@@ -11,6 +11,18 @@
 *.sln.docstates
 *.env
 
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Spotlight and Trash
+.Spotlight-V100
+.Trashes
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
