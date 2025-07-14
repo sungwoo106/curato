@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# added files
+/secure/encrypted_api_key.bin
+/secure/private_key.pem
+
 # User-specific files
 *.rsuser
 *.suo
