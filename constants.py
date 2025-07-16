@@ -18,6 +18,8 @@ COMPANION_TYPES = [
 
 MIN_RATING = 3.0
 
+MAX_DISTANCE_KM = 5  # Default maximum distance for search in kilometers
+
 BUDGET : int = 50000  # Default budget in KRW
 
 LOCATION : str = "홍대입구" # Default location for search
