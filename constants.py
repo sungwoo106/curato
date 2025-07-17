@@ -26,7 +26,7 @@ COMPANION_TYPES = [
 
 MAX_DISTANCE_KM = 5  # Default maximum distance for search in kilometers
 
-BUDGET : int = 50000  # Default budget in KRW
+BUDGET = ["low", "medium", "high"]  # Default budget in KRW
 
 LOCATION : tuple = (37.5563, 126.9237) # Default location for search
 
@@ -51,3 +51,41 @@ TONE_STYLE_MAP = {
     }
 }
 
+LOW_BUDGET = [
+    "grab a warm cup of street coffee",
+    "share a simple snack from a nearby stall",
+    "buy a small souvenir from a local stand",
+    "pick up a couple of drinks from a convenience store and chat on a bench",
+    "try a hotteok or fish cake at a food cart",
+    "browse cute trinkets at a Daiso or small shop",
+    "toss coins into a wishing fountain",
+    "take sticker photos at a self-photo booth",
+    "rent a book or comic from a local library café",
+    "enjoy an ice cream cone on a quiet walk"
+]
+
+MEDIUM_BUDGET = [
+    "enjoy a cozy café treat while watching people pass by",
+    "try a local specialty dish at a well-known eatery",
+    "buy a matching pair of keychains from a souvenir shop",
+    "visit a small art exhibit or museum with a modest entrance fee",
+    "rent bikes and ride along a scenic path",
+    "share a mini dessert platter at a bakery",
+    "sit for a caricature drawing or instant portrait",
+    "take a short river cruise or paddle boat ride",
+    "buy tickets to a themed pop-up or cultural experience",
+    "attend a mini workshop (calligraphy, crafts, etc.)"
+]
+
+HIGH_BUDGET = [
+    "treat yourselves to a luxurious dessert at a famous patisserie",
+    "book a private tea or wine tasting experience",
+    "shop for handmade accessories at a boutique",
+    "go for a scenic cable car or observatory ride",
+    "have a multi-course lunch at a beautiful restaurant",
+    "enjoy a couple’s spa footbath or massage chair session",
+    "take professional photos at a hanbok rental studio",
+    "rent a private boat or han river picnic set",
+    "purchase matching couple rings or bracelets",
+    "sign up for a guided city tour or street food tasting walk"
+]

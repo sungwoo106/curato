@@ -9,7 +9,7 @@ import json
 class Preferences:
     def __init__(self,
                  companion_type=COMPANION_TYPES[0],
-                 budget=BUDGET,
+                 budget=BUDGET[0],
                  starting_time=STARTING_TIME,
                  max_distance_km=MAX_DISTANCE_KM,
                  start_location=LOCATION):
@@ -28,7 +28,7 @@ class Preferences:
     def set_companion_type(self, companion_type: str):
         self.companion_type = companion_type
 
-    def set_budget(self, budget: int):
+    def set_budget(self, budget: str):
         self.budget = budget
 
     def set_starting_time(self, starting_time: int):
@@ -62,7 +62,13 @@ class Preferences:
                 self.companion_type,
                 self.starting_time,
                 self.max_distance_km,
-                search_places(pt, self.start_location, 0, 1000, 10)
+                search_places(
+                    pt,
+                    self.start_location[0],
+                    self.start_location[1],
+                    int(self.max_distance_km * 1000),
+                    10,
+                )
             )
             phi_output = run_phi_runner(prompt)
             try:

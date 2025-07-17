@@ -1,5 +1,6 @@
 import json
-from constants import TONE_STYLE_MAP
+import random
+from constants import TONE_STYLE_MAP, LOW_BUDGET, MEDIUM_BUDGET, HIGH_BUDGET
 
 # Contains prompt templates for various tasks in the Edge Day Planner application.
 
@@ -62,7 +63,7 @@ Choose the best place and reply in this format only:
 """.strip()
 
 
-def build_phi_four_loc(start_location: tuple, companion_type: str, start_time: int, budget: int, recommendations_json: json)-> str:
+def build_phi_four_loc(start_location: tuple, companion_type: str, start_time: int, budget_level: str, recommendations_json: json)-> str:
     return f"""
 <|system|>
 You are an expert travel assistant AI. Your task is to select the best 4 locations from a list of recommended places grouped by place type. These locations come from the Kakao Map API and are intended to form a 1-day route optimized for user preferences.
@@ -99,7 +100,7 @@ Instructions:
 User Plan Settings:
 - Start location: "{start_location}"
 - Start time: "{start_time}"
-- Total budget: {budget} (won)
+- Total budget: {budget_level} (budget level: low, medium, high)
 - Companion type: "{companion_type}"
 
 Data:
@@ -111,9 +112,19 @@ Respond ONLY with a JSON array of 4 selected places. No explanations.
 <|assistant|>
 """.strip()
 
-def build_llama_emotional_prompt(four_locations: list, companion_type: str) -> str:
-    style = TONE_STYLE_MAP.get(companion_type, TONE_STYLE_MAP["혼자"])
+def build_llama_emotional_prompt(four_locations: list, companion_type: str, budget_level: str) -> str:
+    style = TONE_STYLE_MAP.get(companion_type, TONE_STYLE_MAP["solo"])
     locs_text = "\n".join([f"{i+1}. {loc}" for i, loc in enumerate(four_locations)])
+
+
+    # Define potential activities based on budget level
+    money_activities = {
+        "low": LOW_BUDGET,
+        "medium": MEDIUM_BUDGET,
+        "high": HIGH_BUDGET
+    }
+
+    selected_activities = random.sample(money_activities[budget_level], k=2)
 
     user_message = f"""
 You are a storytelling assistant that creates emotionally resonant day plans.
@@ -127,6 +138,8 @@ Tone: {style['tone']}
 Instructions:
 - Begin with a warm greeting or a sense of anticipation.
 - For each location, describe the experience as if the user is already there.
+- Randomly include at least one or two small paid activities such as: {selected_activities}
+  (These should match the user's budget and feel naturally woven into the story.)
 - Use rich sensory language and emotional cues.
 - End the day with a thoughtful or satisfying closing moment.
 

@@ -4,15 +4,15 @@ from secure.crypto_utils import get_kakao_map_api_key
 
 # Calls Kakao Map API
 
-def search_places(query: str, loc: tuple, radius: int = 1000, size: int = 10):
+def search_places(query: str, lat: float, lng: float, radius: int = 1000, size: int = 10):
     """
     Searches for places using the Kakao Map API.
-    @param query: Search query string.
-    @param lat: Latitude of the location to search around.
-    @param lng: Longitude of the location to search around.
+    @param query: Search keyword (e.g., "카페").
+    @param lat: Latitude of the center point.
+    @param lng: Longitude of the center point.
     @param radius: Search radius in meters (default is 1000).
     @param size: Number of results to return (default is 10).
-    @return: JSON response from the Kakao Map API containing search results.
+    @return: JSON response from the Kakao Map API containing place information.
     """
 
     api_key = get_kakao_map_api_key()
@@ -23,8 +23,8 @@ def search_places(query: str, loc: tuple, radius: int = 1000, size: int = 10):
     }
     params = {
         "query": query,
-        "x": str(loc[0]),  # Longitude
-        "y": str(loc[1]),  # Latitude
+        "x": str(lng),  # Longitude
+        "y": str(lat),  # Latitude
         "radius": radius,
         "size": size,
         "sort": "distance"  # Sort by distance

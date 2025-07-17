@@ -3,7 +3,7 @@ import random
 from core.prompts import build_phi_prompt
 from models.phi_runner import run_phi_runner
 from data.api_clients.location_fetcher import get_location_coordinates
-from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, COMPANION_PLACE_TYPES, BUDGET, LOCATION, STARTING_TIME
+from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, STARTING_TIME
 from preferences import Preferences
 from data.api_clients.kakao_api import format_kakao_places_for_prompt
 import json
@@ -31,12 +31,12 @@ if companion_selected:
 
 
 # Get user input for budget
-budget_input = input(f"예산을 입력하세요 (기본값: {BUDGET}원): ")
+budget_input = input(f"예산을 입력하세요 (기본값: {BUDGET[0]} level): ")
 try:
-    budget = int(budget_input) if budget_input else BUDGET
+    budget = budget_input if budget_input else BUDGET[0]
 except ValueError:
     print("잘못된 입력입니다. 기본값으로 진행합니다.")
-    budget = BUDGET
+    budget = BUDGET[0]
 
 # Get user input for starting time
 starting_time_input = input(f"출발 시간을 입력하세요 (24시간 형식, 예: 13 for 1PM, 기본값: {STARTING_TIME}): ")

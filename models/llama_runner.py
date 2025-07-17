@@ -11,11 +11,17 @@ def run_llama_runner(prompt: str) -> str:
     with open("llama_prompt.txt", "w", encoding="utf-8") as f:
         f.write(prompt)
 
-    result = subprocess.run([
-        "./genie-t2t-run.exe",  # Or "genie-t2t-run" on Linux
-        "--model-bundle", "genie_bundle_llama",
-        "--input-text", "prompt.txt"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            "./genie-t2t-run.exe",  # Or "genie-t2t-run" on Linux
+            "--model-bundle",
+            "genie_bundle_llama",
+            "--input-text",
+            "llama_prompt.txt",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
     return result.stdout.strip()
 
