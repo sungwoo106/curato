@@ -14,7 +14,7 @@ def get_location_coordinates(location_name: str):
     api_key = get_kakao_map_api_key()
     url = "https://dapi.kakao.com/v2/local/search/keyword.json"
     headers = {"Authorization": f"KakaoAK {api_key}"}
-    params = {"query": location_name, "size": 8}
+    params = {"query": location_name, "size": 8} # Limit to 8 results
     response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
     data = response.json()

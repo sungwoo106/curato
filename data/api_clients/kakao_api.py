@@ -1,6 +1,5 @@
 import requests
 from typing import Dict, List
-import json
 from secure.crypto_utils import get_kakao_map_api_key
 
 # Calls Kakao Map API
