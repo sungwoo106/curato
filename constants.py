@@ -31,3 +31,23 @@ BUDGET : int = 50000  # Default budget in KRW
 LOCATION : tuple = (37.5563, 126.9237) # Default location for search
 
 STARTING_TIME : int = 12  # Default starting time in hours (12 PM)
+
+TONE_STYLE_MAP = {
+    "solo": {
+        "tone": "introspective and calm",
+        "style_note": "Use peaceful and reflective language. Highlight moments of stillness or self-connection."
+    },
+    "family": {
+        "tone": "warm and secure",
+        "style_note": "Use comforting and affectionate language. Emphasize bonding, laughter, and safety."
+    },
+    "couple": {
+        "tone": "poetic and romantic",
+        "style_note": "Use tender and lyrical language. Focus on shared moments, feelings, and beauty."
+    },
+    "friends": {
+        "tone": "casual and playful",
+        "style_note": "Use energetic, humorous language. Emphasize fun, spontaneity, and good vibes."
+    }
+}
+

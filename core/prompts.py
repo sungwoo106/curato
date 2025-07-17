@@ -1,5 +1,5 @@
-from data.api_clients.kakao_api import search_places
 import json
+from constants import TONE_STYLE_MAP
 
 # Contains prompt templates for various tasks in the Edge Day Planner application.
 
@@ -110,3 +110,37 @@ Respond ONLY with a JSON array of 4 selected places. No explanations.
 
 <|assistant|>
 """.strip()
+
+def build_llama_emotional_prompt(four_locations: list, companion_type: str) -> str:
+    style = TONE_STYLE_MAP.get(companion_type, TONE_STYLE_MAP["혼자"])
+    locs_text = "\n".join([f"{i+1}. {loc}" for i, loc in enumerate(four_locations)])
+
+    user_message = f"""
+You are a storytelling assistant that creates emotionally resonant day plans.
+
+Write a heartfelt, immersive itinerary for the following 4 places:
+{locs_text}
+
+The user is spending the day with: {companion_type}
+Tone: {style['tone']}
+
+Instructions:
+- Begin with a warm greeting or a sense of anticipation.
+- For each location, describe the experience as if the user is already there.
+- Use rich sensory language and emotional cues.
+- End the day with a thoughtful or satisfying closing moment.
+
+Style Guide:
+{style['style_note']}
+
+Output Format:
+Write one continuous, beautiful paragraph per location (4 total), followed by a poetic closing.
+
+Avoid using numbered steps or bullet points.
+""".strip()
+
+    return (
+        "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n"
+        + user_message
+        + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n"
+    )

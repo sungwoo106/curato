@@ -1,5 +1,6 @@
-from core.prompts import build_phi_prompt, build_phi_four_loc
+from core.prompts import build_phi_prompt, build_phi_four_loc, build_llama_emotional_prompt
 from models.phi_runner import run_phi_runner
+from models.llama_runner import run_llama_runner
 from data.api_clients.kakao_api import search_places, format_kakao_places_for_prompt
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
@@ -85,3 +86,16 @@ class Preferences:
             recommendations_json
         )
         return run_phi_runner(prompt)
+
+    def run_llama_story(self):
+        """
+        Runs the llama prompt using the output from run_route_planner (expected to be a JSON array of 4 locations).
+        """
+        route_plan_json = self.run_route_planner()
+        try:
+            four_locations = json.loads(route_plan_json)
+        except Exception as e:
+            print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
+            return None
+        prompt = build_llama_emotional_prompt(four_locations, self.companion_type)
+        return run_llama_runner(prompt)

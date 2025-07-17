@@ -1,8 +1,8 @@
 import subprocess
 
 # phi_runner for when on Windows
-'''def run_phi_runner(prompt: str) -> str:
-    with open("prompt.txt", "w") as f:
+def run_phi_runner(prompt: str) -> str:
+    with open("phi_prompt.txt", "w") as f:
         f.write(prompt)
 
     result = subprocess.run([
@@ -11,8 +11,10 @@ import subprocess
         "--input-text", "prompt.txt"
     ], capture_output=True, text=True)
 
-    return result.stdout.strip()'''
+    return result.stdout.strip()
 
+'''
 # phi_runner for mock response
 def run_phi_runner(prompt: str) -> str:
     return "1. 서울숲\n2. 북서울 꿈의숲\n3. 응봉산"
+'''
