@@ -1,6 +1,6 @@
 from core.prompts import build_phi_prompt
 from models.phi_runner import run_phi_runner
-from constants import PLACE_TYPES, COMPANION_TYPES, MIN_RATING, BUDGET, LOCATION
+from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, MIN_RATING, BUDGET, LOCATION
 from preferences import Preferences
 
 # Entry point
@@ -10,7 +10,7 @@ location = input("원하는 장소의 위치를 입력하세요 (기본값: 홍�
 LOCATION = location if location else LOCATION
 
 print("원하는 장소 유형을 선택하세요 (여러 개 선택하려면 쉼표로 구분):")
-for idx, pt in enumerate(PLACE_TYPES):
+for idx, pt in enumerate(USER_SELECTABLE_PLACE_TYPES):
     print(f"{idx+1}. {pt}")
 selected = input("번호 또는 이름을 입력하세요: ")
 
@@ -20,14 +20,14 @@ for item in selected.split(','):
     item = item.strip()
     if item.isdigit():
         idx = int(item) - 1
-        if 0 <= idx < len(PLACE_TYPES):
-            selected_types.append(PLACE_TYPES[idx])
-    elif item in PLACE_TYPES:
+        if 0 <= idx < len(USER_SELECTABLE_PLACE_TYPES):
+            selected_types.append(USER_SELECTABLE_PLACE_TYPES[idx])
+    elif item in USER_SELECTABLE_PLACE_TYPES:
         selected_types.append(item)
 
 if not selected_types:
     print("선택된 장소 유형이 없습니다. 기본값(restaurant)으로 진행합니다.")
-    selected_types = [PLACE_TYPES[0]]
+    selected_types = [USER_SELECTABLE_PLACE_TYPES[0]]
 
 # Run for each selected place type
 for pt in selected_types:

@@ -4,7 +4,7 @@ from data.api_clients.kakao_api import search_places
 
 
 
-def build_phi_prompt(place_type: str, companion_type: str, rating: float, budget: int, max_distance_km: float) -> str:
+def build_phi_prompt(place_type: str, companion_type: str, budget: int, max_distance_km: float) -> str:
     place_list_json = search_places(place_type, 37.5665, 126.9780)  # Example coordinates (Seoul City Hall)
     return f"""
 <|system|>
@@ -13,13 +13,11 @@ You are a local recommendation expert AI helping a user choose the best {place_t
 Consider the following criteria:
 - Companion type: {companion_type}
 - Budget: {budget} KRW
-- Minimum rating: {rating} stars
 - Maximum distance: {max_distance_km} km from starting point
 
 Only recommend a place that:
 - Matches the place type ({place_type})
 - Is within budget and distance
-- Has high ratings and enough reviews
 - Feels suitable for the given companion type
 
 <|end|>
