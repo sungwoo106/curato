@@ -31,7 +31,18 @@ Here is the list of candidate places in JSON:
 {place_list}
 
 Choose the best place and reply in this format only:
-"[Place Name]"
+{{
+  "place": {{
+    "place_name": "...",
+    "address_name": "...",
+    "road_address_name": "...",
+    "x": "...",  // longitude
+    "y": "...",  // latitude
+    "category_name": "...",
+    "phone": "..."
+    // ...other fields from the input JSON
+  }}
+}}
 <|end|>
 
 <|assistant|>
