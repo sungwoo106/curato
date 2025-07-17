@@ -3,14 +3,16 @@ import random
 from core.prompts import build_phi_prompt
 from models.phi_runner import run_phi_runner
 from data.api_clients.location_fetcher import get_location_coordinates
-from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, COMPANION_PLACE_TYPES, MIN_RATING, BUDGET, LOCATION, STARTING_TIME
+from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, COMPANION_PLACE_TYPES, BUDGET, LOCATION, STARTING_TIME
 from preferences import Preferences
+from data.api_clients.kakao_api import format_kakao_places_for_prompt
+import json
 
 # Entry point
 
 # Get user input for location
-location = input("원하는 장소의 위치를 입력하세요 (기본값: 홍대입구): ")
-location = get_location_coordinates(location) if location else LOCATION
+start_location = input("원하는 장소의 위치를 입력하세요 (기본값: 홍대입구): ")
+start_location = get_location_coordinates(start_location) if start_location else LOCATION
 
 # Get user input for companion type
 print("동행 유형을 선택하세요:")
@@ -51,35 +53,38 @@ except ValueError:
 print("원하는 장소 유형을 선택하세요 (여러 개 선택하려면 쉼표로 구분):")
 for idx, pt in enumerate(USER_SELECTABLE_PLACE_TYPES):
     print(f"{idx+1}. {pt}")
-selected = input("번호 또는 이름을 입력하세요: ")
+selected = input("번호 또는 이름을 입력하세요: ") # input example: "1, 3, 카페"
 
-# Parse user input
-selected_types = []
+
+# Parse user input for place types
+user_selected_types = []
 for item in selected.split(','):
     item = item.strip()
     if item.isdigit():
         idx = int(item) - 1
         if 0 <= idx < len(USER_SELECTABLE_PLACE_TYPES):
-            selected_types.append(USER_SELECTABLE_PLACE_TYPES[idx])
+            user_selected_types.append(USER_SELECTABLE_PLACE_TYPES[idx])
     elif item in USER_SELECTABLE_PLACE_TYPES:
-        selected_types.append(item)
+        user_selected_types.append(item)
 
+# Create Preferences instance and run workflow
+planner = Preferences(
+    companion_type=companion_type,
+    budget=budget,
+    starting_time=starting_time,
+    start_location=start_location
+)
+planner.select_place_types(user_selected_types)
+planner.collect_phi_outputs()
+recommendations_json = planner.format_recommendations()
 
-# Randomly select 4 or 5 unique place types from companion-specific list
-companion_places = COMPANION_PLACE_TYPES.get(companion_type, [])
-num_to_select = random.choice([4, 5])
-if len(companion_places) >= num_to_select:
-    selected_types = random.sample(companion_places, num_to_select)
-else:
-    selected_types = companion_places.copy()
-
-if not selected_types:
-    print("해당 동행 유형에 대한 추천 장소 유형이 없습니다. 기본값(카페)으로 진행합니다.")
-    selected_types = [USER_SELECTABLE_PLACE_TYPES[0]]
-
-# Run for each selected place type
-for pt in selected_types:
-    planner = Preferences(place_type=pt, companion_type=companion_type, budget=budget, starting_time=starting_time, location=location)
-    phi_output = planner.run()
+# Print each place type's recommendation
+for pt in planner.selected_types:
     print(f"\n[{pt}] 추천 결과:")
-    print(phi_output)
+    for place in planner.phi_outputs.get(pt, []):
+        print(json.dumps(place, ensure_ascii=False, indent=2))
+
+# Run route planner for 4 locations
+route_plan = planner.run_route_planner()
+print("\n최적의 1일 경로 추천:")
+print(route_plan)
