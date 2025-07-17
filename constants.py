@@ -28,6 +28,6 @@ MAX_DISTANCE_KM = 5  # Default maximum distance for search in kilometers
 
 BUDGET : int = 50000  # Default budget in KRW
 
-LOCATION : str = "홍대입구" # Default location for search
+LOCATION : tuple = (37.5563, 126.9237) # Default location for search
 
 STARTING_TIME : int = 12  # Default starting time in hours (12 PM)

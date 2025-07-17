@@ -1,11 +1,13 @@
 import requests
 from secure.crypto_utils import get_kakao_map_api_key
 
+# Calls Kakao Map API to search for starting location coordinates
 
 def get_location_coordinates(location_name: str):
     """
     Given a location name (e.g., '홍대입구', '명동'), return its latitude and longitude using Kakao Map API.
-    Returns (lat, lng) as floats, or None if not found.
+    @param location_name: Name of the location to search for.
+    @return: Tuple of (latitude, longitude) if found, otherwise None.
     """
     api_key = get_kakao_map_api_key()
 
