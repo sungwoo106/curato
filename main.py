@@ -1,3 +1,5 @@
+
+import random
 from core.prompts import build_phi_prompt
 from models.phi_runner import run_phi_runner
 from data.api_clients.location_fetcher import get_location_coordinates
@@ -62,14 +64,17 @@ for item in selected.split(','):
     elif item in USER_SELECTABLE_PLACE_TYPES:
         selected_types.append(item)
 
-# Add companion-specific place types
+
+# Randomly select 4 or 5 unique place types from companion-specific list
 companion_places = COMPANION_PLACE_TYPES.get(companion_type, [])
-for pt in companion_places:
-    if pt not in selected_types:
-        selected_types.append(pt)
+num_to_select = random.choice([4, 5])
+if len(companion_places) >= num_to_select:
+    selected_types = random.sample(companion_places, num_to_select)
+else:
+    selected_types = companion_places.copy()
 
 if not selected_types:
-    print("선택된 장소 유형이 없습니다. 기본값(카페)으로 진행합니다.")
+    print("해당 동행 유형에 대한 추천 장소 유형이 없습니다. 기본값(카페)으로 진행합니다.")
     selected_types = [USER_SELECTABLE_PLACE_TYPES[0]]
 
 # Run for each selected place type
