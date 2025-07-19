@@ -1,11 +1,8 @@
 
 import random
-from core.prompts import build_phi_prompt
-from models.phi_runner import run_phi_runner
 from data.api_clients.location_fetcher import get_location_coordinates
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, STARTING_TIME
 from preferences import Preferences
-from data.api_clients.kakao_api import format_kakao_places_for_prompt
 import json
 
 # Entry point
@@ -87,4 +84,9 @@ for pt in planner.selected_types:
 # Run route planner for 4 locations
 route_plan = planner.run_route_planner()
 print("\n최적의 1일 경로 추천:")
-print(route_plan)
+# Attempt to parse and print the route plan because it should be a JSON response
+try:
+    parsed_plan = json.loads(route_plan)
+    print(json.dumps(parsed_plan, ensure_ascii=False, indent=2))
+except Exception:
+    print(route_plan)

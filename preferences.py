@@ -1,7 +1,7 @@
-from core.prompts import build_phi_prompt, build_phi_four_loc, build_llama_emotional_prompt
+from core.prompts import build_phi_four_loc, build_llama_emotional_prompt
 from models.phi_runner import run_phi_runner
 from models.llama_runner import run_llama_runner
-from data.api_clients.kakao_api import search_places, format_kakao_places_for_prompt
+from data.api_clients.kakao_api import get_closest_place, format_kakao_places_for_prompt
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
 import json
@@ -19,7 +19,7 @@ class Preferences:
         self.max_distance_km = max_distance_km
         self.start_location = start_location
         self.selected_types = []
-        self.phi_outputs = {}
+        self.best_places = {}
         self.recommendations_json = []
 
     def set_start_location(self, start_location: tuple):
@@ -53,32 +53,21 @@ class Preferences:
         if not self.selected_types:
             self.selected_types = [USER_SELECTABLE_PLACE_TYPES[0]]
 
-    def collect_phi_outputs(self):
-        self.phi_outputs = {}
+    def collect_best_place(self):
+        # returns in a dictionary format where keys are place types and values are lists of places
+        self.best_places = {}
         for pt in self.selected_types:
-            prompt = build_phi_prompt(
-                self.start_location,
+            best_place = get_closest_place(
                 pt,
-                self.companion_type,
-                self.starting_time,
-                self.max_distance_km,
-                search_places(
-                    pt,
-                    self.start_location[0],
-                    self.start_location[1],
-                    int(self.max_distance_km * 1000),
-                    10,
-                )
+                self.start_location[0],
+                self.start_location[1],
+                int(self.max_distance_km * 1000),
+                10,
             )
-            phi_output = run_phi_runner(prompt)
-            try:
-                phi_json = json.loads(phi_output)
-                self.phi_outputs[pt] = phi_json.get('documents', [])
-            except Exception as e:
-                print(f"{pt} 결과를 JSON으로 파싱할 수 없습니다: {e}")
+            self.best_places[pt] = [best_place] if best_place else []
 
     def format_recommendations(self):
-        self.recommendations_json = format_kakao_places_for_prompt(self.phi_outputs)
+        self.recommendations_json = format_kakao_places_for_prompt(self.best_places)
         return self.recommendations_json
 
     def run_route_planner(self):
