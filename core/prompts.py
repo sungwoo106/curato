@@ -4,93 +4,53 @@ from constants import TONE_STYLE_MAP, LOW_BUDGET, MEDIUM_BUDGET, HIGH_BUDGET
 
 # Contains prompt templates for various tasks in the Edge Day Planner application.
 
-def build_phi_four_loc(start_location: tuple, companion_type: str, start_time: int, budget_level: str, recommendations_json: json)-> str:
+def build_phi_four_loc(
+    start_location: tuple,
+    companion_type: str,
+    start_time: int,
+    budget_level: str,
+    recommendations_json: json,
+) -> str:
+    """    Builds a prompt for the Phi model to select 4 locations based on user preferences.    """
     return f"""
 <|system|>
-You are an expert travel assistant AI. Your task is to select the best 4 locations from a list of recommended places grouped by place type. These locations come from the Kakao Map API and are intended to form a 1-day route optimized for user preferences.
-
-Each place entry has these fields:
-- place_name: name of the place
-- address_name: full land address
-- road_address_name: road address
-- category_group_name: broad category (e.g., 카페)
-- category_name: detailed category path
-- distance: distance from the user's start location in meters (string)
-- phone: optional contact info
-- place_url: Kakao Maps URL
-- x: longitude (string)
-- y: latitude (string)
-
-Instructions:
-1. Select exactly 4 places from the list, each from a different category (place_type).
-2. Choose places that are reasonably close to the starting location (low distance), diverse in experience, and well-distributed across place types.
-3. Prioritize quality over brand repetition (e.g., avoid picking 3 Starbucks).
-4. The 4 places should be optimal for the user's route and preferences.
-5. Return only a JSON list of the 4 selected places in order of the route, each including:
-   - place_name
-   - road_address_name
-   - place_type (manually inferred from category_group_name or category_name)
-   - distance (as integer)
-   - place_url
-   - latitude (float from 'y')
-   - longitude (float from 'x')
-
+Choose 4 locations for a one-day route. Each must be from a different place type, near {start_location}, and suit a {companion_type} outing starting at {start_time}h with a {budget_level} budget. Avoid repeated brands and pick quality spots.
+Return a JSON list (in order) with these fields: place_name, road_address_name, place_type, distance, place_url, latitude, longitude.
 <|end|>
 
 <|user|>
-User Plan Settings:
-- Start location: "{start_location}"
-- Start time: "{start_time}"
-- Total budget: {budget_level} (budget level: low, medium, high)
-- Companion type: "{companion_type}"
-
-Data:
 {recommendations_json}
 
-Respond ONLY with a JSON array of 4 selected places. No explanations.
 <|end|>
 
 <|assistant|>
 """.strip()
 
-def build_llama_emotional_prompt(four_locations: list, companion_type: str, budget_level: str) -> str:
+def build_llama_emotional_prompt(
+    four_locations: list,
+    companion_type: str,
+    budget_level: str,
+) -> str:
     style = TONE_STYLE_MAP.get(companion_type, TONE_STYLE_MAP["solo"])
     locs_text = "\n".join([f"{i+1}. {loc}" for i, loc in enumerate(four_locations)])
 
-
-    # Define potential activities based on budget level
     money_activities = {
         "low": LOW_BUDGET,
         "medium": MEDIUM_BUDGET,
-        "high": HIGH_BUDGET
+        "high": HIGH_BUDGET,
     }
 
     selected_activities = random.sample(money_activities[budget_level], k=2)
 
     user_message = f"""
-You are a storytelling assistant that creates emotionally resonant day plans.
-
-Write a heartfelt, immersive itinerary for the following 4 places:
+You are a storytelling assistant. Describe an emotional itinerary for these places:
 {locs_text}
 
-The user is spending the day with: {companion_type}
+Companion: {companion_type}
 Tone: {style['tone']}
-
-Instructions:
-- Begin with a warm greeting or a sense of anticipation.
-- For each location, describe the experience as if the user is already there.
-- Randomly include at least one or two small paid activities such as: {selected_activities}
-  (These should match the user's budget and feel naturally woven into the story.)
-- Use rich sensory language and emotional cues.
-- End the day with a thoughtful or satisfying closing moment.
-
-Style Guide:
-{style['style_note']}
-
-Output Format:
-Write one continuous, beautiful paragraph per location (4 total), followed by a poetic closing.
-
-Avoid using numbered steps or bullet points.
+Include 1-2 paid activities like: {selected_activities}
+Use rich sensory language and finish with a poetic closing. No bullet points.
+Style guide: {style['style_note']}
 """.strip()
 
     return (
