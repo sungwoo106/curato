@@ -1,9 +1,33 @@
+"""Utilities for querying the Kakao Map API.
+
+The :func:`search_places` function is cached using ``functools.lru_cache``.
+Results are keyed by the query and coordinates rounded to four decimal places
+to avoid repeated HTTP requests for nearly identical lookups.
+"""
+
 import requests
 from typing import Dict, List, Optional
+from functools import lru_cache, wraps
 from secure.crypto_utils import get_kakao_map_api_key
+
+
+def _rounded_cache(func):
+    """Round latitude and longitude before caching."""
+
+    @wraps(func)
+    def wrapper(query: str, lat: float, lng: float, *args, **kwargs):
+        rounded_lat = round(lat, 4)
+        rounded_lng = round(lng, 4)
+        return func(query, rounded_lat, rounded_lng, *args, **kwargs)
+
+    wrapper.cache_clear = getattr(func, "cache_clear", lambda: None)
+    wrapper.cache_info = getattr(func, "cache_info", lambda: None)
+    return wrapper
 
 # Calls Kakao Map API
 
+@_rounded_cache
+@lru_cache(maxsize=128)
 def search_places(query: str, lat: float, lng: float, radius: int = 1000, size: int = 10):
     """
     Searches for places using the Kakao Map API.
