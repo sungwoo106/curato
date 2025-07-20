@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Curato.Views"
         Title="Curato"
-        Width="1920" Height="1080"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -14,11 +14,20 @@
     <Grid>
         <!-- Header area for dragging -->
         <Grid Height="80" Background="White" MouseDown="DragWindow">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Logo / Title -->
             <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,0,0,0"
                        FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
-        </Grid>
 
-        <!-- Main content page (SearchPage below header) -->
-        <views:SearchPage Margin="0,80,0,0"/>
+            <!-- Close button -->
+            <Button Grid.Column="1" Width="40" Height="40" Click="CloseButton_Click" 
+                    Background="Transparent" BorderThickness="0" Padding="0" 
+                    VerticalAlignment="Center" HorizontalAlignment="Right">
+                <TextBlock Text="✕" FontSize="16" Foreground="#555" FontWeight="Bold"/>
+            </Button>
     </Grid>
 </Window>
