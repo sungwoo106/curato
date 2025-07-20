@@ -97,7 +97,7 @@
                                         <Border CornerRadius="40" ClipToBounds="True" Width="318" Height="380">
                                             <Image Source="{Binding ImagePath}" Stretch="UniformToFill" StretchDirection="Both" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" />
                                         </Border>
-                                        <Border Background="#20FFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0">
+                                        <Border Background="#FFFFFFCC" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0">
                                             <Border.Effect>
                                                 <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
                                             </Border.Effect>
