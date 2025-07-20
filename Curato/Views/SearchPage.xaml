@@ -25,7 +25,7 @@
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
                     <!-- Search box -->
-                    <Border Background="White" CornerRadius="30" Padding="15,10" Margin="0,0,20,0" Height="97" Width="494"
+                    <Border Background="White" CornerRadius="100" Padding="15,10" Margin="0,0,20,0" Height="97" Width="494"
                             BorderBrush="#E0E0E0" BorderThickness="1">
                         <DockPanel>
                             <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="0,0,10,0"/>
@@ -36,23 +36,23 @@
                     </Border>
 
                     <!-- Preferences -->
-                    <UniformGrid Columns="4" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,20,0" Height="97">
-                        <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0"
+                    <UniformGrid Columns="4" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,20,0" Height="97" Width="1140">
+                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
                             <TextBlock Text="Companion" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
-                        <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0"
+                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
                             <TextBlock Text="Budget" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
-                        <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0"
+                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
                             <TextBlock Text="Time" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
-                        <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0"
+                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
                             <TextBlock Text="Category" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
@@ -60,7 +60,7 @@
                     </UniformGrid>
 
                     <!-- Generate button -->
-                    <Border Background="#FFB31A" CornerRadius="30" Height="67" Width="67" Margin="20,0,0,0"
+                    <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="20,0,0,0"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -83,7 +83,7 @@
                             <Border Width="323" Height="463" Background="White" CornerRadius="20" Margin="10" Padding="10">
                                 <StackPanel>
                                     <Grid>
-                                        <Border CornerRadius="15" ClipToBounds="True" Width="180" Height="120">
+                                        <Border CornerRadius="40" ClipToBounds="True" Width="318" Height="380">
                                             <Image Source="{Binding ImagePath}" Stretch="UniformToFill"/>
                                         </Border>
                                         <Border Background="#80FFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0">
