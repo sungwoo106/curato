@@ -87,7 +87,7 @@
                 <ItemsControl ItemsSource="{Binding PopularPlaces}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel HorizontalAlignment="Left" ItemWidth="323" ItemHeight="463"/>
+                            <WrapPanel HorizontalAlignment="Left" ItemWidth="323"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
