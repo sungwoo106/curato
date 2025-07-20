@@ -21,11 +21,19 @@
             </Grid>
 
             <!-- Search Bar -->
-            <Border Background="White" Padding="40,20" Grid.Row="1" BorderBrush="#EEEEEE" BorderThickness="0,1,0,1">
+            <Border
+                Background="White"
+                Padding="40,20"
+                Grid.Row="1"
+                BorderBrush="#EEEEEE"
+                BorderThickness="0,1,0,1">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" Opacity="0.08" BlurRadius="12" ShadowDepth="2"/>
+                </Border.Effect> Background="White" Padding="40,20" Grid.Row="1" BorderBrush="#EEEEEE" BorderThickness="0,1,0,1">
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
                     <!-- Search box -->
-                    <Border Background="White" CornerRadius="100" Padding="15,10" Margin="0,0,20,0" Height="97" Width="494"
+                    <Border Background="White" CornerRadius="40" Padding="15,10" Margin="0,0,20,0" Height="97" Width="494"
                             BorderBrush="#E0E0E0" BorderThickness="1">
                         <DockPanel>
                             <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="0,0,10,0"/>
@@ -37,24 +45,27 @@
 
                     <!-- Preferences -->
                     <UniformGrid Columns="4" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,20,0" Height="97" Width="1140">
+                        <UniformGrid.Effect>
+                            <DropShadowEffect Color="Black" Opacity="0.06" BlurRadius="8" ShadowDepth="1"/>
+                        </UniformGrid.Effect>
                         <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Companion" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            <TextBlock Text="Companion" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
                         <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Budget" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            <TextBlock Text="Budget" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
                         <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Time" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            <TextBlock Text="Time" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
                         <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
                                 BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Category" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            <TextBlock Text="Category" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        FontFamily="{StaticResource SatoshiMedium}"/>
                         </Border>
                     </UniformGrid>
@@ -84,7 +95,7 @@
                                 <StackPanel>
                                     <Grid>
                                         <Border CornerRadius="40" ClipToBounds="True" Width="318" Height="380">
-                                            <Image Source="{Binding ImagePath}" Stretch="UniformToFill"/>
+                                            <Image Source="{Binding ImagePath}" Stretch="UniformToFill" StretchDirection="Both" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" />
                                         </Border>
                                         <Border Background="#80FFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0">
                                             <Border.Effect>
