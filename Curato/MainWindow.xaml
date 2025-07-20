@@ -29,5 +29,9 @@
                     VerticalAlignment="Center" HorizontalAlignment="Right">
                 <TextBlock Text="✕" FontSize="16" Foreground="#555" FontWeight="Bold"/>
             </Button>
+        </Grid>
+
+        <!-- Main content page (SearchPage below header) -->
+        <views:SearchPage Margin="0,80,0,0"/>
     </Grid>
 </Window>
