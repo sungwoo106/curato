@@ -1,7 +1,12 @@
-public partial class LoadingPage : UserControl
+using System.Windows.Controls;
+
+namespace Curato.Views
 {
-    public LoadingPage()
+    public partial class LoadingPage : UserControl
     {
-        InitializeComponent();
+        public LoadingPage()
+        {
+            InitializeComponent();
+        }
     }
 }

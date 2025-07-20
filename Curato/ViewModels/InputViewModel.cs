@@ -27,7 +27,7 @@ namespace Curato.ViewModels
                 {
                     ImagePath = "/Resources/Images/seongsu.jpg",
                     Title = "Seongsu",
-                    Subtitle = "New treㅎㅇㅂndy area with cafes and restaurants",
+                    Subtitle = "New trendy area with cafes and restaurants",
                     Type = "Most Loved"
                 },
                 new PopularPlace
@@ -70,8 +70,8 @@ namespace Curato.ViewModels
             System.Diagnostics.Debug.WriteLine("Generate Plan Clicked");
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null) =>
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

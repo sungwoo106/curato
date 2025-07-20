@@ -5,7 +5,19 @@
         Title="Curato"
         Width="1920" Height="1080"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        Background="White">
 
-    <views:SearchPage />
+    <Grid>
+        <!-- Header area for dragging -->
+        <Grid Height="80" Background="White" MouseDown="DragWindow">
+            <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,0,0,0"
+                       FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
+        </Grid>
+
+        <!-- Main content page (SearchPage below header) -->
+        <views:SearchPage Margin="0,80,0,0"/>
+    </Grid>
 </Window>

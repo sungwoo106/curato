@@ -20,4 +20,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
     }
+
+    private void DragWindow(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed)
+            this.DragMove();
+    }
 }

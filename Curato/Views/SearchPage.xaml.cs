@@ -1,11 +1,14 @@
 using System.Windows.Controls;
 using Curato.ViewModels;
 
-public partial class SearchPage : UserControl
+namespace Curato.Views
 {
-    public SearchPage()
+    public partial class SearchPage : UserControl
     {
-        InitializeComponent();
-        this.DataContext = new InputViewModel();
+        public SearchPage()
+        {
+            InitializeComponent();
+            this.DataContext = new InputViewModel();
+        }
     }
 }

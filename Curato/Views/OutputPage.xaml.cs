@@ -1,7 +1,14 @@
-public partial class OutputPage : UserControl
+using System.Windows.Controls;
+
+
+namespace Curato.Views
 {
-    public OutputPage()
+    public partial class OutputPage : UserControl
     {
-        InitializeComponent();
+        public OutputPage()
+        {
+            InitializeComponent();
+        }
     }
 }
+
