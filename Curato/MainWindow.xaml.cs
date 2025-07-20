@@ -21,6 +21,15 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        this.WindowState = WindowState.Normal;
+        this.Left = SystemParameters.WorkArea.Left;
+        this.Top = SystemParameters.WorkArea.Top;
+        this.Width = SystemParameters.WorkArea.Width;
+        this.Height = SystemParameters.WorkArea.Height;
+    }
+    
     private void DragWindow(object sender, MouseButtonEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
