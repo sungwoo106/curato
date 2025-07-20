@@ -44,45 +44,46 @@
                     </Border>
 
                     <!-- Preferences -->
-                    <UniformGrid Columns="4" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,20,0" Height="97" Width="1140">
-                        <UniformGrid.Effect>
+                    <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0">
+                        <Border.Effect>
                             <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="1"/>
-                        </UniformGrid.Effect>
-                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
-                                BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Companion" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontFamily="{StaticResource SatoshiMedium}"/>
-                        </Border>
-                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
-                                BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Budget" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontFamily="{StaticResource SatoshiMedium}"/>
-                        </Border>
-                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
-                                BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Time" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontFamily="{StaticResource SatoshiMedium}"/>
-                        </Border>
-                        <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
-                                BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Category" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontFamily="{StaticResource SatoshiMedium}"/>
-                        </Border>
-                    </UniformGrid>
-
-                    <!-- Generate button -->
-                    <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="20,0,0,0"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
-                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border.Effect>
+                        <UniformGrid Columns="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="97" Width="1250">
+                            <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="Companion" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource SatoshiMedium}"/>
+                            </Border>
+                            <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="Budget" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource SatoshiMedium}"/>
+                            </Border>
+                            <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="Time" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource SatoshiMedium}"/>
+                            </Border>
+                            <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0"
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="Category" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource SatoshiMedium}"/>
+                            </Border>
+                            <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="0,0,0,0"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
+                                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            </Border>
+                        </UniformGrid>
                     </Border>
+
                 </DockPanel>
             </Border>
 
             <!-- Recommendations -->
             <StackPanel Grid.Row="2" Margin="120,40,120,0">
                 <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,0,30"
-                           FontFamily="{StaticResource SatoshiBold}" Margin="0,0,0,20"/>
+                           FontFamily="{StaticResource SatoshiBold}"/>
                 <ItemsControl ItemsSource="{Binding PopularPlaces}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
