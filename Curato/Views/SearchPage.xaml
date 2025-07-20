@@ -12,86 +12,76 @@
             <RowDefinition Height="*" />    <!-- Recommendations -->
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Background="White" Padding="40,30" Grid.Row="0">
-            <TextBlock Text="Curato" FontSize="46" FontWeight="Bold" Foreground="#F9B233" FontFamily="{StaticResource SatoshiBold}" />
-        </Border>
+        <!-- Header: Curato logo -->
+        <Grid Background="White" Height="100" Grid.Row="0">
+            <TextBlock Text="Curato"
+                       VerticalAlignment="Center"
+                       Margin="40,0,0,0"
+                       FontSize="28"
+                       Foreground="#F9B233"
+                       FontFamily="{StaticResource SatoshiBold}"/>
+        </Grid>
 
-        <!-- Search Controls -->
+        <!-- Search section -->
         <Border Background="White" Padding="40,20" Grid.Row="1" BorderBrush="#EEEEEE" BorderThickness="0,1,0,1">
             <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
-                <!-- Location Search Box -->
-                <Border Background="White" CornerRadius="30" Padding="15,10" Margin="0,0,20,0" Height="97" Width="494" 
-                        BorderBrush="#E0E0E0" BorderThickness="1" Effect="{DynamicResource ShadowEffect}">
+                <!-- Location search box -->
+                <Border Background="White" CornerRadius="30" Padding="15,10" Margin="0,0,20,0" Height="50" Width="300"
+                        BorderBrush="#E0E0E0" BorderThickness="1" >
                     <DockPanel>
-                        <Image Source="/Resources/Icons/search.png" Width="32" Height="32" Margin="0,0,10,0" />
-                        <TextBox FontSize="24" BorderThickness="0" Background="Transparent" Foreground="#444" FontFamily="{StaticResource SatoshiMedium}"
-                                 VerticalAlignment="Center" Text="Search Location" />
+                        <Image Source="/Resources/Icons/search.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                        <TextBox FontSize="14" BorderThickness="0" Background="Transparent" Foreground="#444"
+                                 FontFamily="{StaticResource SatoshiMedium}" VerticalAlignment="Center"
+                                 Text="Search Location"/>
                     </DockPanel>
                 </Border>
 
-                <!-- Preference Buttons -->
-                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="67" Width="202"
+                <!-- Preference pills -->
+                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="50" Width="140"
                         BorderBrush="#E0E0E0" BorderThickness="1">
-                    <TextBlock FontSize="24" Text="Companion" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{StaticResource SatoshiMedium}" />
+                    <TextBlock Text="Companion" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontFamily="{StaticResource SatoshiMedium}" />
                 </Border>
-                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="67" Width="155"
+                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="50" Width="100"
                         BorderBrush="#E0E0E0" BorderThickness="1">
-                    <TextBlock FontSize="24" Text="Budget" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{StaticResource SatoshiMedium}" />
+                    <TextBlock Text="Budget" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontFamily="{StaticResource SatoshiMedium}" />
                 </Border>
-                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="67" Width="131"
+                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="50" Width="100"
                         BorderBrush="#E0E0E0" BorderThickness="1">
-                    <TextBlock FontSize="24" Text="Time" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{StaticResource SatoshiMedium}" />
+                    <TextBlock Text="Time" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontFamily="{StaticResource SatoshiMedium}" />
                 </Border>
-                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="67" Width="177"
+                <Border Background="White" CornerRadius="30" Padding="20,10" Margin="0,0,10,0" Height="50" Width="120"
                         BorderBrush="#E0E0E0" BorderThickness="1">
-                    <TextBlock FontSize="24" Text="Category" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{StaticResource SatoshiMedium}" />
+                    <TextBlock Text="Category" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontFamily="{StaticResource SatoshiMedium}" />
                 </Border>
 
-                <!-- Generate Button -->
-                <Border Background="#FFB31A" CornerRadius="30" Height="67" Width="67" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Border>
-
-            </DockPanel>
-        </Border>
-
-        <!-- Recommendations -->
+        <!-- Recommendations section -->
         <StackPanel Grid.Row="2" Margin="40,30">
-            <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,0,20" FontFamily="{StaticResource SatoshiBold}" />
-            <ItemsControl ItemsSource="{Binding PopularPlaces}"
-                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                          ScrollViewer.VerticalScrollBarVisibility="Disabled">
+            <TextBlock Text="Popular places around Seoul" FontSize="20" FontFamily="{StaticResource SatoshiBold}" Margin="0,0,0,20" />
+            <ItemsControl ItemsSource="{Binding PopularPlaces}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"
-                                   ItemHeight="463"
-                                   ItemWidth="323"
-                                   HorizontalAlignment="Left" />
+                        <WrapPanel HorizontalAlignment="Left" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Width="323" Height="463" Background="White" CornerRadius="20" Margin="10" Padding="10">
+                        <Border Width="200" Height="250" Background="White" CornerRadius="20" Margin="10" Padding="10">
                             <StackPanel>
                                 <Grid>
-                                    <Border CornerRadius="20" ClipToBounds="True" Width="318" Height="380">
-                                        <Image Source="{Binding ImagePath}"
-                                               Stretch="Uniform"
-                                               StretchDirection="DownOnly" />
+                                    <Border CornerRadius="15" ClipToBounds="True" Width="180" Height="120">
+                                        <Image Source="{Binding ImagePath}" Stretch="UniformToFill" />
                                     </Border>
-                                    <Border Background="#80FFFFFF" Padding="6,2"
-                                            CornerRadius="10" HorizontalAlignment="Left"
-                                            VerticalAlignment="Top" Margin="8,8,0,0">
-                                        <Border.Effect>
-                                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
-                                        </Border.Effect>
-                                        <TextBlock Text="{Binding Type}" FontSize="16" Foreground="#CC000000" FontFamily="{StaticResource SatoshiBold}" />
+                                    <Border Background="#E0E0E0" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" Margin="8,8,0,0">
+                                        <TextBlock Text="{Binding Label}" FontSize="10" FontFamily="{StaticResource SatoshiMedium}" Foreground="#AA000000"/>
                                     </Border>
                                 </Grid>
-                                <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0" FontFamily="{StaticResource SatoshiBold}" />
-                                <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Foreground="#555" FontFamily="{StaticResource SatoshiMedium}"/>
+                                <TextBlock Text="{Binding Title}" FontSize="14" Margin="0,10,0,0" FontFamily="{StaticResource SatoshiBold}" />
+                                <TextBlock Text="{Binding Subtitle}" FontSize="12" TextWrapping="Wrap" Foreground="#555" FontFamily="{StaticResource SatoshiMedium}"/>
                             </StackPanel>
                         </Border>
                     </DataTemplate>
