@@ -14,8 +14,8 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Background="White" Height="100" Grid.Row="0">
-                <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,0,0,0"
+            <Grid Background="White" Height="80" Grid.Row="0">
+                <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,-10,0,0"
                            FontSize="46" Foreground="#FFB31A"
                            FontFamily="{StaticResource SatoshiBold}"/>
             </Grid>
@@ -80,13 +80,13 @@
             </Border>
 
             <!-- Recommendations -->
-            <StackPanel Grid.Row="2" Margin="40,30">
-                <TextBlock Text="Popular places around Seoul" FontSize="34"
+            <StackPanel Grid.Row="2" Margin="120,40,120,0">
+                <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,0,30"
                            FontFamily="{StaticResource SatoshiBold}" Margin="0,0,0,20"/>
                 <ItemsControl ItemsSource="{Binding PopularPlaces}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel HorizontalAlignment="Left"/>
+                            <WrapPanel HorizontalAlignment="Left" ItemWidth="323" ItemHeight="463"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
