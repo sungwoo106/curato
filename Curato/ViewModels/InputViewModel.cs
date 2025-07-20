@@ -28,35 +28,35 @@ namespace Curato.ViewModels
                     ImagePath = "/Resources/Images/seongsu.jpg",
                     Title = "Seongsu",
                     Subtitle = "New trendy area with cafes and restaurants",
-                    Type = "Most Loved"
+                    Label = "Most Loved"
                 },
                 new PopularPlace
                 {
                     ImagePath = "/Resources/Images/hongdae.jpg",
                     Title = "Hongdae ・ Mapo",
                     Subtitle = "Trendy, youthful culture and cafes",
-                    Type = "Most Popular"
+                    Label = "Most Popular"
                 },
                 new PopularPlace
                 {
                     ImagePath = "/Resources/Images/gangnam.jpg",
                     Title = "Gangnam ・ Yeoksam",
                     Subtitle = "Upscale shopping and nightlife",
-                    Type = "Most Fancy"
+                    Label = "Most Fancy"
                 },
                 new PopularPlace
                 {
                     ImagePath = "/Resources/Images/itaewon.jpg",
                     Title = "Itaewon ・ Yongsan",
                     Subtitle = "Global vibes and cuisine",
-                    Type = "Most Diverse"
+                    Label = "Most Diverse"
                 },
                 new PopularPlace
                 {
                     ImagePath = "/Resources/Images/bukchon.jpg",
                     Title = "Bukchon ・ Jongno",
                     Subtitle = "Traditional hanok village beauty",
-                    Type = "Most Cultural"
+                    Label = "Most Cultural"
                 }
             };
 
