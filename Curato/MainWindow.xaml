@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterScreen"
         Loaded="MainWindow_Loaded"
         ResizeMode="NoResize"
-        WindowStyle="None"
+        WindowStyle="SingleBorderWindow"
         AllowsTransparency="False"
         Background="White"
         MouseDown="DragWindow">
@@ -22,17 +22,6 @@
             <!-- Logo / Title -->
             <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,0,0,0"
                        FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
-
-            <!-- Close button -->
-            <Button x:Name="CloseButton" Grid.Column="1" Width="40" Height="40"
-                    Click="CloseButton_Click" Cursor="Hand" ToolTip="Close"
-                    Background="Transparent" BorderThickness="0" Padding="0"
-                    VerticalAlignment="Center" HorizontalAlignment="Right">
-                <Grid Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Line X1="0" Y1="0" X2="16" Y2="16" Stroke="#555" StrokeThickness="2"/>
-                    <Line X1="16" Y1="0" X2="0" Y2="16" Stroke="#555" StrokeThickness="2"/>
-                </Grid>
-            </Button>
         </Grid>
 
         <!-- Main content page (SearchPage below header) -->
