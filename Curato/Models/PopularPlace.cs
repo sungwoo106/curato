@@ -6,7 +6,7 @@ namespace Curato.Models
         public string Title { get; set; }
         public string Subtitle { get; set; }
 
-        public string Type { get; set; } = string.Empty;
+        public string Label { get; set; }
 
     }
 }
