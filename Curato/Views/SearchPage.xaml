@@ -29,7 +29,7 @@
                 BorderThickness="0,1,0,1">
                 <Border.Effect>
                     <DropShadowEffect Color="Black" Opacity="0.08" BlurRadius="12" ShadowDepth="2"/>
-                </Border.Effect> Background="White" Padding="40,20" Grid.Row="1" BorderBrush="#EEEEEE" BorderThickness="0,1,0,1">
+                </Border.Effect>
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
                     <!-- Search box -->
