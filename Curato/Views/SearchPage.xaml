@@ -59,6 +59,13 @@
                                FontFamily="{StaticResource SatoshiMedium}" />
                 </Border>
 
+                <!-- Generate button -->
+                <Border Background="#F9B233" CornerRadius="30" Height="50" Width="50" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image Source="/Resources/Icons/arrow.png" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Border>
+            </DockPanel>
+        </Border>
+
         <!-- Recommendations section -->
         <StackPanel Grid.Row="2" Margin="40,30">
             <TextBlock Text="Popular places around Seoul" FontSize="20" FontFamily="{StaticResource SatoshiBold}" Margin="0,0,0,20" />
