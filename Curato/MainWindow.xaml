@@ -24,10 +24,14 @@
                        FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
 
             <!-- Close button -->
-            <Button Grid.Column="1" Width="40" Height="40" Click="CloseButton_Click" 
-                    Background="Transparent" BorderThickness="0" Padding="0" 
+            <Button x:Name="CloseButton" Grid.Column="1" Width="40" Height="40"
+                    Click="CloseButton_Click" Cursor="Hand" ToolTip="Close"
+                    Background="Transparent" BorderThickness="0" Padding="0"
                     VerticalAlignment="Center" HorizontalAlignment="Right">
-                <TextBlock Text="✕" FontSize="16" Foreground="#555" FontWeight="Bold"/>
+                <Grid Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Line X1="0" Y1="0" X2="16" Y2="16" Stroke="#555" StrokeThickness="2"/>
+                    <Line X1="16" Y1="0" X2="0" Y2="16" Stroke="#555" StrokeThickness="2"/>
+                </Grid>
             </Button>
         </Grid>
 
