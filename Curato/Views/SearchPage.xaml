@@ -69,7 +69,7 @@
                                 <TextBlock Text="Category" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
                                            FontFamily="{StaticResource SatoshiMedium}"/>
                             </Border>
-                            <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="0,0,20,0"
+                            <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="0,0,40,0"
                                     HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
                                        VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -82,7 +82,7 @@
 
             <!-- Recommendations -->
             <StackPanel Grid.Row="2" Margin="120,40,120,0">
-                <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,0,30"
+                <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,0,50"
                            FontFamily="{StaticResource SatoshiBold}"/>
                 <ItemsControl ItemsSource="{Binding PopularPlaces}">
                     <ItemsControl.ItemsPanel>
@@ -102,13 +102,13 @@
                                             <Border.Effect>
                                                 <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
                                             </Border.Effect>
-                                            <TextBlock Text="{Binding Label}" FontSize="16" Margin="0,0,10,10"
+                                            <TextBlock Text="{Binding Label}" FontSize="16" Margin="10,10,0,0"
                                                        FontFamily="{StaticResource SatoshiBold}" Foreground="#CC000000"/>
                                         </Border>
                                     </Grid>
                                     <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0"
                                                FontFamily="{StaticResource SatoshiBold}"/>
-                                    <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
+                                    <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,10,0,0"
                                                Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"/>
                                 </StackPanel>
                             </Border>
