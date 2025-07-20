@@ -8,7 +8,8 @@
         ResizeMode="NoResize"
         WindowStyle="None"
         AllowsTransparency="False"
-        Background="White">
+        Background="White"
+        MouseDown="DragWindow">
 
     <Grid>
         <!-- Header area for dragging -->

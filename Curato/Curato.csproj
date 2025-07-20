@@ -8,4 +8,14 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+    <!-- Ensure that image and font assets are packaged with the application -->
+  <ItemGroup>
+    <!-- Icons and general images used by the UI -->
+    <Resource Include="Resources\Icons\*.png" />
+    <Resource Include="Resources\Images\*.jpg" />
+
+    <!-- Custom fonts referenced in App.xaml -->
+    <Resource Include="Fonts\*.ttf" />
+  </ItemGroup>
+
 </Project>
