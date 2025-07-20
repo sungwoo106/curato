@@ -1,0 +1,28 @@
+<UserControl x:Class="EdgeAITravelPlanner.Views.OutputPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- WebView Map -->
+        <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="10">
+            <TextBlock Text="[Map will be displayed here via WebView2]" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="Gray"/>
+        </Border>
+
+        <!-- Emotional Itinerary -->
+        <ScrollViewer Grid.Column="1" Margin="20">
+            <TextBlock TextWrapping="Wrap" FontSize="16">
+                피치가 낮은 카페에서 하루를 시작해보세요.
+                주변의 구경을 다루며 스타벅스한 모험을 시작하고,
+                사람들과 함께 마지막에는 달력적인 여행을 만들어보세요.
+            </TextBlock>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

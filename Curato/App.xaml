@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:Curato"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="SatoshiBold">/Fonts/#Satoshi Bold</FontFamily>
+        <FontFamily x:Key="SatoshiMedium">/Fonts/#Satoshi Medium</FontFamily>
     </Application.Resources>
 </Application>
