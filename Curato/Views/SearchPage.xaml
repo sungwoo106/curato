@@ -60,10 +60,15 @@
         <!-- Recommendations -->
         <StackPanel Grid.Row="2" Margin="40,30">
             <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,0,20" FontFamily="{StaticResource SatoshiBold}" />
-            <ItemsControl ItemsSource="{Binding PopularPlaces}">
+            <ItemsControl ItemsSource="{Binding PopularPlaces}"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Disabled">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel ItemHeight="463" ItemWidth="323" HorizontalAlignment="Left" />
+                        <WrapPanel Orientation="Horizontal"
+                                   ItemHeight="463"
+                                   ItemWidth="323"
+                                   HorizontalAlignment="Left" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -74,7 +79,9 @@
                                     <Border CornerRadius="15" ClipToBounds="True" Width="318" Height="380">
                                         <Image Source="{Binding ImagePath}" Stretch="UniformToFill" />
                                     </Border>
-                                    <Border Background="Transparent" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0">
+                                    <Border Background="#33FFFFFF" Padding="6,2"
+                                            CornerRadius="10" HorizontalAlignment="Left"
+                                            VerticalAlignment="Top" Margin="8,8,0,0">
                                         <TextBlock Text="{Binding Type}" FontSize="16" Foreground="#CC000000" FontFamily="{StaticResource SatoshiBold}" />
                                     </Border>
                                 </Grid>
