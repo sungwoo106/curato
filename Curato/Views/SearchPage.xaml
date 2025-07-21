@@ -225,7 +225,7 @@
                             x:Name="TimePopup"
                             PlacementTarget="{Binding ElementName=CompanionButton}"
                             Placement="Bottom"
-                            HorizontalOffset="-60"
+                            HorizontalOffset="-30"
                             VerticalOffset="40"
                             StaysOpen="False"
                             AllowsTransparency="True"
