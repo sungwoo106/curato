@@ -19,6 +19,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        // Display the search page when the window loads
+        MainFrame.Navigate(new Views.SearchPage());
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -29,7 +31,7 @@ public partial class MainWindow : Window
         this.Width = SystemParameters.WorkArea.Width;
         this.Height = SystemParameters.WorkArea.Height;
     }
-    
+
     private void DragWindow(object sender, MouseButtonEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)

@@ -329,11 +329,19 @@
                             </Border>
                             </Popup>
 
-                            <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="40,0,0,0"
-                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button x:Name="GenerateButton" Click="GenerateButton_Click"
+                                    Width="67" Height="67" Margin="40,0,0,0" Cursor="Hand"
+                                    Background="#FFB31A" BorderThickness="0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="100">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
                                 <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
                                        VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                            </Border>
+                            </Button>
                         </UniformGrid>
                     </Border>
 

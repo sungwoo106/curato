@@ -24,7 +24,7 @@
                        FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
         </Grid>
 
-        <!-- Main content page (SearchPage below header) -->
-        <views:SearchPage Margin="0,80,0,0"/>
+        <!-- Main content frame -->
+        <Frame x:Name="MainFrame" Margin="0,80,0,0" NavigationUIVisibility="Hidden"/>
     </Grid>
 </Window>

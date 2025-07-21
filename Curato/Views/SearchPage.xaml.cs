@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Data;
 using Curato.ViewModels;
+using Curato;
 
 namespace Curato.Views
 {
@@ -278,10 +279,10 @@ namespace Curato.Views
             // Container border
             var border = new Border
             {
-                Background      = Brushes.White,
-                CornerRadius    = new CornerRadius(30),
-                Padding         = new Thickness(10),
-                BorderBrush     = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DDD")),
+                Background = Brushes.White,
+                CornerRadius = new CornerRadius(30),
+                Padding = new Thickness(10),
+                BorderBrush = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DDD")),
                 BorderThickness = new Thickness(1)
             };
 
@@ -345,14 +346,14 @@ namespace Curato.Views
 
             var scroll = new ScrollViewer
             {
-                Content                       = stack,
-                VerticalScrollBarVisibility   = ScrollBarVisibility.Auto,
+                Content = stack,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                MaxHeight                     = 300
+                MaxHeight = 300
             };
 
             border.Child = scroll;
-            popup.Child  = border;
+            popup.Child = border;
             popup.Closed += (_, _) =>
             {
                 if (_activeTimeSubPopup == popup)
@@ -381,16 +382,16 @@ namespace Curato.Views
                 CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             }
-            
+
             var chipStyle = (Style)FindResource("TimeChipStyle");
-            var satoshi   = (FontFamily)FindResource("SatoshiMedium");
+            var satoshi = (FontFamily)FindResource("SatoshiMedium");
 
             // Loop and place each option
             var categories = vm.CategoryOptions;
             for (int i = 0; i < categories.Count; i++)
             {
-                string cat      = categories[i];
-                bool selected   = cat == vm.SelectedCategory;
+                string cat = categories[i];
+                bool selected = cat == vm.SelectedCategory;
 
                 // text
                 var text = new TextBlock
@@ -432,7 +433,19 @@ namespace Curato.Views
                 CategoryGrid.Children.Add(btn);
             }
 
-        CategoryPopup.IsOpen = true;
+            CategoryPopup.IsOpen = true;
+        }
+        
+        private void GenerateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is InputViewModel vm)
+            {
+                if (vm.GeneratePlanCommand.CanExecute(null))
+                    vm.GeneratePlanCommand.Execute(null);
+            }
+
+            var parentWindow = Window.GetWindow(this) as MainWindow;
+            parentWindow?.MainFrame.Navigate(new LoadingPage());
         }
     }
 }
