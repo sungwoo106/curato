@@ -227,7 +227,7 @@ namespace Curato.Views
                 };
                 var btn = new Button
                 {
-                    Style   = chipStyle,
+                    Style   = (Style)FindResource("TimeChipStyle"),
                     Content = panel,
                     Cursor  = Cursors.Hand,
                     Padding = new Thickness(8)
