@@ -131,12 +131,9 @@ namespace Curato.ViewModels
         public bool TimeSelected
             => !string.IsNullOrEmpty(SelectedSubTime);
 
-        // The six category options
-        public ObservableCollection<string> CategoryOptions { get; }
-            = new ObservableCollection<string>
-            { "Cafe", "Museum", "Park", "Shopping", "Restaurant", "Gallery" };
+        // The list of place categories
+        public ObservableCollection<string> CategoryOptions { get; } = new ObservableCollection<string>();
 
-        // Track the single-selected category
         private string? _selectedCategory;
         public string? SelectedCategory
         {
@@ -153,13 +150,11 @@ namespace Curato.ViewModels
             }
         }
 
-        // Button text + accent flag
-        public string CategoryButtonText
-            => string.IsNullOrEmpty(SelectedCategory) ? "Category" : SelectedCategory;
+        // What shows on the button
+        public string CategoryButtonText => string.IsNullOrEmpty(SelectedCategory) ? "Category" : SelectedCategory;
 
-        public bool CategorySelected
-            => !string.IsNullOrEmpty(SelectedCategory);
-
+        // Helper for style trigger
+        public bool CategorySelected => !string.IsNullOrEmpty(SelectedCategory);
 
         public string LocationQuery { get; set; } = "Search Location";
 
@@ -169,6 +164,9 @@ namespace Curato.ViewModels
         {
             foreach (var ct in FetchCompanionTypes())
                 CompanionTypes.Add(ct);
+
+            foreach (var cat in FetchCategories())
+                CategoryOptions.Add(cat);
 
             PopularPlaces = new ObservableCollection<PopularPlace>
             {
@@ -241,6 +239,31 @@ namespace Curato.ViewModels
             {
                 Debug.WriteLine($"Failed to load companion types: {ex}");
                 return new List<string> { "tSolo", "tCouple", "tFriends", "tFamily" };
+            }
+        }
+
+        private IEnumerable<string> FetchCategories()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "python3",
+                    Arguments = "-c \"import json, constants; print(json.dumps(constants.USER_SELECTABLE_PLACE_TYPES))\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi)!;
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                return JsonSerializer.Deserialize<List<string>>(output) ?? new List<string>();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load categories: {ex}");
+                return new List<string> { "Cafe", "Restaurant", "Park" };
             }
         }
 

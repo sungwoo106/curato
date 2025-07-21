@@ -1,5 +1,5 @@
 USER_SELECTABLE_PLACE_TYPES = [
-    "카페", "식당", "공원", "영화관", "쇼핑몰", "문화공간"
+    "Cafe", "Restaurant", "Park", "Cinema", "Mall", "Cultural Spot"
 ]
 
 COMPANION_PLACE_TYPES = {

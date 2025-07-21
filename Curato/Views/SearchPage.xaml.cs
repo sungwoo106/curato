@@ -383,10 +383,10 @@ namespace Curato.Views
             }
             
             var chipStyle = (Style)FindResource("TimeChipStyle");
-            var satoshi   = (FontFamily)FindResource("{StaticResource SatoshiMedium}");
+            var satoshi   = (FontFamily)FindResource("SatoshiMedium");
 
             // Loop and place each option
-                var categories = vm.CategoryOptions;
+            var categories = vm.CategoryOptions;
             for (int i = 0; i < categories.Count; i++)
             {
                 string cat      = categories[i];
