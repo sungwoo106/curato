@@ -118,7 +118,7 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
-                            <Button/>        
+                            </Button>        
                             <Popup x:Name="BudgetPopup"
                                 PlacementTarget="{Binding ElementName=BudgetButton}"
                                 Placement="Bottom"
