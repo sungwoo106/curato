@@ -191,27 +191,6 @@ namespace Curato.Views
 
             // Show the main popup
             TimePopup.IsOpen = true;
-
-            // If a period was already selected, restore its sub-popup *after* opening
-            if (vm.SelectedMainTime is not null)
-            {
-                // Use Dispatcher to defer until visuals are ready
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    // find the button whose text matches the selected period
-                    var priorBtn = TimeMainItemsControl.Items
-                        .OfType<Button>()
-                        .FirstOrDefault(b =>
-                        {
-                            var stack = (StackPanel)b.Content;
-                            var tb    = stack.Children.OfType<TextBlock>().FirstOrDefault();
-                            return tb?.Text == vm.SelectedMainTime;
-                        });
-
-                    if (priorBtn != null)
-                        ShowPeriodOptions(priorBtn, vm.TimeOptionsMap[vm.SelectedMainTime]);
-                }), DispatcherPriority.Loaded);
-            }
         }
 
         private Style BuildPeriodButtonStyle(string period)
