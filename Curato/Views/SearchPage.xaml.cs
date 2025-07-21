@@ -182,7 +182,7 @@ namespace Curato.Views
                 btn.MouseLeftButtonUp += (_, _) =>
                 {
                     vm.SelectedMainTime = period;
-                    PopulateSubSlots(vm, btn);
+                    PopulateSubSlots(vm);
                 };
 
                 TimeMainItemsControl.Items.Add(btn);
@@ -191,7 +191,7 @@ namespace Curato.Views
             TimePopup.IsOpen = true;
         }
 
-        private void PopulateSubSlots(InputViewModel vm, Border anchor)
+        private void PopulateSubSlots(InputViewModel vm)
         {
             TimeSubItemsControl.Items.Clear();
             TimeSubItemsControl.Visibility = Visibility.Visible;
@@ -200,6 +200,7 @@ namespace Curato.Views
             foreach (var slot in vm.TimeOptionsMap[vm.SelectedMainTime!])
             {
                 bool isSubSelected = slot == vm.SelectedSubTime;
+
                 var dot = new Ellipse
                 {
                     Width = 25,
@@ -219,7 +220,7 @@ namespace Curato.Views
                 };
                 var panel = new StackPanel
                 {
-                    Orientation = Orientation.Horizontal,
+                    Orientation = Orientation.Vertical,
                     Children = { dot, txt },
                     Margin = new Thickness(0,0,15,0)
                 };
@@ -235,6 +236,7 @@ namespace Curato.Views
                 container.MouseLeftButtonUp += (_,_) =>
                 {
                     vm.SelectedSubTime = slot;
+                    TimeSubScroll.Visibility = Visibility.Collapsed;
                     TimePopup.IsOpen = false;
                 };
 
