@@ -171,11 +171,12 @@ namespace Curato.Views
                     Children = { txt },
                     Margin = new Thickness(0, 0, 15, 0)
                 };
-                var btn = new Border
+                var btn = new Button
                 {
+                    Style   = (Style)FindResource("TimeChipStyle"),
                     Content = panel,
-                    Cursor = Cursors.Hand,
-                    style = (Style)FindResource("TimeChipStyle")
+                    Cursor  = Cursors.Hand,
+                    Padding = new Thickness(8)
                 };
 
                 btn.MouseLeftButtonUp += (_, _) =>
