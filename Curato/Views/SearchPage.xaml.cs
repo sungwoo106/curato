@@ -202,7 +202,7 @@ namespace Curato.Views
             var borderFactory = new FrameworkElementFactory(typeof(Border));
             borderFactory.SetValue(Border.BackgroundProperty,
                 new TemplateBindingExtension(Button.BackgroundProperty));
-            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(30));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(20));
             borderFactory.SetValue(Border.PaddingProperty,
                 new TemplateBindingExtension(Button.PaddingProperty));
             var contentFactory = new FrameworkElementFactory(typeof(ContentPresenter));
@@ -258,7 +258,7 @@ namespace Curato.Views
             var border = new Border
             {
                 Background      = Brushes.White,
-                CornerRadius    = new CornerRadius(8),
+                CornerRadius    = new CornerRadius(30),
                 Padding         = new Thickness(10),
                 BorderBrush     = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DDD")),
                 BorderThickness = new Thickness(1)
@@ -277,26 +277,27 @@ namespace Curato.Views
                 // dot + text
                 var dot = new Ellipse
                 {
-                    Width             = 25,
-                    Height            = 25,
-                    Fill              = isSelected
+                    Width = 25,
+                    Height = 25,
+                    Fill = isSelected
                                         ? (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))
                                         : Brushes.LightGray,
-                    Margin            = new Thickness(0, 0, 6, 0),
+                    Margin = new Thickness(0, 0, 6, 0),
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 var text = new TextBlock
                 {
-                    Text              = slot,
-                    FontSize          = 24,
+                    Text = slot,
+                    FontSize = 24,
                     VerticalAlignment = VerticalAlignment.Center,
-                    FontFamily        = new FontFamily("{StaticResource SatoshiMedium}")
+                    Foreground = Brushes.Black,
+                    FontFamily = new FontFamily("{StaticResource SatoshiMedium}")
                 };
                 var panel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Children    = { dot, text },
-                    Margin      = new Thickness(0, 5, 0, 0)
+                    Children = { dot, text },
+                    Margin = new Thickness(0, 5, 0, 0)
                 };
 
                 var container = new Border

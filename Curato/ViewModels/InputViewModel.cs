@@ -123,16 +123,13 @@ namespace Curato.ViewModels
 
         // What shows on the button
         public string TimeButtonText
-            => !string.IsNullOrEmpty(SelectedSubTime) 
-                ? SelectedSubTime 
-                : (!string.IsNullOrEmpty(SelectedMainTime) 
-                    ? SelectedMainTime 
-                    : "Time");
+            => string.IsNullOrEmpty(SelectedSubTime)
+                 ? "Time"
+                 : SelectedSubTime;
 
-        // Accent when anything’s picked
-        public bool TimeSelected 
-            => !string.IsNullOrEmpty(SelectedSubTime) 
-            || !string.IsNullOrEmpty(SelectedMainTime);
+        // Accent only once a sub-slot is chosen
+        public bool TimeSelected
+            => !string.IsNullOrEmpty(SelectedSubTime);
 
         public string LocationQuery { get; set; } = "Search Location";
 

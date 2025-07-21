@@ -172,7 +172,7 @@
                             <Popup x:Name="CompanionPopup"
                                 PlacementTarget="{Binding ElementName=CompanionButton}"
                                 Placement="Bottom"
-                                VerticalOffset="20"
+                                VerticalOffset="40"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -198,7 +198,7 @@
                             <Popup x:Name="BudgetPopup"
                                 PlacementTarget="{Binding ElementName=BudgetButton}"
                                 Placement="Bottom"
-                                VerticalOffset="20"
+                                VerticalOffset="40"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -225,8 +225,8 @@
                             x:Name="TimePopup"
                             PlacementTarget="{Binding ElementName=CompanionButton}"
                             Placement="Bottom"
-                            HorizontalOffset="-100"
-                            VerticalOffset="20"
+                            HorizontalOffset="-60"
+                            VerticalOffset="40"
                             StaysOpen="False"
                             AllowsTransparency="True"
                             PopupAnimation="Slide"
@@ -239,9 +239,18 @@
                                 BorderBrush="#DDD"
                                 BorderThickness="1"
                                 Effect="{DynamicResource ShadowEffect}">
-                                <StackPanel>
+                                <Grid>
+                                <Grid.RowDefinitions>
+                                    <!-- Row for the four period buttons: same height as your toggle buttons (67) -->
+                                    <RowDefinition Height="67"/>
+                                    <!-- Row for sub-popup or scroll content -->
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
                                 <!-- Main periods row -->
-                                <ItemsControl x:Name="TimeMainItemsControl">
+                                <ItemsControl x:Name="TimeMainItemsControl"
+                                    Grid.Row="0"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Stretch">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <UniformGrid Columns="4" VerticalAlignment="Center"/>
@@ -249,15 +258,17 @@
                                 </ItemsControl.ItemsPanel>
                                 </ItemsControl>
 
-                                <!-- Sub-slots row -->
+                                <!-- Sub popup row -->
                                 <ScrollViewer
                                     x:Name="TimeSubScroll"
+                                    Grid.Row="1"
                                     HorizontalScrollBarVisibility="Auto"
                                     VerticalScrollBarVisibility="Disabled"
+                                    VerticalOffset="40"
                                     Visibility="Collapsed"
                                     Margin="0,10,0,0"
                                     Width="204"
-                                    MaxHeight="360">
+                                    MaxHeight="300">
                                     <ItemsControl x:Name="TimeSubItemsControl">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -267,7 +278,7 @@
                                     </ItemsControl.ItemsPanel>
                                     </ItemsControl>
                                 </ScrollViewer>
-                                </StackPanel>
+                                </Grid>
                             </Border>
                             </Popup>
                             <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0" Height="67" Width="177"
