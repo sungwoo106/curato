@@ -24,7 +24,7 @@
                        FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
         </Grid>
 
-        <!-- Main content frame -->
-        <Frame x:Name="MainFrame" Margin="0,80,0,0" NavigationUIVisibility="Hidden" x:FieldModifier="public"/>
+        <!-- Main content host -->
+        <ContentControl x:Name="MainFrame" Margin="0,80,0,0" x:FieldModifier="public"/>
     </Grid>
 </Window>
