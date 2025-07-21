@@ -5,6 +5,7 @@ using System.Windows.Media.Animation;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Curato.ViewModels;
 
 namespace Curato.Views
@@ -50,7 +51,7 @@ namespace Curato.Views
                 {
                     Orientation = Orientation.Horizontal,
                     Children = { dot, text },
-                    Margin = new Thickness(0, 5)
+                    Margin = new Thickness(0, 5, 0, 0)
                 };
 
                 var container = new Border
@@ -59,7 +60,7 @@ namespace Curato.Views
                     Background = Brushes.Transparent,
                     Child = panel,
                     Cursor = Cursors.Hand,
-                    Padding = new Thickness(10)
+                    Padding = new Thickness(10, 10, 10, 10)
                 };
 
                 container.MouseLeftButtonUp += (_, _) =>
