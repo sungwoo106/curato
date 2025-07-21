@@ -264,7 +264,6 @@
                                     Grid.Row="1"
                                     HorizontalScrollBarVisibility="Auto"
                                     VerticalScrollBarVisibility="Disabled"
-                                    VerticalOffset="40"
                                     Visibility="Collapsed"
                                     Margin="0,10,0,0"
                                     Width="204"

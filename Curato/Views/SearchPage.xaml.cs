@@ -247,11 +247,12 @@ namespace Curato.Views
             // 1) Build the Popup
             var popup = new Popup
             {
-                PlacementTarget    = target,
-                Placement          = PlacementMode.Bottom,
-                StaysOpen          = false,
+                PlacementTarget = target,
+                Placement = PlacementMode.Bottom,
+                StaysOpen = false,
                 AllowsTransparency = true,
-                PopupAnimation     = PopupAnimation.Fade
+                PopupAnimation = PopupAnimation.Slide,
+                VerticalOffset = 40, // Adjusted for better visibility
             };
 
             // 2) Container border
