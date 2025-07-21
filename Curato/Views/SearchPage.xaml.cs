@@ -141,10 +141,23 @@ namespace Curato.Views
             if (DataContext is not InputViewModel vm)
                 return;
 
-            // Clear prior items
+            // Toggle off if already open
+            if (TimePopup.IsOpen)
+            {
+                TimePopup.IsOpen = false;
+                return;
+            }
+            
+            // Clear out the containers so we can rebuild
             TimeMainItemsControl.Items.Clear();
-            vm.SelectedMainTime = null;
-            vm.SelectedSubTime = null;
+            TimeSubItemsControl.Items.Clear();
+
+
+            // Show the sub-scroll area only if the user has already picked a period
+            TimeSubScroll.Visibility = vm.SelectedMainTime != null
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
 
             // Build main-period buttons
             foreach (var period in vm.TimeMainOptions)
@@ -166,9 +179,9 @@ namespace Curato.Views
                 };
                 var btn = new Button
                 {
-                    Style   = BuildPeriodButtonStyle(period),
+                    Style = BuildPeriodButtonStyle(period),
                     Content = panel,
-                    Cursor  = Cursors.Hand,
+                    Cursor = Cursors.Hand,
                     Padding = new Thickness(8)
                 };
 
@@ -180,6 +193,10 @@ namespace Curato.Views
 
                 TimeMainItemsControl.Items.Add(btn);
             }
+
+            // If they’d already chosen a period before, re-populate its sub-popup now
+            if (vm.SelectedMainTime is not null)
+                ShowPeriodOptions(btn, vm.TimeOptionsMap[vm.SelectedMainTime]);
 
             TimePopup.IsOpen = true;
         }
@@ -252,7 +269,9 @@ namespace Curato.Views
                 StaysOpen = false,
                 AllowsTransparency = true,
                 PopupAnimation = PopupAnimation.Slide,
-                VerticalOffset = 40, // Adjusted for better visibility
+                MaxHeight = 300,
+                Width = 204,
+                VerticalOffset = 40 // Adjusted for better visibility
             };
 
             // 2) Container border
@@ -289,7 +308,7 @@ namespace Curato.Views
                 var text = new TextBlock
                 {
                     Text = slot,
-                    FontSize = 24,
+                    FontSize = 20,
                     VerticalAlignment = VerticalAlignment.Center,
                     Foreground = Brushes.Black,
                     FontFamily = new FontFamily("{StaticResource SatoshiMedium}")
@@ -315,8 +334,18 @@ namespace Curato.Views
                     vm.SelectedSubTime = slot;
                     // Close the popup after selection
                     popup.IsOpen = false;
+                    // **also close the main TimePopup**
+                    this.TimePopup.IsOpen = false;
                 };
                 stack.Children.Add(container);
+
+                var scroll = new ScrollViewer
+                {
+                    Content                       = stack,
+                    VerticalScrollBarVisibility   = ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    MaxHeight                     = 300
+                };
             }
 
             border.Child = stack;
