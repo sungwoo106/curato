@@ -6,6 +6,34 @@
              mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080">
 
     <UserControl.Resources>
+    <Style x:Key="DropDownButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="30" Padding="20,10">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding CompanionSelected}" Value="True">
+                <Setter Property="Background" Value="#FFB31A"/>
+                <Setter Property="Foreground" Value="White"/>
+            </DataTrigger>
+            <!-- hover feedback -->
+            <Trigger Property="IsMouseOver" Value="True">   
+                <Setter Property="Background" Value="#FFF2CC"/>
+            </Trigger>
+            <!-- pressed feedback -->
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="#FFB31A"/>
+                <Setter Property="Foreground" Value="White"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
     <Style x:Key="TimeChipStyle" TargetType="Button">
         <Setter Property="Background" Value="White"/>
         <Setter Property="Foreground" Value="Black"/>
@@ -14,7 +42,7 @@
             <ControlTemplate TargetType="Button">
             <Border 
                 Background="{TemplateBinding Background}" 
-                CornerRadius="30" 
+                CornerRadius="20" 
                 Padding="20,10">
                 <ContentPresenter 
                 HorizontalAlignment="Center" 
@@ -89,37 +117,8 @@
                         <UniformGrid Columns="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="97" Width="1250">
                             <!-- Companion Button -->
                             <Button x:Name="CompanionButton" Content="{Binding CompanionButtonText}" Click="CompanionButton_Click"
-                                    FontSize="24" FontFamily="{StaticResource SatoshiMedium}" Height="67" Width="202" Margin="0,0,10,0" BorderThickness="0">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Setter Property="Foreground" Value="Black"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="30" Padding="20,10">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding CompanionSelected}" Value="True">
-                                                <Setter Property="Background" Value="#FFB31A"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </DataTrigger>
-                                            <!-- hover feedback -->
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#FFF2CC"/>
-                                            </Trigger>
-                                            <!-- pressed feedback -->
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter Property="Background" Value="#FFB31A"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
+                                    FontSize="24" FontFamily="{StaticResource SatoshiMedium}" Height="67" Width="202" Margin="0,0,10,0" BorderThickness="0"
+                                    Style="{StaticResource DropdownButtonStyle}">
                             </Button>
                             <Popup x:Name="CompanionPopup"
                                 PlacementTarget="{Binding ElementName=CompanionButton}"
@@ -143,37 +142,8 @@
                                     Height="67" 
                                     Width="158" 
                                     Margin="0,0,10,0" 
-                                    BorderThickness="0">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Setter Property="Foreground" Value="Black"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="30" Padding="20,10">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding BudgetSelected}" Value="True">
-                                                <Setter Property="Background" Value="#FFB31A"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </DataTrigger>
-                                                                                        <!-- hover feedback -->
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#FFF2CC"/>
-                                            </Trigger>
-                                            <!-- pressed feedback -->
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter Property="Background" Value="#FFB31A"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
+                                    BorderThickness="0"
+                                    Style="{StaticResource DropdownButtonStyle}">
                             </Button>        
                             <Popup x:Name="BudgetPopup"
                                 PlacementTarget="{Binding ElementName=BudgetButton}"
@@ -197,41 +167,12 @@
                                     Height="67" 
                                     Width="131" 
                                     Margin="0,0,10,0" 
-                                    BorderThickness="0">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Setter Property="Foreground" Value="Black"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="30" Padding="20,10">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TimeSelected}" Value="True">
-                                                <Setter Property="Background" Value="#FFB31A"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </DataTrigger>
-                                            <!-- hover feedback -->
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#FFF2CC"/>
-                                            </Trigger>
-                                            <!-- pressed feedback -->
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter Property="Background" Value="#FFB31A"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
+                                    BorderThickness="0"
+                                    Style="{StaticResource DropdownButtonStyle}">
                             </Button>
                             <Popup
                             x:Name="TimePopup"
-                            PlacementTarget="{Binding ElementName=TimeButton}"
+                            PlacementTarget="{Binding ElementName=BudgetButton}"
                             Placement="Bottom"
                             StaysOpen="False"
                             AllowsTransparency="True"
@@ -251,7 +192,7 @@
                                     <ItemsControl x:Name="TimeMainItemsControl">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
+                                            <UniformGrid Columns="4" />
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                     </ItemsControl>

@@ -158,6 +158,7 @@ namespace Curato.Views
             foreach (var period in vm.TimeMainOptions)
             {
                 bool isMainSelected = period == vm.SelectedMainTime;
+
                 var txt = new TextBlock
                 {
                     Text = period,
@@ -179,7 +180,7 @@ namespace Curato.Views
                     Padding = new Thickness(8)
                 };
 
-                btn.MouseLeftButtonUp += (_, _) =>
+                btn.Click += (_, _) =>
                 {
                     vm.SelectedMainTime = period;
                     PopulateSubSlots(vm);
@@ -208,7 +209,7 @@ namespace Curato.Views
                     Fill = isSubSelected
                         ? (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))
                         : Brushes.LightGray,
-                    Margin = new Thickness(0,0,6,0),
+                    Margin = new Thickness(0,0,10,0),
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 var txt = new TextBlock
