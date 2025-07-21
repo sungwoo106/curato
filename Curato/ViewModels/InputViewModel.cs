@@ -124,6 +124,35 @@ namespace Curato.ViewModels
             }
         }
 
+        // The list of budget options
+        public ObservableCollection<string> BudgetOptions { get; } 
+            = new ObservableCollection<string> { "$", "$$", "$$$" };
+
+        private string? _selectedBudget;
+        public string? SelectedBudget
+        {
+            get => _selectedBudget;
+            set
+            {
+                if (_selectedBudget != value)
+                {
+                    _selectedBudget = value;
+                    OnPropertyChanged();                       // SelectedBudget
+                    OnPropertyChanged(nameof(BudgetButtonText));
+                    OnPropertyChanged(nameof(BudgetSelected));
+                }
+            }
+        }
+
+        // What shows on the button
+        public string BudgetButtonText 
+            => string.IsNullOrEmpty(SelectedBudget) ? "Budget" : SelectedBudget;
+
+        // Helper for style trigger
+        public bool BudgetSelected 
+            => !string.IsNullOrEmpty(SelectedBudget);
+
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
