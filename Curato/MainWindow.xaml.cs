@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         // Display the search page when the window loads
-        MainFrame.Navigate(new Views.SearchPage());
+        MainFrame.Content = new Views.SearchPage();
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)

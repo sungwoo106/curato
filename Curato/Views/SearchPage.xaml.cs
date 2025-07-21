@@ -444,8 +444,9 @@ namespace Curato.Views
                     vm.GeneratePlanCommand.Execute(null);
             }
 
-            var parentWindow = Application.Current.MainWindow as MainWindow;
-            parentWindow?.MainFrame.Navigate(new LoadingPage());
+            var parentWindow = Window.GetWindow(this) as MainWindow;
+            if (parentWindow != null)
+                parentWindow.MainFrame.Content = new LoadingPage();
         }
     }
 }
