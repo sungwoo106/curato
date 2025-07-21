@@ -6,44 +6,78 @@
              mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080">
 
     <UserControl.Resources>
-    <Style x:Key="DropDownButtonStyle" TargetType="Button">
-      <Setter Property="Background" Value="White"/>
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="BorderBrush" Value="Transparent"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Padding" Value="10,6"/>
-      <Setter Property="FontFamily" Value="{StaticResource SatoshiMedium}"/>
-      <Setter Property="FontSize" Value="24"/>
-      <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" 
-                        CornerRadius="30" 
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
+    <!-- Base style: shared look + hover/pressed -->
+    <Style x:Key="BaseDropdownStyle" TargetType="Button">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="FontFamily" Value="{StaticResource SatoshiMedium}"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+            <Border Background="{TemplateBinding Background}"
+                    CornerRadius="30"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            </ControlTemplate>
+        </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <!-- accent when selected -->
-            <DataTrigger Binding="{Binding CompanionSelected}" Value="True">
+        <Trigger Property="IsMouseOver" Value="True">
+            <Setter Property="Background" Value="#FFF2CC"/>
+        </Trigger>
+        <Trigger Property="IsPressed" Value="True">
+            <Setter Property="Background" Value="#FFD699"/>
+        </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Companion -->
+    <Style x:Key="CompanionButtonStyle" TargetType="Button"
+            BasedOn="{StaticResource BaseDropdownStyle}">
+        <Style.Triggers>
+        <DataTrigger Binding="{Binding CompanionSelected}" Value="True">
             <Setter Property="Background" Value="#FFB31A"/>
             <Setter Property="Foreground" Value="White"/>
-            </DataTrigger>
-            <DataTrigger Binding="{Binding BudgetSelected}" Value="True">
+        </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Budget -->
+    <Style x:Key="BudgetButtonStyle" TargetType="Button"
+            BasedOn="{StaticResource BaseDropdownStyle}">
+        <Style.Triggers>
+        <DataTrigger Binding="{Binding BudgetSelected}" Value="True">
             <Setter Property="Background" Value="#FFB31A"/>
             <Setter Property="Foreground" Value="White"/>
-            </DataTrigger>
-            <DataTrigger Binding="{Binding TimeSelected}" Value="True">
+        </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Time -->
+    <Style x:Key="TimeButtonStyle" TargetType="Button"
+            BasedOn="{StaticResource BaseDropdownStyle}">
+        <Style.Triggers>
+        <DataTrigger Binding="{Binding TimeSelected}" Value="True">
             <Setter Property="Background" Value="#FFB31A"/>
             <Setter Property="Foreground" Value="White"/>
-            </DataTrigger>
-            <!-- hover feedback -->
-            <Trigger Property="IsMouseOver" Value="True">   
-                <Setter Property="Background" Value="#FFF2CC"/>
-            </Trigger>
+        </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Category -->
+    <Style x:Key="CategoryButtonStyle" TargetType="Button"
+            BasedOn="{StaticResource BaseDropdownStyle}">
+        <Style.Triggers>
+        <DataTrigger Binding="{Binding CategorySelected}" Value="True">
+            <Setter Property="Background" Value="#FFB31A"/>
+            <Setter Property="Foreground" Value="White"/>
+        </DataTrigger>
         </Style.Triggers>
     </Style>
     
@@ -133,11 +167,12 @@
                             <!-- Companion Button -->
                             <Button x:Name="CompanionButton" Content="{Binding CompanionButtonText}" Click="CompanionButton_Click"
                                     FontSize="24" FontFamily="{StaticResource SatoshiMedium}" Height="67" Width="202" Margin="0,0,10,0" BorderThickness="0"
-                                    Style="{StaticResource DropDownButtonStyle}">
+                                    Style="{StaticResource CompanionButtonStyle}">
                             </Button>
                             <Popup x:Name="CompanionPopup"
                                 PlacementTarget="{Binding ElementName=CompanionButton}"
                                 Placement="Bottom"
+                                VerticalOffset="20"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -158,11 +193,12 @@
                                     Width="158" 
                                     Margin="0,0,10,0" 
                                     BorderThickness="0"
-                                    Style="{StaticResource DropDownButtonStyle}">
+                                    Style="{StaticResource BudgetButtonStyle}">
                             </Button>        
                             <Popup x:Name="BudgetPopup"
                                 PlacementTarget="{Binding ElementName=BudgetButton}"
                                 Placement="Bottom"
+                                VerticalOffset="20"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -183,13 +219,14 @@
                                     Width="131" 
                                     Margin="0,0,10,0" 
                                     BorderThickness="0"
-                                    Style="{StaticResource DropDownButtonStyle}">
+                                    Style="{StaticResource TimeButtonStyle}">
                             </Button>
                             <Popup
                             x:Name="TimePopup"
-                            Placement="Absolute"
-                            HorizontalOffset="822"
-                            VerticalOffset="304"
+                            PlacementTarget="{Binding ElementName=CompanionButton}"
+                            Placement="Bottom"
+                            HorizontalOffset="-100"
+                            VerticalOffset="20"
                             StaysOpen="False"
                             AllowsTransparency="True"
                             PopupAnimation="Slide"
@@ -219,6 +256,7 @@
                                     VerticalScrollBarVisibility="Disabled"
                                     Visibility="Collapsed"
                                     Margin="0,10,0,0"
+                                    Width="204"
                                     MaxHeight="360">
                                     <ItemsControl x:Name="TimeSubItemsControl">
                                     <ItemsControl.ItemsPanel>
