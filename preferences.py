@@ -72,13 +72,15 @@ class Preferences:
 
     def run_route_planner(self):
         # Build and run the route planner prompt for 4 locations
+        """Run the Phi model to generate a one day route."""
+        self.collect_best_place()
         recommendations_json = self.format_recommendations()
         prompt = build_phi_four_loc(
             self.start_location,
             self.companion_type,
             self.starting_time,
             self.budget,
-            recommendations_json
+            recommendations_json,
         )
         return run_phi_runner(prompt)
 
@@ -92,5 +94,9 @@ class Preferences:
         except Exception as e:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
             return None
-        prompt = build_llama_emotional_prompt(four_locations, self.companion_type)
+        prompt = build_llama_emotional_prompt(
+            four_locations,
+            self.companion_type,
+            self.budget,
+        )
         return run_llama_runner(prompt)

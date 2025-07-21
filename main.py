@@ -72,13 +72,13 @@ planner = Preferences(
     start_location=start_location
 )
 planner.select_place_types(user_selected_types)
-planner.collect_phi_outputs()
+planner.collect_best_place()
 recommendations_json = planner.format_recommendations()
 
 # Print each place type's recommendation
 for pt in planner.selected_types:
     print(f"\n[{pt}] 추천 결과:")
-    for place in planner.phi_outputs.get(pt, []):
+    for place in planner.best_places.get(pt, []):
         print(json.dumps(place, ensure_ascii=False, indent=2))
 
 # Run route planner for 4 locations
