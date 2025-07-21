@@ -370,7 +370,7 @@ namespace Curato.Views
             if (DataContext is not InputViewModel vm) return;
 
             // Clear old items
-            CategoryItemsControl.Items.Clear();
+            CategoryGrid.Children.Clear();
 
             // Ensure exactly 2 rows & 3 columns (Auto-sized)
             if (CategoryGrid.RowDefinitions.Count == 0)
@@ -395,7 +395,7 @@ namespace Curato.Views
                 // text
                 var text = new TextBlock
                 {
-                    Text = option,
+                    Text = cat,
                     FontSize = 24,
                     FontFamily = satoshi,
                     Foreground = Brushes.Black,
