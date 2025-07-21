@@ -131,6 +131,36 @@ namespace Curato.ViewModels
         public bool TimeSelected
             => !string.IsNullOrEmpty(SelectedSubTime);
 
+        // The six category options
+        public ObservableCollection<string> CategoryOptions { get; }
+            = new ObservableCollection<string>
+            { "Cafe", "Museum", "Park", "Shopping", "Restaurant", "Gallery" };
+
+        // Track the single-selected category
+        private string? _selectedCategory;
+        public string? SelectedCategory
+        {
+            get => _selectedCategory;
+            set
+            {
+                if (_selectedCategory != value)
+                {
+                    _selectedCategory = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(CategoryButtonText));
+                    OnPropertyChanged(nameof(CategorySelected));
+                }
+            }
+        }
+
+        // Button text + accent flag
+        public string CategoryButtonText
+            => string.IsNullOrEmpty(SelectedCategory) ? "Category" : SelectedCategory;
+
+        public bool CategorySelected
+            => !string.IsNullOrEmpty(SelectedCategory);
+
+
         public string LocationQuery { get; set; } = "Search Location";
 
         public ICommand GeneratePlanCommand { get; }

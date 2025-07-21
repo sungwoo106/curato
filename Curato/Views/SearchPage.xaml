@@ -280,11 +280,66 @@
                                 </Grid>
                             </Border>
                             </Popup>
-                            <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0" Height="67" Width="177"
-                                    BorderBrush="#E0E0E0" BorderThickness="0">
-                                <TextBlock Text="Category" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           FontFamily="{StaticResource SatoshiMedium}"/>
+
+                            <!-- Category Button -->
+                            <Button
+                            x:Name="CategoryButton"
+                            Style="{StaticResource CategoryButtonStyle}"
+                            Content="{Binding CategoryButtonText}"
+                            Click="CategoryButton_Click"
+                            FontSize="24"
+                            FontFamily="{StaticResource SatoshiMedium}"
+                            Height="67"
+                            Width="181"
+                            Margin="0,0,10,0"
+                            BorderThickness="0" />
+
+                            <!-- Category dropdown -->
+                            <Popup
+                            x:Name="CategoryPopup"
+                            PlacementTarget="{Binding ElementName=CategoryButton}"
+                            Placement="Bottom"
+                            VerticalOffset="40"
+                            MaxWidth="630"
+                            MaxHeight="260"
+                            StaysOpen="False"
+                            AllowsTransparency="True"
+                            PopupAnimation="Slide">
+                            
+                            <Border
+                                Background="White"
+                                Padding="12"
+                                CornerRadius="40"
+                                BorderBrush="#DDD"
+                                BorderThickness="1"
+                                Effect="{StaticResource ShadowEffect}">
+                                
+                                <!-- 2×3 grid -->
+                                <ItemsControl x:Name="CategoryItemsControl" Margin="0,10,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                    <!-- WrapPanel lays out items left-to-right, wrapping to new lines -->
+                                    <WrapPanel 
+                                        MaxWidth="630"
+                                        Orientation="Horizontal" 
+                                        ItemHeight="Auto" 
+                                        ItemWidth="Auto" 
+                                        HorizontalAlignment="Left" 
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,0,0"
+                                        />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <!-- space between items -->
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style>
+                                    <Setter Property="FrameworkElement.Margin" Value="5"/>
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                </ItemsControl>
                             </Border>
+                            </Popup>
+
                             <Border Background="#FFB31A" CornerRadius="100" Height="67" Width="67" Margin="40,0,0,0"
                                     HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
