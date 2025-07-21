@@ -225,23 +225,21 @@ namespace Curato.Views
                     Children = { dot, txt },
                     Margin = new Thickness(0,0,15,0)
                 };
-                var container = new Border
+                var btn = new Button
                 {
-                    CornerRadius = new CornerRadius(8),
-                    Background = Brushes.Transparent,
-                    Child = panel,
-                    Cursor = Cursors.Hand,
+                    Style   = chipStyle,
+                    Content = panel,
+                    Cursor  = Cursors.Hand,
                     Padding = new Thickness(8)
                 };
-
-                container.MouseLeftButtonUp += (_,_) =>
+                btn.Click += (_,_) =>
                 {
-                    vm.SelectedSubTime = slot;
+                    vm.SelectedSubTime    = slot;
                     TimeSubScroll.Visibility = Visibility.Collapsed;
-                    TimePopup.IsOpen = false;
+                    TimePopup.IsOpen         = false;
                 };
 
-                TimeSubItemsControl.Items.Add(container);
+                TimeSubItemsControl.Items.Add(btn);
             }
         }
 
