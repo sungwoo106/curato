@@ -297,7 +297,7 @@
                             <!-- Category dropdown -->
                             <Popup
                             x:Name="CategoryPopup"
-                            PlacementTarget="{Binding ElementName=CategoryButton}"
+                            PlacementTarget="{Binding ElementName=TimeButton}"
                             Placement="Bottom"
                             VerticalOffset="40"
                             MaxWidth="630"
@@ -315,28 +315,17 @@
                                 Effect="{StaticResource ShadowEffect}">
                                 
                                 <!-- 2×3 grid -->
-                                <ItemsControl x:Name="CategoryItemsControl" Margin="0,10,0,0">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                    <!-- WrapPanel lays out items left-to-right, wrapping to new lines -->
-                                    <WrapPanel 
-                                        MaxWidth="630"
-                                        Orientation="Horizontal" 
-                                        ItemHeight="Auto" 
-                                        ItemWidth="Auto" 
-                                        HorizontalAlignment="Left" 
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,0,0"
-                                        />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <!-- space between items -->
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style>
-                                    <Setter Property="FrameworkElement.Margin" Value="5"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                                </ItemsControl>
+                                <Grid x:Name="CategoryGrid" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                </Grid>
                             </Border>
                             </Popup>
 

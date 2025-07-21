@@ -136,6 +136,7 @@ namespace Curato.Views
             BudgetPopup.IsOpen = true;
         }
 
+        private Popup? _activeTimeSubPopup;
         private void TimeButton_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is not InputViewModel vm)
@@ -145,13 +146,12 @@ namespace Curato.Views
             if (TimePopup.IsOpen)
             {
                 TimePopup.IsOpen = false;
+                _activeTimeSubPopup?.IsOpen = false;
                 return;
             }
 
             // Clear out the containers so we can rebuild
             TimeMainItemsControl.Items.Clear();
-            TimeSubItemsControl.Items.Clear();
-            TimeSubScroll.Visibility = Visibility.Collapsed;
 
             // Build main-period buttons
             foreach (var period in vm.TimeMainOptions)
@@ -182,7 +182,7 @@ namespace Curato.Views
                 btn.Click += (_, _) =>
                 {
                     vm.SelectedMainTime = period;
-                    ShowPeriodOptions(vm.TimeOptionsMap[period]);
+                    ShowPeriodOptions(btn, vm.TimeOptionsMap[period]);
                 };
 
                 TimeMainItemsControl.Items.Add(btn);
@@ -249,11 +249,41 @@ namespace Curato.Views
             return style;
         }
 
-        private void ShowPeriodOptions(List<string> options)
+        private void ShowPeriodOptions(Button target, List<string> options)
         {
             if (DataContext is not InputViewModel vm) return;
 
-            TimeSubItemsControl.Items.Clear();
+            // Close any previously opened sub popup to avoid crashes
+            _activeTimeSubPopup?.IsOpen = false;
+
+            // Build the Popup
+            var popup = new Popup
+            {
+                PlacementTarget = target,
+                Placement = PlacementMode.Bottom,
+                StaysOpen = false,
+                AllowsTransparency = true,
+                PopupAnimation = PopupAnimation.Slide,
+                MaxHeight = 300,
+                Width = 204,
+                VerticalOffset = 40 // Adjusted for better visibility
+            };
+
+            // Container border
+            var border = new Border
+            {
+                Background      = Brushes.White,
+                CornerRadius    = new CornerRadius(30),
+                Padding         = new Thickness(10),
+                BorderBrush     = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DDD")),
+                BorderThickness = new Thickness(1)
+            };
+
+            // Vertical stack for each slot
+            var stack = new StackPanel
+            {
+                Orientation = Orientation.Vertical
+            };
 
             foreach (var slot in options)
             {
@@ -298,13 +328,35 @@ namespace Curato.Views
                 container.MouseLeftButtonUp += (_, _) =>
                 {
                     vm.SelectedSubTime = slot;
-                    TimePopup.IsOpen = false;
+                    // Close the popup after selection
+                    popup.IsOpen = false;
+                    // also close the main TimePopup
+                    this.TimePopup.IsOpen = false;
                 };
 
-                TimeSubItemsControl.Items.Add(container);
+                stack.Children.Add(container);
             }
 
-            TimeSubScroll.Visibility = Visibility.Visible;
+            var scroll = new ScrollViewer
+            {
+                Content                       = stack,
+                VerticalScrollBarVisibility   = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                MaxHeight                     = 300
+            };
+
+            border.Child = scroll;
+            popup.Child  = border;
+            popup.Closed += (_, _) =>
+            {
+                if (_activeTimeSubPopup == popup)
+                {
+                    _activeTimeSubPopup = null;
+                }
+            };
+
+            _activeTimeSubPopup = popup;
+            popup.IsOpen = true;
         }
 
         private void CategoryButton_Click(object sender, RoutedEventArgs e)
@@ -314,47 +366,67 @@ namespace Curato.Views
             // Clear old items
             CategoryItemsControl.Items.Clear();
 
-            // Build each category chip
-            foreach (var option in vm.CategoryOptions)
+            bool isSelected = option == vm.SelectedCategory;
+
+            // Ensure exactly 2 rows & 3 columns (Auto-sized)
+            if (CategoryGrid.RowDefinitions.Count == 0)
             {
+                CategoryGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                CategoryGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            }
+            
+            var chipStyle = (Style)FindResource("TimeChipStyle");
+
+            // Loop and place each option
+            for (int i = 0; i < vm.CategoryOptions.Count; i++)
+            {
+                string option = vm.CategoryOptions[i];
                 bool isSelected = option == vm.SelectedCategory;
 
+                // text
                 var text = new TextBlock
                 {
-                    Text              = option,
-                    FontSize          = 24,
-                    FontFamily        = new FontFamily("{StaticResource SatoshiMedium}"),
-                    Foreground        = Brushes.Black,
+                    Text = option,
+                    FontSize = 24,
+                    FontFamily = satoshi,
+                    Foreground = Brushes.Black,
                     VerticalAlignment = VerticalAlignment.Center
                 };
 
                 var panel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Children    = { text },
-                    Margin      = new Thickness(0,5,0,0)
+                    Children = { text },
+                    Margin = new Thickness(0, 5, 0, 0)
                 };
 
-                var container = new Border
+                // chip-style button
+                var btn = new Button
                 {
-                    CornerRadius = new CornerRadius(20),
-                    Background   = Brushes.Transparent,
-                    Child        = panel,
-                    Cursor       = Cursors.Hand,
-                    Padding      = new Thickness(10)
+                    Style = chipStyle,
+                    Content = panel,
+                    Cursor = Cursors.Hand,
+                    Padding = new Thickness(10)
                 };
-
-                container.MouseLeftButtonUp += (_, _) =>
+                btn.Click += (_, _) =>
                 {
                     vm.SelectedCategory = option;
                     CategoryPopup.IsOpen = false;
                 };
 
-                CategoryItemsControl.Items.Add(container);
+                // place at row/col
+                int row = i / 3;
+                int col = i % 3;
+                Grid.SetRow(btn, row);
+                Grid.SetColumn(btn, col);
+
+                CategoryGrid.Children.Add(btn);
             }
 
-            CategoryPopup.IsOpen = true;
+        CategoryPopup.IsOpen = true;
         }
-
     }
 }
