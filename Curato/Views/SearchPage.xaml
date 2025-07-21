@@ -191,7 +191,7 @@
                             <!-- Time Button -->
                             <Button x:Name="TimeButton"
                                     Content="{Binding TimeButtonText}"
-                                    Click="BudgetButton_Click"
+                                    Click="TimeButton_Click"
                                     FontSize="24" 
                                     FontFamily="{StaticResource SatoshiMedium}" 
                                     Height="67" 
