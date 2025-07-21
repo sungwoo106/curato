@@ -44,11 +44,6 @@
             <Trigger Property="IsMouseOver" Value="True">   
                 <Setter Property="Background" Value="#FFF2CC"/>
             </Trigger>
-            <!-- pressed feedback -->
-            <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="#FFB31A"/>
-                <Setter Property="Foreground" Value="White"/>
-            </Trigger>
         </Style.Triggers>
     </Style>
     
@@ -68,11 +63,6 @@
         </Setter.Value>
         </Setter>
         <Style.Triggers>
-        <!-- permanent “selected” accent -->
-        <DataTrigger Binding="{Binding TimeSelected}" Value="True">
-            <Setter Property="Background" Value="#FFB31A"/>
-            <Setter Property="Foreground" Value="White"/>
-        </DataTrigger>
         <!-- hover feedback -->
         <Trigger Property="IsMouseOver" Value="True">
             <Setter Property="Background" Value="#FFF2CC"/>
@@ -197,8 +187,9 @@
                             </Button>
                             <Popup
                             x:Name="TimePopup"
-                            PlacementTarget="{Binding ElementName=BudgetButton}"
-                            Placement="Bottom"
+                            Placement="Absolute"
+                            HorizontalOffset="822"
+                            VerticalOffset="304"
                             StaysOpen="False"
                             AllowsTransparency="True"
                             PopupAnimation="Slide"
@@ -216,7 +207,7 @@
                                 <ItemsControl x:Name="TimeMainItemsControl">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="4" />
+                                        <UniformGrid Columns="4" VerticalAlignment="Center"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 </ItemsControl>

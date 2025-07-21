@@ -143,7 +143,7 @@ namespace Curato.Views
             // Clear prior items
             TimeMainItemsControl.Items.Clear();
             TimeSubItemsControl.Items.Clear();
-            TimeSubItemsControl.Visibility = Visibility.Collapsed;
+            TimeSubScroll.Visibility = Visibility.Collapsed;
             vm.SelectedMainTime = null;
             vm.SelectedSubTime = null;
 
@@ -174,7 +174,7 @@ namespace Curato.Views
                 };
                 var btn = new Button
                 {
-                    Style   = (Style)FindResource("TimeChipStyle"),
+                    Style   = BuildPeriodButtonStyle(period),
                     Content = panel,
                     Cursor  = Cursors.Hand,
                     Padding = new Thickness(8)
@@ -192,10 +192,66 @@ namespace Curato.Views
             TimePopup.IsOpen = true;
         }
 
+        private Style BuildPeriodButtonStyle(string period)
+        {
+            // Base style
+            var style = new Style(typeof(Button));
+
+            // Default look
+            style.Setters.Add(new Setter(Control.BackgroundProperty, Brushes.White));
+            style.Setters.Add(new Setter(Control.ForegroundProperty, Brushes.Black));
+            style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(8)));
+            style.Setters.Add(new Setter(Control.FontSizeProperty, 20.0));
+            style.Setters.Add(new Setter(Control.FontFamilyProperty, new FontFamily("{StaticResource SatoshiMedium}")));
+            style.Setters.Add(new Setter(Control.CursorProperty, Cursors.Hand));
+
+            // 1b) Rounded-corner template
+            var template = new ControlTemplate(typeof(Button));
+            var borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.BackgroundProperty,
+                new TemplateBindingExtension(Button.BackgroundProperty));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(8));
+            borderFactory.SetValue(Border.PaddingProperty,
+                new TemplateBindingExtension(Button.PaddingProperty));
+            var contentFactory = new FrameworkElementFactory(typeof(ContentPresenter));
+            contentFactory.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            contentFactory.SetValue(ContentPresenter.VerticalAlignmentProperty,   VerticalAlignment.Center);
+            borderFactory.AppendChild(contentFactory);
+            template.VisualTree = borderFactory;
+            style.Setters.Add(new Setter(Button.TemplateProperty, template));
+
+            // 2) Hover & pressed feedback (exact same as your other dropdowns)
+            var hoverTrigger = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+            hoverTrigger.Setters.Add(new Setter(Control.BackgroundProperty,
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF2CC"))));
+            style.Triggers.Add(hoverTrigger);
+
+            var pressedTrigger = new Trigger { Property = Button.IsPressedProperty, Value = true };
+            pressedTrigger.Setters.Add(new Setter(Control.BackgroundProperty,
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFD699"))));
+            style.Triggers.Add(pressedTrigger);
+
+            // 3) DataTrigger: when this button's period == vm.SelectedMainTime, accent it
+            var selectedTrigger = new DataTrigger
+            {
+                Binding = new Binding(nameof(InputViewModel.SelectedMainTime))
+                {
+                    Source = this.DataContext
+                },
+                Value = period
+            };
+            selectedTrigger.Setters.Add(new Setter(Control.BackgroundProperty,
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))));
+            selectedTrigger.Setters.Add(new Setter(Control.ForegroundProperty, Brushes.White));
+            style.Triggers.Add(selectedTrigger);
+
+            return style;
+        }
+
         private void PopulateSubSlots(InputViewModel vm)
         {
             TimeSubItemsControl.Items.Clear();
-            TimeSubItemsControl.Visibility = Visibility.Visible;
+            TimeSubScroll.Visibility = Visibility.Visible;
 
             // build each sub-slot
             foreach (var slot in vm.TimeOptionsMap[vm.SelectedMainTime!])
@@ -209,7 +265,7 @@ namespace Curato.Views
                     Fill = isSubSelected
                         ? (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))
                         : Brushes.LightGray,
-                    Margin = new Thickness(0,0,10,0),
+                    Margin = new Thickness(0, 0, 10, 0),
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 var txt = new TextBlock
@@ -223,20 +279,20 @@ namespace Curato.Views
                 {
                     Orientation = Orientation.Vertical,
                     Children = { dot, txt },
-                    Margin = new Thickness(0,0,15,0)
+                    Margin = new Thickness(0, 0, 15, 0)
                 };
                 var btn = new Button
                 {
-                    Style   = (Style)FindResource("TimeChipStyle"),
+                    Style = (Style)FindResource("TimeChipStyle"),
                     Content = panel,
-                    Cursor  = Cursors.Hand,
+                    Cursor = Cursors.Hand,
                     Padding = new Thickness(8)
                 };
-                btn.Click += (_,_) =>
+                btn.Click += (_, _) =>
                 {
-                    vm.SelectedSubTime    = slot;
+                    vm.SelectedSubTime = slot;
                     TimeSubScroll.Visibility = Visibility.Collapsed;
-                    TimePopup.IsOpen         = false;
+                    TimePopup.IsOpen = false;
                 };
 
                 TimeSubItemsControl.Items.Add(btn);
