@@ -73,6 +73,18 @@
                                     </Style>
                                 </Button.Style>
                             </Button>
+                            <Popup x:Name="CompanionPopup"
+                                PlacementTarget="{Binding ElementName=CompanionButton}"
+                                Placement="Bottom"
+                                StaysOpen="False"
+                                AllowsTransparency="True"
+                                PopupAnimation="Slide"
+                                Width="192"
+                                MinHeight="230">
+                                <Border Background="White" CornerRadius="50" Padding="12" Effect="{DynamicResource ShadowEffect}">
+                                    <ItemsControl x:Name="CompanionItemsControl"/>
+                                </Border>
+                            </Popup>
                             <Border Background="White" CornerRadius="40" Padding="20,10" Margin="0,0,10,0" Height="67" Width="155"
                                     BorderBrush="#E0E0E0" BorderThickness="0">
                                 <TextBlock Text="Budget" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"

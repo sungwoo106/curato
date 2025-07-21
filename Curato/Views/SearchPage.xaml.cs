@@ -22,39 +22,17 @@ namespace Curato.Views
             if (DataContext is not InputViewModel vm)
                 return;
 
-            var popup = new ContextMenu
-            {
-                Style = (Style)FindResource("AnimatedContextMenuStyle"),
-                Background = Brushes.White,
-                BorderThickness = new Thickness(0),
-                Placement = PlacementMode.Bottom,
-                PlacementTarget = sender as UIElement,
-                Padding = new Thickness(8),
-                MaxHeight = 240,
-                MinWidth = 190,
-                HasDropShadow = true,
-                Opacity = 0 // ensure the animation starts from 0
-            };
+            CompanionItemsControl.Items.Clear();
 
             foreach (string type in vm.CompanionTypes)
             {
                 var isSelected = type == vm.SelectedCompanion;
 
-                var container = new Border
-                {
-                    Background = Brushes.White,
-                    CornerRadius = new CornerRadius(50),
-                    Padding = new Thickness(12, 8, 12, 8),
-                    Margin = new Thickness(4)
-                };
-
                 var dot = new Ellipse
                 {
                     Width = 25,
                     Height = 25,
-                    Fill = isSelected
-                        ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))
-                        : Brushes.LightGray,
+                    Fill = isSelected ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A")) : Brushes.LightGray,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(0, 0, 10, 0)
                 };
@@ -68,29 +46,32 @@ namespace Curato.Views
                     FontFamily = new FontFamily("{StaticResource SatoshiMedium}")
                 };
 
-                var stack = new StackPanel
+                var panel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Children = { dot, text }
+                    Children = { dot, text },
+                    Margin = new Thickness(0, 5)
                 };
 
-                container.Child = stack;
-
-                var item = new MenuItem
+                var container = new Border
                 {
-                    Header = container,
+                    CornerRadius = new CornerRadius(8),
                     Background = Brushes.Transparent,
-                    BorderThickness = new Thickness(0),
-                    Padding = new Thickness(0)
+                    Child = panel,
+                    Cursor = Cursors.Hand,
+                    Padding = new Thickness(10)
                 };
 
-                item.Click += (_, _) => vm.SelectedCompanion = type;
+                container.MouseLeftButtonUp += (_, _) =>
+                {
+                    vm.SelectedCompanion = type;
+                    CompanionPopup.IsOpen = false;
+                };
 
-                popup.Items.Add(item);
+                CompanionItemsControl.Items.Add(container);
             }
 
-            popup.IsOpen = true;
+            CompanionPopup.IsOpen = true;
         }
-
     }
 }
