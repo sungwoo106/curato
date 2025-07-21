@@ -445,7 +445,11 @@ namespace Curato.Views
             }
 
             var parentWindow = Window.GetWindow(this) as MainWindow;
-            parentWindow?.MainFrame.Navigate(new LoadingPage());
+            if (mainWindow != null)
+            {
+                // Swap out the current page without using navigation to avoid crashes
+                mainWindow.MainFrame.Content = new LoadingPage();
+            }
         }
     }
 }

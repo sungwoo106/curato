@@ -50,9 +50,12 @@ namespace Curato.Views
                 dotTimer.Stop();
                 progressTimer.Stop();
 
-                // Navigate to OutputPage
+                // Display the output page without using navigation
                 var parentWindow = Window.GetWindow(this) as MainWindow;
-                parentWindow?.MainFrame.Navigate(new OutputPage());
+                if (parentWindow != null)
+                {
+                    parentWindow.MainFrame.Content = new OutputPage();
+                }
             }
         }
 
