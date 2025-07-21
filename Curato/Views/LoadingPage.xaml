@@ -16,7 +16,7 @@
                    VerticalAlignment="Top"/>
 
         <!-- Center StackPanel -->
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <!-- Animated Text -->
             <TextBlock x:Name="LoadingTextBlock"
                        Text="Planning your trip..."
