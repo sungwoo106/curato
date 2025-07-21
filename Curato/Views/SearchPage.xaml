@@ -54,6 +54,7 @@
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Background" Value="White"/>
+                                        <Setter Property="Foreground" Value="Black"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
@@ -66,6 +67,7 @@
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding CompanionSelected}" Value="True">
                                                 <Setter Property="Background" Value="#FFB31A"/>
+                                                <Setter Property="Foreground" Value="White"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

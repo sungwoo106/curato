@@ -120,7 +120,7 @@ namespace Curato.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to load companion types: {ex}");
-                return new List<string> { "solo", "couple", "friends", "family" };
+                return new List<string> { "tSolo", "tCouple", "tFriends", "tFamily" };
             }
         }
 

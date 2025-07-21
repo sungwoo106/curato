@@ -18,10 +18,10 @@ COMPANION_PLACE_TYPES = {
 }
 
 COMPANION_TYPES = [
-    "solo",
-    "couple",
-    "friends",
-    "family"
+    "Solo",
+    "Couple",
+    "Friends",
+    "Family"
 ]
 
 MAX_DISTANCE_KM = 5  # Default maximum distance for search in kilometers
