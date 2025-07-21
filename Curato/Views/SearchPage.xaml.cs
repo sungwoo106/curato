@@ -331,7 +331,7 @@ namespace Curato.Views
                 var panel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Children    = { dot, text },
+                    Children    = { text },
                     Margin      = new Thickness(0,5,0,0)
                 };
 
