@@ -91,7 +91,7 @@ namespace Curato.Views
                 {
                     Width = 25,
                     Height = 25,
-                    Fill    = isSelected
+                    Fill = isSelected
                             ? (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))
                             : Brushes.LightGray,
                     VerticalAlignment = VerticalAlignment.Center,
@@ -133,6 +133,112 @@ namespace Curato.Views
             }
 
             BudgetPopup.IsOpen = true;
+        }
+
+        private void TimeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not InputViewModel vm)
+                return;
+
+            // Clear prior items
+            TimeMainItemsControl.Items.Clear();
+            TimeSubItemsControl.Items.Clear();
+            TimeSubItemsControl.Visibility = Visibility.Collapsed;
+            vm.SelectedMainTime = null;
+            vm.SelectedSubTime = null;
+
+            // Grab the style you defined in XAML on your TimeButton
+            var chipStyle = this.TimeButton.Style;
+
+            // Reset the popup
+            TimePopup.HorizontalOffset = 0;
+            TimePopup.VerticalOffset = 0;
+
+            // Build main-period buttons
+            foreach (var period in vm.TimeMainOptions)
+            {
+                bool isMainSelected = period == vm.SelectedMainTime;
+                var txt = new TextBlock
+                {
+                    Text = period,
+                    FontSize = 24,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontFamily = new FontFamily("{StaticResource SatoshiMedium}")
+                };
+                var panel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children = { txt },
+                    Margin = new Thickness(0, 0, 15, 0)
+                };
+                var btn = new Border
+                {
+                    Content = panel,
+                    Cursor = Cursors.Hand,
+                    style = (Style)FindResource("TimeChipStyle")
+                };
+
+                btn.MouseLeftButtonUp += (_, _) =>
+                {
+                    vm.SelectedMainTime = period;
+                    PopulateSubSlots(vm, btn);
+                };
+
+                TimeMainItemsControl.Items.Add(btn);
+            }
+
+            TimePopup.IsOpen = true;
+        }
+
+        private void PopulateSubSlots(InputViewModel vm, Border anchor)
+        {
+            TimeSubItemsControl.Items.Clear();
+            TimeSubItemsControl.Visibility = Visibility.Visible;
+
+            // build each sub-slot
+            foreach (var slot in vm.TimeOptionsMap[vm.SelectedMainTime!])
+            {
+                bool isSubSelected = slot == vm.SelectedSubTime;
+                var dot = new Ellipse
+                {
+                    Width = 25,
+                    Height = 25,
+                    Fill = isSubSelected
+                        ? (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"))
+                        : Brushes.LightGray,
+                    Margin = new Thickness(0,0,6,0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                var txt = new TextBlock
+                {
+                    Text = slot,
+                    FontSize = 24,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontFamily = new FontFamily("{StaticResource SatoshiMedium}")
+                };
+                var panel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children = { dot, txt },
+                    Margin = new Thickness(0,0,15,0)
+                };
+                var container = new Border
+                {
+                    CornerRadius = new CornerRadius(8),
+                    Background = Brushes.Transparent,
+                    Child = panel,
+                    Cursor = Cursors.Hand,
+                    Padding = new Thickness(8)
+                };
+
+                container.MouseLeftButtonUp += (_,_) =>
+                {
+                    vm.SelectedSubTime = slot;
+                    TimePopup.IsOpen = false;
+                };
+
+                TimeSubItemsControl.Items.Add(container);
+            }
         }
 
     }

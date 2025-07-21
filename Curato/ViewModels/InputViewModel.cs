@@ -70,6 +70,70 @@ namespace Curato.ViewModels
         // Helper for style trigger
         public bool BudgetSelected => !string.IsNullOrEmpty(SelectedBudget);
 
+        // The list of time options
+        // Main options: Midnight, Morning, Afternoon, Evening
+        // Sub-options: 00:00, 01:00, ..., 23:00
+        public Dictionary<string, List<string>> TimeOptionsMap { get; }
+            = new Dictionary<string, List<string>>
+            {
+                ["Midnight"] = new List<string> { "00:00", "01:00", "02:00", "03:00", "04:00", "05:00" },
+                ["Morning"] = new List<string> { "06:00", "07:00", "08:00", "09:00", "10:00", "11:00" },
+                ["Afternoon"] = new List<string> { "12:00", "13:00", "14:00", "15:00", "16:00", "17:00" },
+                ["Evening"] = new List<string> { "18:00", "19:00", "20:00", "21:00", "22:00", "23:00" }
+            };
+
+        // For binding first row
+        public IEnumerable<string> TimeMainOptions 
+            => TimeOptionsMap.Keys;
+
+        // Selected period & slot
+        private string? _selectedMainTime;
+        public string? SelectedMainTime
+        {
+            get => _selectedMainTime;
+            set
+            {
+                if (_selectedMainTime != value)
+                {
+                    _selectedMainTime = value;
+                    // reset sub-selection when main changes
+                    SelectedSubTime = null;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TimeButtonText));
+                    OnPropertyChanged(nameof(TimeSelected));
+                }
+            }
+        }
+
+        private string? _selectedSubTime;
+        public string? SelectedSubTime
+        {
+            get => _selectedSubTime;
+            set
+            {
+                if (_selectedSubTime != value)
+                {
+                    _selectedSubTime = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TimeButtonText));
+                    OnPropertyChanged(nameof(TimeSelected));
+                }
+            }
+        }
+
+        // What shows on the button
+        public string TimeButtonText
+            => !string.IsNullOrEmpty(SelectedSubTime) 
+                ? SelectedSubTime 
+                : (!string.IsNullOrEmpty(SelectedMainTime) 
+                    ? SelectedMainTime 
+                    : "Time");
+
+        // Accent when anything’s picked
+        public bool TimeSelected 
+            => !string.IsNullOrEmpty(SelectedSubTime) 
+            || !string.IsNullOrEmpty(SelectedMainTime);
+
         public string LocationQuery { get; set; } = "Search Location";
 
         public ICommand GeneratePlanCommand { get; }
