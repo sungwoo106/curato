@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Windows.Threading;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 using System.Windows.Shapes;
@@ -150,8 +152,6 @@ namespace Curato.Views
             
             // Clear out the containers so we can rebuild
             TimeMainItemsControl.Items.Clear();
-            vm.SelectedMainTime = vm.SelectedMainTime; // leave the existing value alone
-            vm.SelectedSubTime  = vm.SelectedSubTime;  // leave that alone too
 
             // Build main-period buttons
             foreach (var period in vm.TimeMainOptions)
@@ -187,13 +187,31 @@ namespace Curato.Views
 
                 TimeMainItemsControl.Items.Add(btn);
 
-
-                // If they’d already chosen a period before, re-populate its sub-popup now
-                if (isMainSelected)
-                    ShowPeriodOptions(btn, vm.TimeOptionsMap[period]);
             }
 
+            // Show the main popup
             TimePopup.IsOpen = true;
+
+            // If a period was already selected, restore its sub-popup *after* opening
+            if (vm.SelectedMainTime is not null)
+            {
+                // Use Dispatcher to defer until visuals are ready
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    // find the button whose text matches the selected period
+                    var priorBtn = TimeMainItemsControl.Items
+                        .OfType<Button>()
+                        .FirstOrDefault(b =>
+                        {
+                            var stack = (StackPanel)b.Content;
+                            var tb    = stack.Children.OfType<TextBlock>().FirstOrDefault();
+                            return tb?.Text == vm.SelectedMainTime;
+                        });
+
+                    if (priorBtn != null)
+                        ShowPeriodOptions(priorBtn, vm.TimeOptionsMap[vm.SelectedMainTime]);
+                }), DispatcherPriority.Loaded);
+            }
         }
 
         private Style BuildPeriodButtonStyle(string period)
