@@ -1,3 +1,7 @@
+using System.Windows.Media;
+using System.Windows.Controls.Primitives;
+using System.Windows.Shapes;
+using System.Windows.Media.Animation;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
