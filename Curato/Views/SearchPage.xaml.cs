@@ -150,14 +150,8 @@ namespace Curato.Views
             
             // Clear out the containers so we can rebuild
             TimeMainItemsControl.Items.Clear();
-            TimeSubItemsControl.Items.Clear();
-
-
-            // Show the sub-scroll area only if the user has already picked a period
-            TimeSubScroll.Visibility = vm.SelectedMainTime != null
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-
+            vm.SelectedMainTime = vm.SelectedMainTime; // leave the existing value alone
+            vm.SelectedSubTime  = vm.SelectedSubTime;  // leave that alone too
 
             // Build main-period buttons
             foreach (var period in vm.TimeMainOptions)
@@ -192,11 +186,12 @@ namespace Curato.Views
                 };
 
                 TimeMainItemsControl.Items.Add(btn);
-            }
 
-            // If they’d already chosen a period before, re-populate its sub-popup now
-            if (vm.SelectedMainTime is not null)
-                ShowPeriodOptions(btn, vm.TimeOptionsMap[vm.SelectedMainTime]);
+
+                // If they’d already chosen a period before, re-populate its sub-popup now
+                if (isMainSelected)
+                    ShowPeriodOptions(btn, vm.TimeOptionsMap[period]);
+            }
 
             TimePopup.IsOpen = true;
         }
