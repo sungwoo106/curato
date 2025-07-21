@@ -19,6 +19,7 @@ namespace Curato.ViewModels
     {
         public ObservableCollection<PopularPlace> PopularPlaces { get; set; }
 
+        // The list of companion types
         public ObservableCollection<string> CompanionTypes { get; } = new ObservableCollection<string>();
 
         private string? _selectedCompanion;
@@ -37,9 +38,37 @@ namespace Curato.ViewModels
             }
         }
 
+        // What shows on the button
         public string CompanionButtonText => string.IsNullOrEmpty(SelectedCompanion) ? "Companion" : SelectedCompanion;
 
+        // Helper for style trigger
         public bool CompanionSelected => !string.IsNullOrEmpty(SelectedCompanion);
+
+        // The list of budget options
+        public ObservableCollection<string> BudgetOptions { get; } 
+            = new ObservableCollection<string> { "$", "$$", "$$$" };
+
+        private string? _selectedBudget;
+        public string? SelectedBudget
+        {
+            get => _selectedBudget;
+            set
+            {
+                if (_selectedBudget != value)
+                {
+                    _selectedBudget = value;
+                    OnPropertyChanged();                       // SelectedBudget
+                    OnPropertyChanged(nameof(BudgetButtonText));
+                    OnPropertyChanged(nameof(BudgetSelected));
+                }
+            }
+        }
+
+        // What shows on the button
+        public string BudgetButtonText => string.IsNullOrEmpty(SelectedBudget) ? "Budget" : SelectedBudget;
+
+        // Helper for style trigger
+        public bool BudgetSelected => !string.IsNullOrEmpty(SelectedBudget);
 
         public string LocationQuery { get; set; } = "Search Location";
 
@@ -123,36 +152,6 @@ namespace Curato.ViewModels
                 return new List<string> { "tSolo", "tCouple", "tFriends", "tFamily" };
             }
         }
-
-        // The list of budget options
-        public ObservableCollection<string> BudgetOptions { get; } 
-            = new ObservableCollection<string> { "$", "$$", "$$$" };
-
-        private string? _selectedBudget;
-        public string? SelectedBudget
-        {
-            get => _selectedBudget;
-            set
-            {
-                if (_selectedBudget != value)
-                {
-                    _selectedBudget = value;
-                    OnPropertyChanged();                       // SelectedBudget
-                    OnPropertyChanged(nameof(BudgetButtonText));
-                    OnPropertyChanged(nameof(BudgetSelected));
-                }
-            }
-        }
-
-        // What shows on the button
-        public string BudgetButtonText 
-            => string.IsNullOrEmpty(SelectedBudget) ? "Budget" : SelectedBudget;
-
-        // Helper for style trigger
-        public bool BudgetSelected 
-            => !string.IsNullOrEmpty(SelectedBudget);
-
-
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
