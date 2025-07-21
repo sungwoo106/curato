@@ -146,7 +146,10 @@ namespace Curato.Views
             if (TimePopup.IsOpen)
             {
                 TimePopup.IsOpen = false;
-                _activeTimeSubPopup?.IsOpen = false;
+                if (_activeTimeSubPopup != null)
+                {
+                    _activeTimeSubPopup.IsOpen = false;
+                }
                 return;
             }
 
@@ -254,7 +257,10 @@ namespace Curato.Views
             if (DataContext is not InputViewModel vm) return;
 
             // Close any previously opened sub popup to avoid crashes
-            _activeTimeSubPopup?.IsOpen = false;
+            if (_activeTimeSubPopup != null)
+            {
+                _activeTimeSubPopup.IsOpen = false;
+            }
 
             // Build the Popup
             var popup = new Popup
@@ -366,8 +372,6 @@ namespace Curato.Views
             // Clear old items
             CategoryItemsControl.Items.Clear();
 
-            bool isSelected = option == vm.SelectedCategory;
-
             // Ensure exactly 2 rows & 3 columns (Auto-sized)
             if (CategoryGrid.RowDefinitions.Count == 0)
             {
@@ -379,12 +383,14 @@ namespace Curato.Views
             }
             
             var chipStyle = (Style)FindResource("TimeChipStyle");
+            var satoshi   = (FontFamily)FindResource("{StaticResource SatoshiMedium}");
 
             // Loop and place each option
-            for (int i = 0; i < vm.CategoryOptions.Count; i++)
+                var categories = vm.CategoryOptions;
+            for (int i = 0; i < categories.Count; i++)
             {
-                string option = vm.CategoryOptions[i];
-                bool isSelected = option == vm.SelectedCategory;
+                string cat      = categories[i];
+                bool selected   = cat == vm.SelectedCategory;
 
                 // text
                 var text = new TextBlock
@@ -413,7 +419,7 @@ namespace Curato.Views
                 };
                 btn.Click += (_, _) =>
                 {
-                    vm.SelectedCategory = option;
+                    vm.SelectedCategory = cat;
                     CategoryPopup.IsOpen = false;
                 };
 
