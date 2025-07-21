@@ -444,7 +444,7 @@ namespace Curato.Views
                     vm.GeneratePlanCommand.Execute(null);
             }
 
-            var parentWindow = Window.GetWindow(this) as MainWindow;
+            var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
             {
                 // Swap out the current page without using navigation to avoid crashes
