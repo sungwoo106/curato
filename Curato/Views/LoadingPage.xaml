@@ -47,7 +47,8 @@
                         Width="0"
                         Height="24"
                         Background="#FFB46A00"
-                        CornerRadius="20"/>
+                        CornerRadius="20"
+                        HorizontalAlignment="Left"/>
             </Border>
         </StackPanel>
     </Grid>
