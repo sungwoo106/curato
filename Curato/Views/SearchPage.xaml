@@ -153,7 +153,7 @@
       x:Key="ShadowEffect"
       Color="Black"
       Opacity="0.13"
-      BlurRadius="10"
+      BlurRadius="20"
       ShadowDepth="2"/>
     </UserControl.Resources>
 
@@ -198,7 +198,7 @@
                     </Border>
 
                     <!-- Preferences -->
-                    <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0">
+                    <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97">
                         <Border.Effect>
                             <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
                         </Border.Effect>
@@ -269,9 +269,9 @@
                             </Button>
                             <Popup
                             x:Name="TimePopup"
-                            PlacementTarget="{Binding ElementName=CompanionButton}"
+                            PlacementTarget="{Binding ElementName=BudgetButton}"
                             Placement="Bottom"
-                            HorizontalOffset="-20"
+                            HorizontalOffset="-50"
                             VerticalOffset="40"
                             StaysOpen="False"
                             AllowsTransparency="True"
@@ -296,7 +296,9 @@
                                 <ItemsControl x:Name="TimeMainItemsControl"
                                     Grid.Row="0"
                                     VerticalAlignment="Center"
-                                    HorizontalAlignment="Stretch">
+                                    HorizontalAlignment="Stretch"
+                                    MinWidth="166"
+                                    MinHeight="65">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <UniformGrid Columns="4" VerticalAlignment="Center"/>
@@ -343,7 +345,7 @@
                             <!-- Category dropdown -->
                             <Popup
                             x:Name="CategoryPopup"
-                            PlacementTarget="{Binding ElementName=CategoryButton}"
+                            PlacementTarget="{Binding ElementName=TimeButton}"
                             Placement="Bottom"
                             StaysOpen="False"
                             AllowsTransparency="True"
