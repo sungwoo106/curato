@@ -378,57 +378,59 @@ namespace Curato.Views
             {
                 CategoryGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                 CategoryGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                for (int i = 0; i < 3; i++)
+                    CategoryGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             }
 
-            var chipStyle = (Style)FindResource("TimeChipStyle");
-            var satoshi = (FontFamily)FindResource("SatoshiMedium");
+            var chipStyle = (Style)FindResource("CategoryChipStyle");
 
             // Loop and place each option
-            var categories = vm.CategoryOptions;
-            for (int i = 0; i < categories.Count; i++)
-            {
-                string cat = categories[i];
-                bool selected = cat == vm.SelectedCategory;
 
-                // text
-                var text = new TextBlock
+            for (int i = 0; i < vm.CategoryOptions.Count; i++)
+            {
+                string cat = vm.CategoryOptions[i];
+                bool isSelected = cat == vm.SelectedCategory;
+
+                // Build text panel
+                var tb = new TextBlock
                 {
-                    Text = cat,
-                    FontSize = 24,
-                    FontFamily = satoshi,
-                    Foreground = Brushes.Black,
+                    Text              = cat,
+                    FontSize          = 20,
+                    FontFamily        = (FontFamily)FindResource("SatoshiMedium"),
+                    Foreground        = Brushes.Black,
                     VerticalAlignment = VerticalAlignment.Center
                 };
-
                 var panel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Children = { text },
-                    Margin = new Thickness(0, 5, 0, 0)
+                    Children    = { tb }
                 };
 
-                // chip-style button
+                // Create a Button with Chip style
                 var btn = new Button
                 {
-                    Style = chipStyle,
+                    Style   = chipStyle,
                     Content = panel,
-                    Cursor = Cursors.Hand,
-                    Padding = new Thickness(10)
+                    Padding = new Thickness(12,6,12,6),
+                    Cursor  = Cursors.Hand
                 };
+
+                // If it’s the selected category, tint it
+                if (isSelected)
+                {
+                    btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
+                    btn.Foreground = Brushes.White;
+                }
+
                 btn.Click += (_, _) =>
                 {
                     vm.SelectedCategory = cat;
                     CategoryPopup.IsOpen = false;
                 };
 
-                // place at row/col
-                int row = i / 3;
-                int col = i % 3;
-                Grid.SetRow(btn, row);
-                Grid.SetColumn(btn, col);
+                // position in 2×3 grid
+                Grid.SetRow(btn, i / 3);
+                Grid.SetColumn(btn, i % 3);
 
                 CategoryGrid.Children.Add(btn);
             }
