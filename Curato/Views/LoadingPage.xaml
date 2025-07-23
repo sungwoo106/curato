@@ -9,7 +9,7 @@
         <!-- Top-left Logo -->
         <TextBlock Text="Curato"
                    FontSize="46"
-                   FontFamily="{StaticResource Satoshi Bold}"
+                   FontFamily="{StaticResource SatoshiBold}"
                    Foreground="#FFB31A"
                    Margin="30"
                    HorizontalAlignment="Left"
@@ -21,7 +21,7 @@
             <TextBlock x:Name="LoadingTextBlock"
                        Text="Planning your trip..."
                        FontSize="46"
-                       FontFamily="{StaticResource Satoshi Medium}"
+                       FontFamily="{StaticResource SatoshiMedium}"
                        Foreground="#FFB31A"
                        HorizontalAlignment="Center"/>
 
