@@ -12,19 +12,7 @@
         MouseDown="DragWindow">
 
     <Grid>
-        <!-- Header area for dragging -->
-        <Grid Height="80" Background="White" MouseDown="DragWindow">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Logo / Title -->
-            <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,0,0,0"
-                       FontSize="28" Foreground="#F9B233" FontFamily="Satoshi Bold"/>
-        </Grid>
-
         <!-- Main content host -->
-        <ContentControl x:Name="MainFrame" Margin="0,80,0,0" x:FieldModifier="public"/>
+        <ContentControl x:Name="MainFrame" x:FieldModifier="public"/>
     </Grid>
 </Window>

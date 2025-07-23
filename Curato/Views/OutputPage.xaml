@@ -6,10 +6,23 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800">
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="3*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Background="White" Height="80" Grid.Row="0">
+            <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,-10,0,0"
+                       FontSize="46" Foreground="#FFB31A"
+                       FontFamily="{StaticResource SatoshiBold}"/>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
 
         <!-- WebView Map -->
         <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="10">
@@ -24,5 +37,6 @@
                 사람들과 함께 마지막에는 달력적인 여행을 만들어보세요.
             </TextBlock>
         </ScrollViewer>
+            </Grid>
     </Grid>
 </UserControl>

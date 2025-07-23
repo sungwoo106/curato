@@ -14,17 +14,21 @@
                           ShadowDepth="2"/>
     </UserControl.Resources>
     <Grid Background="White">
-        <!-- Top-left Logo -->
-        <TextBlock Text="Curato"
-                   FontSize="46"
-                   FontFamily="{StaticResource SatoshiBold}"
-                   Foreground="#FFB31A"
-                   Margin="30"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Background="White" Height="80" Grid.Row="0">
+            <TextBlock Text="Curato" VerticalAlignment="Center" Margin="40,-10,0,0"
+                       FontSize="46"
+                       FontFamily="{StaticResource SatoshiBold}"
+                       Foreground="#FFB31A"/>
+        </Grid>
 
         <!-- Center StackPanel -->
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
             <!-- Animated Text -->
             <TextBlock x:Name="LoadingTextBlock"
                        Text="Planning your trip..."
