@@ -152,7 +152,7 @@
     </Style>
 
 
-    <!-- 3) Simple drop-shadow effect so your borders don’t blow up -->
+    <!-- Simple drop-shadow effect so your borders don’t blow up -->
     <DropShadowEffect
       x:Key="ShadowEffect"
       Color="Black"
@@ -185,6 +185,9 @@
                 BorderBrush="#EEEEEE"
                 BorderThickness="0"
                 MinHeight="340">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
+                </Border.Effect>
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
                     <!-- Search box -->
