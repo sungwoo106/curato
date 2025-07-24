@@ -76,8 +76,10 @@
                         Height="75"
                         Margin="30,0">
                     <TextBlock Text="{Binding PreferencesSummary}"
-                               FontSize="18"
-                               FontFamily="{StaticResource SatoshiMedium}"/>
+                               FontSize="20"
+                               FontFamily="{StaticResource SatoshiMedium}"
+                               HorizontalAlignment="Center"
+                               VerticalAlighment="Center"/>
                 </Border>
 
                 <!-- Edit Plan Button -->
@@ -87,7 +89,7 @@
                         Padding="12,6"
                         MinWidth="170"
                         Height="75"
-                        Margin="-40,0,0,0"
+                        Margin="-80,0,0,0"
                         Click="EditButton_Click"
                         Cursor="Hand"
                         Background="White"
@@ -108,7 +110,7 @@
                                         <Border Background="{TemplateBinding Background}"
                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                CornerRadius="22">
+                                                CornerRadius="30">
                                             <ContentPresenter HorizontalAlignment="Center"
                                                               VerticalAlignment="Center"
                                                               Margin="10,2"/>
