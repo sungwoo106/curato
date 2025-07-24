@@ -172,7 +172,7 @@
 
             <!-- Header -->
             <Grid Background="White" Height="80" Grid.Row="0">
-                <TextBlock Text="Curato" VerticalAlignment="Center" Margin="80,40,0,0"
+                <TextBlock Text="Curato" VerticalAlignment="Center" Margin="75,40,0,0"
                            FontSize="46" Foreground="#FFB31A"
                            FontFamily="{StaticResource SatoshiBold}"/>
             </Grid>
