@@ -79,7 +79,7 @@
                                FontSize="20"
                                FontFamily="{StaticResource SatoshiMedium}"
                                Foreground="#575757"
-                              TextAlignment="Justify"
+                               TextAlignment="Center"
                                TextWrapping="Wrap"
                                HorizontalAlignment="Stretch"
                                VerticalAlignment="Center"/>
