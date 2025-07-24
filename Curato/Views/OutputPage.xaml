@@ -61,7 +61,7 @@
                            Height="80"
                            Foreground="#FFB31A"
                            VerticalAlignment="Center"
-                           Margin="40,-40,0,0"/>
+                           Margin="40,-100,0,0"/>
 
                 <!-- Preferences -->
                 <Border Grid.Column="1"
@@ -87,7 +87,7 @@
                         Padding="12,6"
                         MinWidth="170"
                         Height="75"
-                        Margin="-100,0,0,0"
+                        Margin="-150,0,0,0"
                         Click="EditButton_Click"
                         Cursor="Hand"
                         Background="White"
