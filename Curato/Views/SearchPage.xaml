@@ -83,8 +83,6 @@
 
     <!-- Category Chip -->
     <Style x:Key="CategoryChipStyle" TargetType="Button">
-    <!-- ensure a pill at least 125×65 -->
-    <Setter Property="MinWidth" Value="125"/>
     <Setter Property="MinHeight" Value="65"/>
     <!-- default -->
     <Setter Property="Margin" Value="8"/>
@@ -415,17 +413,15 @@
                             <Border Width="323" Height="Auto" Background="White" CornerRadius="20" Margin="10" Padding="10">
                                 <StackPanel VerticalAlignment="Top">
                                     <Grid>
-                                        <Image Source="{Binding ImagePath}"
-                                               Width="318" Height="350"
-                                               Stretch="UniformToFill" StretchDirection="Both"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               SnapsToDevicePixels="True"
-                                               RenderOptions.BitmapScalingMode="HighQuality">
-                                            <Image.Clip>
-                                                <RectangleGeometry Rect="0,0,318,350" RadiusX="40" RadiusY="40" />
-                                            </Image.Clip>
-                                        </Image>
+                                        <Border Height="350"
+                                                CornerRadius="40"
+                                                ClipToBounds="True"
+                                                HorizontalAlignment="Stretch">
+                                            <Image Source="{Binding ImagePath}"
+                                                   Stretch="UniformToFill" StretchDirection="Both"
+                                                   SnapsToDevicePixels="True"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        </Border>
                                         <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0">
                                             <Border.Effect>
                                                 <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
