@@ -7,22 +7,18 @@
              mc:Ignorable="d" Background="White">
 
     <UserControl.Resources>
-        <Style x:Key="PillChipStyle" TargetType="TextBlock">
+        <Style x:Key="PillChipStyle" TargetType="Label">
             <Setter Property="Background" Value="#FFB31A"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontFamily" Value="{StaticResource SatoshiMedium}"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="Padding" Value="14,6"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
-            <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="TextBlock">
+                    <ControlTemplate TargetType="Label">
                         <Border Background="{TemplateBinding Background}"
                                 CornerRadius="20"
                                 Padding="{TemplateBinding Padding}">
@@ -67,11 +63,11 @@
                             VerticalAlignment="Center"
                             Margin="30,0"
                             DockPanel.Dock="Left">
-                    <TextBlock Text="{Binding LocationQuery}" Style="{StaticResource PillChipStyle}"/>
-                    <TextBlock Text="{Binding SelectedCompanion}" Style="{StaticResource PillChipStyle}"/>
-                    <TextBlock Text="{Binding SelectedBudget}" Style="{StaticResource PillChipStyle}"/>
-                    <TextBlock Text="{Binding SelectedMainTime}" Style="{StaticResource PillChipStyle}"/>
-                    <TextBlock Text="{Binding SelectedCategoriesText}" Style="{StaticResource PillChipStyle}"/>
+                    <Label Content="{Binding LocationQuery}" Style="{StaticResource PillChipStyle}"/>
+                    <Label Content="{Binding SelectedCompanion}" Style="{StaticResource PillChipStyle}"/>
+                    <Label Content="{Binding SelectedBudget}" Style="{StaticResource PillChipStyle}"/>
+                    <Label Content="{Binding SelectedMainTime}" Style="{StaticResource PillChipStyle}"/>
+                    <Label Content="{Binding SelectedCategoriesText}" Style="{StaticResource PillChipStyle}"/>
                 </StackPanel>
 
                 <!-- Edit Plan Button -->
