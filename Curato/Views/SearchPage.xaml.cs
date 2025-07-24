@@ -391,7 +391,7 @@ namespace Curato.Views
             for (int i = 0; i < vm.CategoryOptions.Count; i++)
             {
                 string cat = vm.CategoryOptions[i];
-                bool isSelected = cat == vm.SelectedCategory;
+                bool isSelected = vm.SelectedCategories.Contains(cat);
 
                 // Build text panel
                 var tb = new TextBlock
@@ -413,7 +413,7 @@ namespace Curato.Views
                 {
                     Style   = chipStyle,
                     Content = panel,
-                    Padding = new Thickness(20, 6, 20, 6),
+                    Padding = new Thickness(24, 6, 24, 6),
                     Margin = new Thickness(12, 8, 12, 8),
                     Cursor  = Cursors.Hand,
                     // center it in its star‐sized cell:
@@ -430,8 +430,18 @@ namespace Curato.Views
 
                 btn.Click += (_, _) =>
                 {
-                    vm.SelectedCategory = cat;
-                    CategoryPopup.IsOpen = false;
+                    if (vm.SelectedCategories.Contains(cat))
+                    {
+                        vm.SelectedCategories.Remove(cat);
+                        btn.Background = Brushes.White;
+                        btn.Foreground = Brushes.Black;
+                    }
+                    else
+                    {
+                        vm.SelectedCategories.Add(cat);
+                        btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
+                        btn.Foreground = Brushes.White;
+                    }
                 };
 
                 // position in 2×3 grid

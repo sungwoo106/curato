@@ -85,7 +85,7 @@
     <Style x:Key="CategoryChipStyle" TargetType="Button">
     <Setter Property="MinHeight" Value="65"/>
     <!-- default -->
-    <Setter Property="Padding" Value="20,8"/>
+    <Setter Property="Padding" Value="24,8"/>
     <Setter Property="Margin" Value="12,8"/>
     <Setter Property="Background" Value="White"/>
     <Setter Property="BorderBrush" Value="#DDD"/>

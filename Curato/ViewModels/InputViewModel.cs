@@ -134,27 +134,17 @@ namespace Curato.ViewModels
         // The list of place categories
         public ObservableCollection<string> CategoryOptions { get; } = new ObservableCollection<string>();
 
-        private string? _selectedCategory;
-        public string? SelectedCategory
-        {
-            get => _selectedCategory;
-            set
-            {
-                if (_selectedCategory != value)
-                {
-                    _selectedCategory = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(CategoryButtonText));
-                    OnPropertyChanged(nameof(CategorySelected));
-                }
-            }
-        }
+        // Categories the user has selected from the popup
+        public ObservableCollection<string> SelectedCategories { get; } = new ObservableCollection<string>();
 
-        // What shows on the button
-        public string CategoryButtonText => string.IsNullOrEmpty(SelectedCategory) ? "Category" : SelectedCategory;
+        // Selected category for the button
+        public string CategoryButtonText =>
+            SelectedCategories.Count == 0 ?
+            "Category" :
+            string.Join(", ", SelectedCategories);
 
         // Helper for style trigger
-        public bool CategorySelected => !string.IsNullOrEmpty(SelectedCategory);
+        public bool CategorySelected => SelectedCategories.Count > 0;
 
         public string LocationQuery { get; set; } = "Search Location";
 
@@ -162,6 +152,11 @@ namespace Curato.ViewModels
 
         public InputViewModel()
         {
+            SelectedCategories.CollectionChanged += (_, __) =>
+            {
+                OnPropertyChanged(nameof(CategoryButtonText));
+                OnPropertyChanged(nameof(CategorySelected));
+            };
             foreach (var ct in FetchCompanionTypes())
                 CompanionTypes.Add(ct);
 
