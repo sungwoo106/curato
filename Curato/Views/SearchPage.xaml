@@ -427,6 +427,8 @@
                                                 HorizontalAlignment="Stretch">
                                             <Image Source="{Binding ImagePath}"
                                                    Stretch="UniformToFill" StretchDirection="Both"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
                                                    SnapsToDevicePixels="True"
                                                    RenderOptions.BitmapScalingMode="HighQuality"/>
                                         </Border>

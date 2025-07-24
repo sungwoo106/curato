@@ -121,6 +121,7 @@ namespace Curato.ViewModels
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(TimeButtonText));
                     OnPropertyChanged(nameof(TimeSelected));
+                    OnPropertyChanged(nameof(PreferencesSummary));
                 }
             }
         }
@@ -159,7 +160,7 @@ namespace Curato.ViewModels
             LocationQuery,
             SelectedCompanion,
             SelectedBudget,
-            SelectedMainTime,
+            string.IsNullOrWhiteSpace(SelectedSubTime) ? null : $"Start at {SelectedSubTime}",
             SelectedCategoriesText
         }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
