@@ -60,7 +60,8 @@
                            FontFamily="{StaticResource SatoshiBold}"
                            Height="80"
                            Foreground="#FFB31A"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center"
+                           Margin="40,-10,0,0"/>
 
                 <!-- Preferences -->
                 <Border Grid.Column="1"
@@ -71,6 +72,8 @@
                         Padding="14,6"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        MinWidth="1100"
+                        Height="75"
                         Margin="30,0">
                     <TextBlock Text="{Binding PreferencesSummary}"
                                FontSize="18"
@@ -82,9 +85,9 @@
                         FontSize="18"
                         FontFamily="{StaticResource SatoshiMedium}"
                         Padding="12,6"
-                        MinWidth="120"
-                        Height="42"
-                        Margin="0,0,0,0"
+                        MinWidth="170"
+                        Height="75"
+                        Margin="-40,0,0,0"
                         Click="EditButton_Click"
                         Cursor="Hand"
                         Background="White"
