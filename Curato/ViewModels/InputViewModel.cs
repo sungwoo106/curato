@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Linq;
 using System.Windows.Input;
 using Curato.Models;
 using Curato.Helpers;
@@ -34,6 +35,7 @@ namespace Curato.ViewModels
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(CompanionButtonText));
                     OnPropertyChanged(nameof(CompanionSelected));
+                    OnPropertyChanged(nameof(PreferencesSummary));
                 }
             }
         }
@@ -60,6 +62,7 @@ namespace Curato.ViewModels
                     OnPropertyChanged();                       // SelectedBudget
                     OnPropertyChanged(nameof(BudgetButtonText));
                     OnPropertyChanged(nameof(BudgetSelected));
+                    OnPropertyChanged(nameof(PreferencesSummary));
                 }
             }
         }
@@ -101,6 +104,7 @@ namespace Curato.ViewModels
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(TimeButtonText));
                     OnPropertyChanged(nameof(TimeSelected));
+                    OnPropertyChanged(nameof(PreferencesSummary));
                 }
             }
         }
@@ -150,6 +154,15 @@ namespace Curato.ViewModels
 
         public string LocationQuery { get; set; } = "Search Location";
 
+        public string PreferencesSummary => string.Join(" | ", new[]
+        {
+            LocationQuery,
+            SelectedCompanion,
+            SelectedBudget,
+            SelectedMainTime,
+            SelectedCategoriesText
+        }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
         public ICommand GeneratePlanCommand { get; }
 
         public InputViewModel()
@@ -158,6 +171,8 @@ namespace Curato.ViewModels
             {
                 OnPropertyChanged(nameof(CategoryButtonText));
                 OnPropertyChanged(nameof(CategorySelected));
+                OnPropertyChanged(nameof(SelectedCategoriesText));
+                OnPropertyChanged(nameof(PreferencesSummary));
             };
             foreach (var ct in FetchCompanionTypes())
                 CompanionTypes.Add(ct);
