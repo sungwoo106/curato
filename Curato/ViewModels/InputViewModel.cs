@@ -137,6 +137,8 @@ namespace Curato.ViewModels
         // Categories the user has selected from the popup
         public ObservableCollection<string> SelectedCategories { get; } = new ObservableCollection<string>();
 
+        public string SelectedCategoriesText => string.Join(", ", SelectedCategories);
+
         // Selected category for the button
         public string CategoryButtonText =>
             SelectedCategories.Count == 0 ?

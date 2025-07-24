@@ -17,7 +17,7 @@ namespace Curato.Views
         public SearchPage()
         {
             InitializeComponent();
-            this.DataContext = new InputViewModel();
+            this.DataContext = AppState.SharedInputViewModel;
         }
 
         private void CompanionButton_Click(object sender, RoutedEventArgs e)
