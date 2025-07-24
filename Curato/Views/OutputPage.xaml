@@ -92,14 +92,12 @@
                         Padding="12,6"
                         MinWidth="170"
                         Height="75"
-                        Margin="-150,0,0,0"
                         Click="EditButton_Click"
-                        Cursor="Hand"
-                        Background="White"
-                        BorderBrush="#DDD"
-                        BorderThickness="1"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center">
+                    <Button.RenderTransform>
+                        <TranslateTransform X="-150"/>
+                    </Button.RenderTransform>
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="White"/>
