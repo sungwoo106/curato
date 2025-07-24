@@ -78,7 +78,11 @@
                     <TextBlock Text="{Binding PreferencesSummary}"
                                FontSize="20"
                                FontFamily="{StaticResource SatoshiMedium}"
-                               Foreground="#575757"/>
+                               Foreground="#575757"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Stretch"
+                               VerticalAlignment="Center"/>
                 </Border>
 
                 <!-- Edit Plan Button -->
