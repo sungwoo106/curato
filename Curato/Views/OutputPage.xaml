@@ -30,19 +30,19 @@
             <DockPanel LastChildFill="False">
                 <!-- Left: Options Summary -->
                 <StackPanel Orientation="Vertical" DockPanel.Dock="Left" Width="Auto">
-                    <TextBlock Text="{Binding LocationQuery, StringFormat= {0}}"
+                    <TextBlock Text="{Binding LocationQuery, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                     <Separator Margin="0,8"/>
-                    <TextBlock Text="{Binding SelectedCompanion, StringFormat= {0}}"
+                    <TextBlock Text="{Binding SelectedCompanion, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                     <Separator Margin="0,8"/>
-                    <TextBlock Text="{Binding SelectedBudget, StringFormat= {0}}"
+                    <TextBlock Text="{Binding SelectedBudget, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                     <Separator Margin="0,8"/>
-                    <TextBlock Text="{Binding SelectedMainTime, StringFormat= {0}}"
+                    <TextBlock Text="{Binding SelectedMainTime, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                     <Separator Margin="0,8"/>
-                    <TextBlock Text="{Binding SelectedCategoriesText, StringFormat= {0}}"
+                    <TextBlock Text="{Binding SelectedCategoriesText, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                 </StackPanel>
 
