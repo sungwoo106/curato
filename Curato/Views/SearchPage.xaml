@@ -85,7 +85,8 @@
     <Style x:Key="CategoryChipStyle" TargetType="Button">
     <Setter Property="MinHeight" Value="65"/>
     <!-- default -->
-    <Setter Property="Margin" Value="8"/>
+    <Setter Property="Padding" Value="20,8"/>
+    <Setter Property="Margin" Value="12,8"/>
     <Setter Property="Background" Value="White"/>
     <Setter Property="BorderBrush" Value="#DDD"/>
     <Setter Property="BorderThickness" Value="1"/>
@@ -300,7 +301,8 @@
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Stretch"
                                     MinWidth="166"
-                                    MinHeight="65">
+                                    MinHeight="65"
+                                    padding="0,10,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <UniformGrid Columns="4" VerticalAlignment="Center"/>

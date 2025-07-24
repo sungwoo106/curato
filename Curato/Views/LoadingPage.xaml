@@ -46,7 +46,7 @@
                 <Border x:Name="ProgressBarFill"
                         Width="0"
                         Height="24"
-                        Background="#FFB46A00"
+                        Background="#FFB31A"
                         CornerRadius="20"
                         HorizontalAlignment="Left"/>
             </Border>
