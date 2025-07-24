@@ -22,26 +22,26 @@
         <!-- User Options Summary Box -->
         <Border Grid.Row="1"
                 Background="#FFF2CC"
-                CornerRadius="16"
-                Margin="30,30,30,15"
+                CornerRadius="30"
+                Margin="30,0,30,20"
                 Padding="20"
                 BorderBrush="#FFD699"
                 BorderThickness="1">
-            <DockPanel LastChildFill="False">
+            <DockPanel>
                 <!-- Left: Options Summary -->
-                <StackPanel Orientation="Vertical" DockPanel.Dock="Left" Width="Auto">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="{Binding LocationQuery, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin="0,8"/>
+                    <Separator Text=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedCompanion, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin="0,8"/>
+                    <Separator Margin=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedBudget, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin="0,8"/>
+                    <Separator Margin=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedMainTime, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin="0,8"/>
+                    <Separator Margin=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedCategoriesText, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                 </StackPanel>
@@ -59,27 +59,36 @@
                         Foreground="White"
                         BorderThickness="0"
                         Cursor="Hand"
-                        Width="100"
-                        Height="40"
+                        Width="120"
+                        Height="42"
                         DockPanel.Dock="Right"
-                        />
+                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="20"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
             </DockPanel>
         </Border>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Margin="30,0,30,30">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
         <!-- WebView Map -->
-        <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="10">
-            <TextBlock Text="[Map will be displayed here via WebView2]" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="Gray"/>
+        <Border Grid.Column="0" Background="#FFF2CC" CornerRadius="16" Margin="0,0,10,0">
+            <TextBlock Text="[Map will be displayed here via WebView2]" 
+                VerticalAlignment="Center" 
+                HorizontalAlignment="Center" 
+                Foreground="Gray"/>
         </Border>
 
         <!-- Emotional Itinerary -->
         <ScrollViewer Grid.Column="1" Margin="20">
-            <TextBlock TextWrapping="Wrap" FontSize="16">
+            <TextBlock TextWrapping="Wrap" FontSize="16" Padding="20">
                 피치가 낮은 카페에서 하루를 시작해보세요.
                 주변의 구경을 다루며 스타벅스한 모험을 시작하고,
                 사람들과 함께 마지막에는 달력적인 여행을 만들어보세요.
