@@ -355,11 +355,11 @@
                             PopupAnimation="Slide"
                             MinWidth="450"
                             MinHeight="240"
-                            HorizontalOffset="-30"
                             VerticalOffset="40">
                             <Border
                                 Background="White"
                                 Padding="12"
+                                Margin="10,10,0,0"
                                 CornerRadius="40"
                                 BorderBrush="#DDD"
                                 BorderThickness="1"
