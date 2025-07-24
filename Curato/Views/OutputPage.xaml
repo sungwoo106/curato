@@ -77,7 +77,8 @@
                         Margin="30,0">
                     <TextBlock Text="{Binding PreferencesSummary}"
                                FontSize="20"
-                               FontFamily="{StaticResource SatoshiMedium}"/>
+                               FontFamily="{StaticResource SatoshiMedium}"
+                               Foreground="#575757"/>
                 </Border>
 
                 <!-- Edit Plan Button -->
