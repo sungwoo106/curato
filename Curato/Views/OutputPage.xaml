@@ -27,19 +27,23 @@
                 Padding="20"
                 BorderBrush="#FFD699"
                 BorderThickness="1">
-            <DockPanel>
+            <DockPanel LastChildFill="False">
                 <!-- Left: Options Summary -->
-                <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Left" Width="Auto">
                     <TextBlock Text="Binding LocationQuery, StringFormat= {0}}"
-                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Margin="0,0,0,4"/>
+                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
+                    <Separator Margin="0,8"/>
                     <TextBlock Text="{Binding SelectedCompanion, StringFormat= {0}}"
-                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Margin="0,0,0,4"/>
+                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
+                    <Separator Margin="0,8"/>
                     <TextBlock Text="Binding SelectedBudget, StringFormat= {0}}"
-                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Margin="0,0,0,4"/>
+                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
+                    <Separator Margin="0,8"/>
                     <TextBlock Text="Binding SelectedMainTime, StringFormat= {0}"
-                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Margin="0,0,0,4"/>
+                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
+                    <Separator Margin="0,8"/>
                     <TextBlock Text="{Binding SelectedCategoriesText, StringFormat= {0}}"
-                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}"/>
+                               FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                 </StackPanel>
 
                 <!-- Right: Edit Button -->
@@ -47,7 +51,7 @@
                         FontSize="18"
                         FontFamily="{StaticResource SatoshiMedium}"
                         Padding="12,6"
-                        Margin="20,0,0,0"
+                        Margin="40,0,0,0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
                         Click="EditButton_Click"
