@@ -155,7 +155,7 @@ namespace Curato.ViewModels
 
         public string LocationQuery { get; set; } = "Search Location";
 
-        public string PreferencesSummary => string.Join("   |   ", new[]
+        public string PreferencesSummary => string.Join("     |     ", new[]
         {
             LocationQuery,
             SelectedCompanion,
