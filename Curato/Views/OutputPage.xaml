@@ -134,7 +134,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- WebView Map -->
-            <Border Grid.Column="0" Background="White" CornerRadius="16" Margin="0,0,10,0" Background="Gray">
+            <Border Grid.Column="0" Background="Gray" CornerRadius="16" Margin="0,0,10,0">
                 <TextBlock Text="[Map will be displayed here via WebView2]" 
                     VerticalAlignment="Center" 
                     HorizontalAlignment="Center" 
