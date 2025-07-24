@@ -412,7 +412,7 @@ namespace Curato.Views
                 {
                     Style   = chipStyle,
                     Content = panel,
-                    Padding = new Thickness(12,6),
+                    Padding = new Thickness(12,6,12,6),
                     Cursor  = Cursors.Hand,
                     // center it in its star‐sized cell:
                     HorizontalAlignment = HorizontalAlignment.Center,
