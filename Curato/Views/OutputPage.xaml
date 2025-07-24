@@ -32,16 +32,16 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="{Binding LocationQuery, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Text=" | " FontSize="20" Margin="8,0"/>
+                    <TextBlock Text=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedCompanion, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin=" | " FontSize="20" Margin="8,0"/>
+                    <TextBlock Margin=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedBudget, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin=" | " FontSize="20" Margin="8,0"/>
+                    <TextBlock Margin=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedMainTime, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
-                    <Separator Margin=" | " FontSize="20" Margin="8,0"/>
+                    <TextBlock Margin=" | " FontSize="20" Margin="8,0"/>
                     <TextBlock Text="{Binding SelectedCategoriesText, StringFormat={}{0}}"
                                FontSize="20" FontFamily="{StaticResource SatoshiMedium}" Foreground="Black"/>
                 </StackPanel>
