@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" Background="White">
-             
+
     <UserControl.Resources>
         <Style x:Key="PillChipStyle" TargetType="TextBlock">
             <Setter Property="Background" Value="#FFB31A"/>
@@ -66,8 +66,7 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Margin="30,0"
-                            DockPanel.Dock="Left"
-                            Spacing="12">
+                            DockPanel.Dock="Left">
                     <TextBlock Text="{Binding LocationQuery}" Style="{StaticResource PillChipStyle}"/>
                     <TextBlock Text="{Binding SelectedCompanion}" Style="{StaticResource PillChipStyle}"/>
                     <TextBlock Text="{Binding SelectedBudget}" Style="{StaticResource PillChipStyle}"/>
