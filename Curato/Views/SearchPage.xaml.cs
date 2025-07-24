@@ -180,7 +180,8 @@ namespace Curato.Views
                     Style = BuildPeriodButtonStyle(period),
                     Content = panel,
                     Cursor = Cursors.Hand,
-                    Padding = new Thickness(8)
+                    Padding = new Thickness(8),
+                    Height = 67
                 };
 
                 btn.Click += (_, _) =>
@@ -412,7 +413,7 @@ namespace Curato.Views
                 {
                     Style   = chipStyle,
                     Content = panel,
-                    Padding = new Thickness(12,6,12,6),
+                    Padding = new Thickness(20,6,20,6),
                     Cursor  = Cursors.Hand,
                     // center it in its star‐sized cell:
                     HorizontalAlignment = HorizontalAlignment.Center,
