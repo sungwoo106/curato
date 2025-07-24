@@ -353,7 +353,7 @@
                             StaysOpen="False"
                             AllowsTransparency="True"
                             PopupAnimation="Slide"
-                            Width="621"
+                            MinWidth="450"
                             MinHeight="240"
                             HorizontalOffset="-30"
                             VerticalOffset="40">
