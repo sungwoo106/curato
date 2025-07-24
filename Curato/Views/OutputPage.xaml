@@ -139,7 +139,7 @@
             <ScrollViewer Grid.Column="1" Margin="20">
                 <StackPanel>
                     <Border Padding="20">
-                        <TextBlock TextWrapping="Wrap" FontSize="16" FontFamily="{StaticResource SatoshiRegular}">
+                        <TextBlock TextWrapping="Wrap" FontSize="16" FontFamily="{StaticResource SatoshiMedium}">
                             피치가 낮은 카페에서 하루를 시작해보세요.
                             주변의 구경을 다루며 스타벅스한 모험을 시작하고,
                             사람들과 함께 마지막에는 달력적인 여행을 만들어보세요.
