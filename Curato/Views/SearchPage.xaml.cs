@@ -383,6 +383,7 @@ namespace Curato.Views
             }
 
             var chipStyle = (Style)FindResource("CategoryChipStyle");
+            var satoshi   = (FontFamily)FindResource("SatoshiMedium");
 
             // Loop and place each option
 
@@ -396,7 +397,7 @@ namespace Curato.Views
                 {
                     Text              = cat,
                     FontSize          = 20,
-                    FontFamily        = (FontFamily)FindResource("SatoshiMedium"),
+                    FontFamily        = satoshi,
                     Foreground        = Brushes.Black,
                     VerticalAlignment = VerticalAlignment.Center
                 };
@@ -411,8 +412,11 @@ namespace Curato.Views
                 {
                     Style   = chipStyle,
                     Content = panel,
-                    Padding = new Thickness(12,6,12,6),
-                    Cursor  = Cursors.Hand
+                    Padding = new Thickness(12,6),
+                    Cursor  = Cursors.Hand,
+                    // center it in its star‐sized cell:
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment   = VerticalAlignment.Center
                 };
 
                 // If it’s the selected category, tint it

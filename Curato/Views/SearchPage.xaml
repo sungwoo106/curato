@@ -351,7 +351,9 @@
                             AllowsTransparency="True"
                             PopupAnimation="Slide"
                             Width="621"
-                            MinHeight="240">
+                            MinHeight="240"
+                            HorizontalOffset="-30"
+                            VerticalOffset="40">
                             <Border
                                 Background="White"
                                 Padding="12"
@@ -359,15 +361,17 @@
                                 BorderBrush="#DDD"
                                 BorderThickness="1"
                                 Effect="{StaticResource ShadowEffect}">
-                                <Grid x:Name="CategoryGrid" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Grid x:Name="CategoryGrid" 
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Center">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 </Grid>
                             </Border>
@@ -408,7 +412,12 @@
                                 <StackPanel VerticalAlignment="Top">
                                     <Grid>
                                         <Border CornerRadius="40" ClipToBounds="True" Width="318" Height="350">
-                                            <Image Source="{Binding ImagePath}" Stretch="UniformToFill" StretchDirection="Both" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" />
+                                            <Image Source="{Binding ImagePath}"
+                                                   Stretch="UniformToFill" StretchDirection="Both"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   SnapsToDevicePixels="True"
+                                                   RenderOptions.BitmapScalingMode="HighQuality" />
                                         </Border>
                                         <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0">
                                             <Border.Effect>
