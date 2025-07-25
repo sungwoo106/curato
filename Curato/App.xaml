@@ -6,6 +6,7 @@
     <Application.Resources>
         <FontFamily x:Key="SatoshiBold">/Fonts/#Satoshi Bold</FontFamily>
         <FontFamily x:Key="SatoshiMedium">/Fonts/#Satoshi Medium</FontFamily>
+        <local:PositiveCountToBoolConverter x:Key="PositiveCountToBoolConverter"/>
         <Style x:Key="AnimatedContextMenuStyle" TargetType="{x:Type ContextMenu}">
             <Setter Property="OverridesDefaultStyle" Value="True"/>
             <Setter Property="Template">

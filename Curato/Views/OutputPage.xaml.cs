@@ -9,7 +9,21 @@ namespace Curato.Views
         public OutputPage()
         {
             InitializeComponent();
-            this.DataContext = AppState.SharedInputViewModel;
+            this.DataContext = AppState.SharedTripPlan;
+
+            var plan = AppState.SharedTripPlan;
+            if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
+            {
+                EmotionalItineraryTextBlock.Inlines.Clear();
+                string[] paragraphs = plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string para in paragraphs)
+                {
+                    EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
+                    EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
+                    EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
+                }
+            }
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)

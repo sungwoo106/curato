@@ -50,44 +50,34 @@ namespace Curato.Views
                 return;
             }
 
-            var results = await FetchPlaceSuggestions(query);
-            vm.LocationSuggestions.Clear();
-            foreach (var r in results)
-                vm.LocationSuggestions.Add(r);
-
-            vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
-        }
-
-        private async Task<List<Models.PlaceSuggestion>> FetchPlaceSuggestions(string query)
-        {
-            const double lat = 37.5563;
-            const double lng = 126.9237;
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "python3",
-                Arguments = $"data/api_clients/search_cli.py \"{query}\" {lat.ToString(CultureInfo.InvariantCulture)} {lng.ToString(CultureInfo.InvariantCulture)} 5",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", ".."))
-            };
-
             try
             {
-                using var process = Process.Start(psi)!;
-                string output = await process.StandardOutput.ReadToEndAsync();
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "python",
+                    Arguments = $"core/location_suggest.py \"{query}\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                string result = await process.StandardOutput.ReadToEndAsync();
                 await process.WaitForExitAsync();
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                return JsonSerializer.Deserialize<List<Models.PlaceSuggestion>>(output, options) ?? new List<Models.PlaceSuggestion>();
+
+                var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
+                vm.LocationSuggestions = suggestions ?? new();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to fetch suggestions: {ex}");
-                return new List<Models.PlaceSuggestion>();
+                Debug.WriteLine($"Error fetching location suggestions: {ex.Message}");
+                vm.LocationSuggestions = new();
             }
+
         }
 
+        // Handle selection of a location from the suggestions
+        /*
         private void LocationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DataContext is not InputViewModel vm)
@@ -99,6 +89,20 @@ namespace Curato.Views
             }
             vm.IsLocationPopupOpen = false;
         }
+        */
+
+        // Handle clicking on a suggestion directly in the popup
+        // This is used when the user clicks on a TextBlock in the ItemsControl
+        private void Suggestion_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is PlaceSuggestion ps && DataContext is InputViewModel vm)
+            {
+                vm.LocationQuery = ps.Name;
+                vm.SelectedLocationCoordinates = (ps.Latitude, ps.Longitude);
+                vm.LocationSuggestions = new();
+            }
+        }
+
 
         private void CompanionButton_Click(object sender, RoutedEventArgs e)
         {
@@ -534,13 +538,23 @@ namespace Curato.Views
             CategoryPopup.IsOpen = true;
         }
         
-        private void GenerateButton_Click(object sender, RoutedEventArgs e)
+        private async void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
-            if (DataContext is InputViewModel vm)
+            if (DataContext is not InputViewModel vm)
+                return;
+
+            var request = new TripRequest
             {
-                if (vm.GeneratePlanCommand.CanExecute(null))
-                    vm.GeneratePlanCommand.Execute(null);
-            }
+                Location = vm.LocationQuery,
+                Companion = vm.SelectedCompanion,
+                Budget = vm.SelectedBudget,
+                StartTime = vm.SelectedTime,
+                PreferredPlaceTypes = vm.SelectedCategories,
+                Coordinates = vm.SelectedLocationCoordinates ?? (37.5665, 126.9780)
+            };
+
+            var tripPlan = await PlannerEngine.GenerateTripPlan(request);
+            AppState.SharedTripPlan = tripPlan;
 
             var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)

@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Windows;
 
+// Currently, loading page is not synced with any specific view model.
+// It serves as a temporary loading screen before navigating to the OutputPage.
+// TODO: Change this to wait for actual data loading in the future.
 namespace Curato.Views
 {
     public partial class LoadingPage : UserControl

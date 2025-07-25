@@ -148,15 +148,15 @@
             </Border>
 
             <!-- Emotional Itinerary -->
-            <ScrollViewer Grid.Column="1" Margin="20">
+            <ScrollViewer Grid.Column="1" Margin="20" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Border Padding="20">
-                        <TextBlock TextWrapping="Wrap"
+                        <TextBlock x:Name="EmotionalItineraryTextBlock"
+                                   TextWrapping="Wrap"
                                    FontSize="16"
                                    FontFamily="{StaticResource SatoshiMedium}"
                                    LineStackingStrategy="BlockLineHeight"
-                                   LineHeight="32"
-                                   Text="{Binding PlanText}"/>
+                                   LineHeight="32"/>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
