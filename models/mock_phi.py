@@ -24,18 +24,28 @@ MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct"
 
 def run_cli(prompt: str) -> str:
     """Send the prompt to the QAI Hub model using the CLI."""
+    prompt_file = "phi_cli_prompt.json"
+    with open(prompt_file, "w", encoding="utf-8") as f:
+        json.dump({"prompt": [prompt]}, f, ensure_ascii=False)
     cmd = [
         "qai-hub",
-        "submit-profile-job",
+        "job",
+        "inference",
+        "submit",
         "--model",
         MODEL_ID,
         "--inputs",
-        json.dumps({"prompt": [prompt]}),
+        "--inputs-file",
+        prompt_file,
         "--device",
         "Snapdragon X Elite CRD",
         "--wait",
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    except FileNotFoundError as exc:
+        raise RuntimeError("qai-hub CLI is not installed") from exc
+    
     if result.returncode != 0:
         raise RuntimeError(
             f"qai-hub CLI failed: {result.stderr.strip()}"
@@ -66,7 +76,11 @@ def main() -> None:
         json.dumps(recommendations, ensure_ascii=False),
     )
 
-    response = run_cli(prompt)
+    try:
+        response = run_cli(prompt)
+    except RuntimeError as e:
+        print(e)
+        response = "[]"  # placeholder when CLI fails
 
     with open("mock_phi_output.txt", "w", encoding="utf-8") as f:
         f.write(response)
