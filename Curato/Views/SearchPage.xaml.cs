@@ -63,7 +63,7 @@ namespace Curato.Views
 
             try
             {
-                var scriptPath = Path.Combine(AppContext.BaseDirectory, "core", "location_suggest.py");
+                var scriptPath = System.IO.Path.Combine(AppContext.BaseDirectory, "core", "location_suggest.py");
 
                 var psi = new ProcessStartInfo
                 {
