@@ -74,6 +74,18 @@ def get_closest_place(query: str, lat: float, lng: float, radius: int = 1000, si
         return None
     return min(documents, key=lambda d: int(d.get("distance", "999999")))
 
+def autocomplete_location(query: str) -> list:
+
+    api_key = get_kakao_map_api_key()
+
+    url = "https://dapi.kakao.com/v2/local/search/keyword.json"
+    headers = {"Authorization": f"KakaoAK {api_key}"}
+    params = {"query": query, "size": 5}
+
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    return response.json()
+
 
 def format_kakao_places_for_prompt(kakao_results: Dict[str, List[Dict]]) -> List[Dict]:
     '''

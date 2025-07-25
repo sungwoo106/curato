@@ -1,10 +1,10 @@
 import sys
 import json
-from data.api_clients.kakao_api import search_places
+from data.api_clients.kakao_api import autocomplete_location
 
 def suggest_locations(query):
     try:
-        results = search_places(query, lat=37.5665, lon=126.9780, radius_km=10)
+        results = autocomplete_location(query)
         suggestions = []
 
         for place in results.get("documents", []):
@@ -19,9 +19,9 @@ def suggest_locations(query):
                 })
 
         print(json.dumps(suggestions, ensure_ascii=False))
-    except Exception:
+    except Exception as e:
         print(json.dumps([]))
-
+        
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps([]))
