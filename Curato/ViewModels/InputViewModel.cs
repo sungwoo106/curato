@@ -185,7 +185,6 @@ namespace Curato.ViewModels
         }
 
         public (double Latitude, double Longitude)? SelectedLocationCoordinates { get; set; }
-        }
 
         public string PreferencesSummary => string.Join("        |        ", new[]
         {
