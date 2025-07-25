@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.IO;
 using Curato.Models;
 
 public static class PlannerEngine
@@ -8,22 +9,34 @@ public static class PlannerEngine
     {
         try
         {
-            string args = JsonSerializer.Serialize(request);
+            string json = JsonSerializer.Serialize(request);
+            var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
             var psi = new ProcessStartInfo
             {
-                FileName = "python",
-                Arguments = $"generate_plan.py \"{args.Replace("\"", "\\\"")}\"",
+                FileName = "python3",
+                Arguments = scriptPath,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                WorkingDirectory = AppContext.BaseDirectory
             };
 
-            using var process = Process.Start(psi);
+            psi.Environment["INPUT_JSON"] = json;
+
+            using var process = Process.Start(psi)!;
             string result = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
 
-            var plan = JsonSerializer.Deserialize<TripPlan>(result);
-            return plan ?? new TripPlan();
+            try
+            {
+                using var doc = JsonDocument.Parse(result);
+                string? itinerary = doc.RootElement.GetProperty("itinerary").GetString();
+                return new TripPlan { EmotionalNarrative = itinerary ?? result };
+            }
+            catch
+            {
+                return new TripPlan { EmotionalNarrative = result };
+            }
         }
         catch (Exception ex)
         {
