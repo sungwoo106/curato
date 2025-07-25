@@ -1,6 +1,9 @@
 import json
 import re
 import sys, os
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 # Get the root directory of the entire project
 sys.path.insert(0, r"C:\Users\sungw\Documents\curato")
 with open("python_used.txt", "w") as f:
