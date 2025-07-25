@@ -38,6 +38,14 @@ namespace Curato.Views
             _locationTimer.Start();
         }
 
+        private void LocationTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is InputViewModel vm && vm.LocationQuery == "Search Location")
+            {
+                vm.LocationQuery = string.Empty;
+            }
+        }
+
         private async void LocationTimer_Tick(object? sender, EventArgs e)
         {
             _locationTimer.Stop();

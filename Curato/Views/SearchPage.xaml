@@ -206,7 +206,8 @@
                                      FontFamily="{StaticResource SatoshiMedium}"
                                      VerticalAlignment="Center"
                                      Text="{Binding LocationQuery, UpdateSourceTrigger=PropertyChanged}"
-                                     TextChanged="LocationTextBox_TextChanged"/>
+                                     TextChanged="LocationTextBox_TextChanged"
+                                     GotFocus="LocationTextBox_GotFocus"/>
                             <Popup x:Name="LocationSuggestionPopup"
                                    MinWidth="650"
                                    MinHeight="400"
