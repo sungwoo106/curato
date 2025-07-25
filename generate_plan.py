@@ -20,7 +20,7 @@ from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 
-_MOCK_DIR = os.path.join(os.path.dirname(__file__), "mock")
+_MOCK_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "mock"))
 
 # Map of location slug to mock story filename
 MOCK_STORIES = {
