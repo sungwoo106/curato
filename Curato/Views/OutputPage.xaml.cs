@@ -14,6 +14,8 @@ namespace Curato.Views
             this.DataContext = AppState.SharedTripPlan;
 
             var plan = AppState.SharedTripPlan;
+            MessageBox.Show(plan?.EmotionalNarrative ?? "No emotional story loaded");
+            
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
                 EmotionalItineraryTextBlock.Inlines.Clear();

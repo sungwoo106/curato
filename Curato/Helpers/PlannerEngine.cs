@@ -13,7 +13,7 @@ public static class PlannerEngine
             var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
             var psi = new ProcessStartInfo
             {
-                FileName = "python3",
+                FileName = "python",
                 Arguments = scriptPath,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
@@ -25,6 +25,7 @@ public static class PlannerEngine
 
             using var process = Process.Start(psi)!;
             string result = await process.StandardOutput.ReadToEndAsync();
+            File.WriteAllText("last_result.json", result);
             await process.WaitForExitAsync();
 
             try
