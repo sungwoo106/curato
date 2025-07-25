@@ -33,7 +33,7 @@ def run_cli(prompt: str) -> str:
         "submit-profile-job",
         "--model",
         MODEL_ID,
-        "--inputs-file",
+        "--input",
         prompt_file,
         "--device",
         "Snapdragon X Elite CRD",
