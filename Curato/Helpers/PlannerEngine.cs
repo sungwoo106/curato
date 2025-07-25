@@ -14,7 +14,7 @@ public static class PlannerEngine
             var psi = new ProcessStartInfo
             {
                 FileName = "python",
-                Arguments = scriptPath,
+                Arguments = $"\"{scriptPath}\"",
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -25,7 +25,8 @@ public static class PlannerEngine
 
             using var process = Process.Start(psi)!;
             string result = await process.StandardOutput.ReadToEndAsync();
-            File.WriteAllText("last_result.json", result);
+            // Debugging output
+            File.WriteAllText("last_result.json", result ?? "[null]");
             await process.WaitForExitAsync();
 
             try
