@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 using System.Windows.Shapes;
@@ -62,10 +63,12 @@ namespace Curato.Views
 
             try
             {
+                var scriptPath = Path.Combine(AppContext.BaseDirectory, "core", "location_suggest.py");
+
                 var psi = new ProcessStartInfo
                 {
                     FileName = "python",
-                    Arguments = $"core/location_suggest.py \"{query}\"",
+                    Arguments = $"\"{scriptPath}\" \"{query}\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
