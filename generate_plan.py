@@ -3,6 +3,8 @@ import re
 import sys, os
 # Get the root directory of the entire project
 sys.path.insert(0, r"C:\Users\sungw\Documents\curato")
+with open("python_used.txt", "w") as f:
+    f.write(sys.executable)
 
 
 
