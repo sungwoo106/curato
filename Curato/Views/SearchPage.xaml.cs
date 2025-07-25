@@ -563,7 +563,6 @@ namespace Curato.Views
                 Budget = vm.SelectedBudget,
                 StartTime = vm.SelectedTime,
                 PreferredPlaceTypes = vm.SelectedCategories.ToList(),
-                Coordinates = vm.SelectedLocationCoordinates ?? (37.5665, 126.9780)
             };
 
             var tripPlan = await PlannerEngine.GenerateTripPlan(request);
