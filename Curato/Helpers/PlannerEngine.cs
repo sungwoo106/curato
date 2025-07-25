@@ -16,6 +16,7 @@ public static class PlannerEngine
                 FileName = "python",
                 Arguments = $"\"{scriptPath}\"",
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WorkingDirectory = AppContext.BaseDirectory
@@ -25,8 +26,10 @@ public static class PlannerEngine
 
             using var process = Process.Start(psi)!;
             string result = await process.StandardOutput.ReadToEndAsync();
+            string error = await process.StandardError.ReadToEndAsync();
             // Debugging output
             File.WriteAllText("last_result.json", result ?? "[null]");
+            File.WriteAllText("last_error.txt", error ?? "[none]");
             await process.WaitForExitAsync();
 
             try
