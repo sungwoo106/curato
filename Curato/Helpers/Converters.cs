@@ -2,15 +2,18 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-public class PositiveCountToBoolConverter : IValueConverter
+namespace Curato.Helpers
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public class PositiveCountToBoolConverter : IValueConverter
     {
-        return value is int count && count > 0;
-    }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is int count && count > 0;
+        }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
