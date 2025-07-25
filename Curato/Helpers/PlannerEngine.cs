@@ -21,6 +21,7 @@ public static class PlannerEngine
                 CreateNoWindow = true,
                 WorkingDirectory = AppContext.BaseDirectory
             };
+            psi.StandardOutputEncoding = System.Text.Encoding.UTF8;
 
             psi.Environment["INPUT_JSON"] = json;
 
