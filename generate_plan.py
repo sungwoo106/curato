@@ -2,8 +2,8 @@ import json
 import re
 import sys, os
 # Get the root directory of the entire project
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-sys.path.insert(0, PROJECT_ROOT)
+sys.path.insert(0, r"C:\Users\sungw\Documents\curato")
+
 
 
 """CLI entry for the WPF frontend.
