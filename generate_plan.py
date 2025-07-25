@@ -5,6 +5,7 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Get the root directory of the entire project
+# Change this to your actual path later
 sys.path.insert(0, r"C:\Users\sungw\Documents\curato")
 with open("python_used.txt", "w") as f:
     f.write(sys.executable)
@@ -23,6 +24,7 @@ from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 
+# Mock directory for testing purposes
 _MOCK_DIR = r"C:\Users\sungw\Documents\curato\mock"
 
 # Map of location slug to mock story filename
@@ -72,64 +74,53 @@ def _load_mock_story(query: str | None) -> str | None:
 # replicate the workflow of "main.py" to call into the real backend logic.
 
 def main() -> None:
+    """Entry point used by the C# UI."""
+
+    # Parse input JSON from the environment.  Missing fields fall back to the
+    # same defaults used throughout the Python CLI.
+    data = json.loads(os.getenv("INPUT_JSON", "{}"))
+
+    companion_type = data.get("companion_type", COMPANION_TYPES[0])
+    budget = data.get("budget", BUDGET[0])
+    starting_time = data.get("starting_time", STARTING_TIME)
+    location_query = data.get("location_query")
+    categories = data.get("categories", [])
+
+    # Check if the query matches one of our mock stories
+    mock = _load_mock_story(location_query)
+    if mock is not None:
+        print(json.dumps({"itinerary": mock}, ensure_ascii=False))
+        return
+
+    # Determine the coordinates for the starting location using the Kakao Map
+    # API. If the lookup fails or no query is provided, fall back to the default
+    # location from "constants.py".
+    start_location = LOCATION
+    if location_query:
+        try:
+            loc = get_location_coordinates(location_query)
+            if loc:
+                start_location = loc
+        except Exception:
+            pass
+
+    # Build the Preferences instance and invoke the main workflow.
+    planner = Preferences(
+        companion_type=companion_type,
+        budget=budget,
+        starting_time=starting_time,
+        start_location=start_location,
+    )
+    planner.select_place_types(categories)
+
+    # Generate the emotional itinerary text using the Llama model.  In case the
+    # backend fails (e.g. missing models), return a helpful message.
     try:
-        """Entry point used by the C# UI."""
+        itinerary = planner.run_llama_story()
+    except Exception as exc:  # Broad catch so the frontend always gets a reply
+        itinerary = f"Backend failure: {exc}"
 
-        # Log the start of the script and the input JSON for debugging purposes.
-        try:
-            with open("debug_log.txt", "a", encoding="utf-8") as log:
-                log.write("STARTING SCRIPT\\n")
-                log.write(f"INPUT_JSON = {os.getenv('INPUT_JSON')}\\n")
-        except Exception as e:
-            print(json.dumps({"itinerary": f"Logging error: {e}"}))
-
-        # Parse input JSON from the environment.  Missing fields fall back to the
-        # same defaults used throughout the Python CLI.
-        data = json.loads(os.getenv("INPUT_JSON", "{}"))
-
-        companion_type = data.get("companion_type", COMPANION_TYPES[0])
-        budget = data.get("budget", BUDGET[0])
-        starting_time = data.get("starting_time", STARTING_TIME)
-        location_query = data.get("location_query")
-        categories = data.get("categories", [])
-
-        # Check if the query matches one of our mock stories
-        mock = _load_mock_story(location_query)
-        if mock is not None:
-            print(json.dumps({"itinerary": mock}, ensure_ascii=False))
-            return
-
-        # Determine the coordinates for the starting location using the Kakao Map
-        # API. If the lookup fails or no query is provided, fall back to the default
-        # location from "constants.py".
-        start_location = LOCATION
-        if location_query:
-            try:
-                loc = get_location_coordinates(location_query)
-                if loc:
-                    start_location = loc
-            except Exception:
-                pass
-
-        # Build the Preferences instance and invoke the main workflow.
-        planner = Preferences(
-            companion_type=companion_type,
-            budget=budget,
-            starting_time=starting_time,
-            start_location=start_location,
-        )
-        planner.select_place_types(categories)
-
-        # Generate the emotional itinerary text using the Llama model.  In case the
-        # backend fails (e.g. missing models), return a helpful message.
-        try:
-            itinerary = planner.run_llama_story()
-        except Exception as exc:  # Broad catch so the frontend always gets a reply
-            itinerary = f"Backend failure: {exc}"
-
-        print(json.dumps({"itinerary": itinerary}, ensure_ascii=False))
-    except Exception as e:
-        print(json.dumps({"itinerary": f"Script failed: {e}"}))
+    print(json.dumps({"itinerary": itinerary}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

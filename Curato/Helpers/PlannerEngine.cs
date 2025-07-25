@@ -13,6 +13,7 @@ public static class PlannerEngine
             var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
             var psi = new ProcessStartInfo
             {
+                // Change this to your Python executable path
                 FileName = @"C:\Users\sungw\AppData\Local\Programs\Python\Python310\python.exe",
                 Arguments = $"\"{scriptPath}\"",
                 RedirectStandardOutput = true,
@@ -28,9 +29,6 @@ public static class PlannerEngine
             using var process = Process.Start(psi)!;
             string result = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
-            // Debugging output
-            File.WriteAllText("last_result.json", result ?? "[null]");
-            File.WriteAllText("last_error.txt", error ?? "[none]");
             await process.WaitForExitAsync();
 
             try

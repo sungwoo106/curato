@@ -13,10 +13,11 @@ namespace Curato.Views
             InitializeComponent();
             this.DataContext = AppState.SharedTripPlan;
 
+            // Load the emotional narrative into the TextBlock
             var plan = AppState.SharedTripPlan;
-            // Debugging output
-            // This will show the emotional narrative in a message box for debugging purposes
-            MessageBox.Show(plan?.EmotionalNarrative ?? "No emotional story loaded");
+
+            // Set the preferences summary
+            PreferencesSummaryLabel.Text = AppState.SharedInputViewModel.PreferencesSummary;
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
