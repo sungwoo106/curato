@@ -30,9 +30,7 @@ def run_cli(prompt: str) -> str:
 
     cmd = [
         "qai-hub",
-        "job",
-        "inference",
-        "submit",
+        "submit-inference-job",
         "--model",
         MODEL_ID,
         "--inputs-file",
