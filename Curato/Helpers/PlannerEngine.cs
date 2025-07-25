@@ -13,7 +13,7 @@ public static class PlannerEngine
             var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
             var psi = new ProcessStartInfo
             {
-                FileName = "python",
+                FileName = @"C:\Users\sungw\AppData\Local\Programs\Python\Python310\python.exe",
                 Arguments = $"\"{scriptPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
