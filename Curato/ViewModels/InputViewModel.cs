@@ -203,7 +203,7 @@ namespace Curato.ViewModels
                 if (_isLocationPopupOpen != value)
                 {
                     _isLocationPopupOpen = value;
-                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsLocationPopupOpen));
                 }
             }
         }
