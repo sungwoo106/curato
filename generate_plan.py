@@ -1,6 +1,8 @@
-import os
 import json
 import re
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+
 
 """CLI entry for the WPF frontend.
 
