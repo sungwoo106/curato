@@ -75,7 +75,7 @@
                         MinWidth="1100"
                         Height="75"
                         Margin="-100,0,0,0">
-                    <TextBlock Text="{Binding PreferencesSummary}"
+                    <TextBlock Text="{Binding PreferencesSummaryLabel}"
                                FontSize="20"
                                FontFamily="{StaticResource SatoshiMedium}"
                                Foreground="#575757"
