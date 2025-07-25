@@ -1,0 +1,38 @@
+[
+  {
+    "place_name": "스타벅스 홍대역점",
+    "road_address_name": "서울 마포구 양화로 165",
+    "place_type": "Cafe",
+    "distance": 25,
+    "place_url": "http://place.map.kakao.com/22105109",
+    "latitude": 37.5572887166274,
+    "longitude": 126.923637798148
+  },
+  {
+    "place_name": "몰레꼴레 와이즈파크홍대점",
+    "road_address_name": "서울 마포구 양화로 176",
+    "place_type": "Restaurant",
+    "distance": 91,
+    "place_url": "http://place.map.kakao.com/14543686",
+    "latitude": 37.557318373033,
+    "longitude": 126.924923449096
+  },
+  {
+    "place_name": "공미학 마포홍대점",
+    "road_address_name": "서울 마포구 양화로 162",
+    "place_type": "테마카페",
+    "distance": 85,
+    "place_url": "http://place.map.kakao.com/50216955",
+    "latitude": 37.556429314936146,
+    "longitude": 126.92386955175071
+  },
+  {
+    "place_name": "트릭아이뮤지엄",
+    "road_address_name": "서울 마포구 홍익로3길 20",
+    "place_type": "전시회",
+    "distance": 451,
+    "place_url": "http://place.map.kakao.com/1501236154",
+    "latitude": 37.5535158824572,
+    "longitude": 126.921715487447
+  }
+]
