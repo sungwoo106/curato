@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Linq;
+using System.IO;
 using System.Windows.Input;
 using Curato.Models;
 using Curato.Helpers;
@@ -18,6 +19,8 @@ namespace Curato.ViewModels
 {
     public class InputViewModel : INotifyPropertyChanged
     {
+        // Root directory containing the Python scripts
+        private readonly string _rootDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
         public ObservableCollection<PopularPlace> PopularPlaces { get; set; }
 
         // The list of companion types
@@ -296,7 +299,8 @@ namespace Curato.ViewModels
                     Arguments = "generate_plan.py",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = _rootDir
                 };
 
                 psi.Environment["INPUT_JSON"] = json;
@@ -307,7 +311,8 @@ namespace Curato.ViewModels
 
                 try
                 {
-                    var result = JsonSerializer.Deserialize<PlanResult>(output);
+                    var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var result = JsonSerializer.Deserialize<PlanResult>(output, opts);
                     PlanText = result?.Itinerary ?? output;
                 }
                 catch
@@ -339,7 +344,8 @@ namespace Curato.ViewModels
                     Arguments = "-c \"import json, constants; print(json.dumps(constants.COMPANION_TYPES))\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = _rootDir
                 };
 
                 using var process = Process.Start(psi)!;
@@ -364,7 +370,8 @@ namespace Curato.ViewModels
                     Arguments = "-c \"import json, constants; print(json.dumps(constants.USER_SELECTABLE_PLACE_TYPES))\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = _rootDir
                 };
 
                 using var process = Process.Start(psi)!;

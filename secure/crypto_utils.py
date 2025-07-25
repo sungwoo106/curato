@@ -2,16 +2,16 @@
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-def get_kakao_map_api_key(encrypted_key_path="encrypted_api_key.bin", private_key_path="private_key.pem") -> str:
+def get_kakao_map_api_key(
+    encrypted_key_path: str = "secure/encrypted_api_key.bin",
+    private_key_path: str = "secure/private_key.pem",
+) -> str:
     """
     Decrypts the encrypted Kakao Map API key using the provided private key.
     @param encrypted_key_path: Path to the file containing the encrypted API key.
     @param private_key_path: Path to the file containing the private key used for decryption
     @return: Decrypted Kakao Map API key as a string.
     """
-
-    encrypted_key_path = "secure/encrypted_api_key.bin"
-    private_key_path = "secure/private_key.pem"
 
     # Load the encrypted API key
     with open(encrypted_key_path, "rb") as f:

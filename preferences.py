@@ -74,13 +74,13 @@ class Preferences:
         # Build and run the route planner prompt for 4 locations
         """Run the Phi model to generate a one day route."""
         self.collect_best_place()
-        recommendations_json = self.format_recommendations()
+        recommendations = self.format_recommendations()
         prompt = build_phi_four_loc(
             self.start_location,
             self.companion_type,
             self.starting_time,
             self.budget,
-            recommendations_json,
+            json.dumps(recommendations, ensure_ascii=False),
         )
         # return run_phi_runner(prompt)
         return "[]"

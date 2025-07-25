@@ -69,7 +69,8 @@ namespace Curato.Views
                 Arguments = $"data/api_clients/search_cli.py \"{query}\" {lat.ToString(CultureInfo.InvariantCulture)} {lng.ToString(CultureInfo.InvariantCulture)} 5",
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                WorkingDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", ".."))
             };
 
             try
@@ -77,7 +78,8 @@ namespace Curato.Views
                 using var process = Process.Start(psi)!;
                 string output = await process.StandardOutput.ReadToEndAsync();
                 await process.WaitForExitAsync();
-                return JsonSerializer.Deserialize<List<Models.PlaceSuggestion>>(output) ?? new List<Models.PlaceSuggestion>();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<List<Models.PlaceSuggestion>>(output, options) ?? new List<Models.PlaceSuggestion>();
             }
             catch (Exception ex)
             {
