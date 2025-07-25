@@ -215,9 +215,9 @@
                                    Placement="Bottom"
                                    StaysOpen="False"
                                    PopupAnimation="Slide"
-                                   IsOpen="{Binding IsLocationPopupOpen}">
+                                   IsOpen="{Binding PlacementTarget.DataContext.IsLocationPopupOpen, RelativeSource={RelativeSource Self}}">
                                 <Border Background="White" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
-                                    <ItemsControl ItemsSource="{Binding LocationSuggestions}">
+                                    <ItemsControl ItemsSource="{Binding PlacementTarget.DataContext.LocationSuggestions, RelativeSource={RelativeSource AncestorType=Popup}}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding Name}"
