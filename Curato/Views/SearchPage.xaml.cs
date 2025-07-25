@@ -69,11 +69,13 @@ namespace Curato.Views
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
                 vm.LocationSuggestions = suggestions ?? new();
+                vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error fetching location suggestions: {ex.Message}");
                 vm.LocationSuggestions = new();
+                vm.IsLocationPopupOpen = false;
             }
 
         }
@@ -102,6 +104,7 @@ namespace Curato.Views
                 vm.LocationQuery = ps.Name;
                 vm.SelectedLocationCoordinates = (ps.Latitude, ps.Longitude);
                 vm.LocationSuggestions = new();
+                vm.IsLocationPopupOpen = false;
             }
         }
 

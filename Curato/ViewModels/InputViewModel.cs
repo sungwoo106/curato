@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Linq;
+using System.IO;
 using System.Windows.Input;
 using Curato.Models;
 using Curato.Helpers;
@@ -311,20 +312,31 @@ namespace Curato.ViewModels
 
                 string json = JsonSerializer.Serialize(payload);
 
+                var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
                 var psi = new ProcessStartInfo
                 {
                     FileName = "python3",
-                    Arguments = "generate_plan.py",
+                    Arguments = scriptPath,
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = AppContext.BaseDirectory
                 };
 
                 psi.Environment["INPUT_JSON"] = json;
 
                 using var process = Process.Start(psi)!;
                 string output = process.StandardOutput.ReadToEnd();
+                string err = process.StandardError.ReadToEnd();
                 process.WaitForExit();
+
+                if (process.ExitCode != 0)
+                {
+                    Debug.WriteLine($"generate_plan.py failed: {err}");
+                    PlanText = "Failed to generate plan.";
+                    return;
+                }
 
                 try
                 {

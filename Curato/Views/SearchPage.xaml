@@ -215,7 +215,7 @@
                                    StaysOpen="False"
                                    AllowsTransparency="True"
                                    PopupAnimation="Slide"
-                                   IsOpen="{Binding LocationSuggestions.Count, Converter={StaticResource PositiveCountToBoolConverter}}">
+                                   IsOpen="{Binding IsLocationPopupOpen}">
                                 <Border Background="White" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
                                     <ItemsControl ItemsSource="{Binding LocationSuggestions}">
                                         <ItemsControl.ItemTemplate>
