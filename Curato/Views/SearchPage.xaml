@@ -214,7 +214,6 @@
                                    PlacementTarget="{Binding ElementName=LocationTextBox}"
                                    Placement="Bottom"
                                    StaysOpen="False"
-                                   AllowsTransparency="True"
                                    PopupAnimation="Slide"
                                    IsOpen="{Binding IsLocationPopupOpen}">
                                 <Border Background="White" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
