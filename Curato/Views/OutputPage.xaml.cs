@@ -14,14 +14,14 @@ namespace Curato.Views
             this.DataContext = AppState.SharedTripPlan;
 
             var plan = AppState.SharedTripPlan;
+            // Debugging output
+            // This will show the emotional narrative in a message box for debugging purposes
             MessageBox.Show(plan?.EmotionalNarrative ?? "No emotional story loaded");
-            
+
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
                 EmotionalItineraryTextBlock.Inlines.Clear();
-                string[] paragraphs = plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-                foreach (string para in paragraphs)
+                foreach (var para in plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());

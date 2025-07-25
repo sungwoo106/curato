@@ -567,6 +567,9 @@ namespace Curato.Views
 
             var tripPlan = await PlannerEngine.GenerateTripPlan(request);
             AppState.SharedTripPlan = tripPlan;
+            // Debugging output
+            MessageBox.Show(AppState.SharedTripPlan?.EmotionalNarrative ?? "null");
+
 
             var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
