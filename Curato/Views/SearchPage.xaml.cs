@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,7 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using System.Threading.Tasks;
 using Curato.ViewModels;
+using Curato.Models;
 using Curato;
 
 namespace Curato.Views
@@ -549,7 +551,7 @@ namespace Curato.Views
                 Companion = vm.SelectedCompanion,
                 Budget = vm.SelectedBudget,
                 StartTime = vm.SelectedTime,
-                PreferredPlaceTypes = vm.SelectedCategories,
+                PreferredPlaceTypes = vm.SelectedCategories.ToList(),
                 Coordinates = vm.SelectedLocationCoordinates ?? (37.5665, 126.9780)
             };
 
