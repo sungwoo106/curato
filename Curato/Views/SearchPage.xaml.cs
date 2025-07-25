@@ -79,7 +79,7 @@ namespace Curato.Views
                 await process.WaitForExitAsync();
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
-                vm.LocationSuggestions = suggestions ?? new();
+                vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
             }
             catch (Exception ex)

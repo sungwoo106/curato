@@ -21,8 +21,8 @@ namespace Curato.ViewModels
     {
         public ObservableCollection<PopularPlace> PopularPlaces { get; set; }
 
-        private List<PlaceSuggestion> _locationSuggestions = new();
-        public List<PlaceSuggestion> LocationSuggestions
+        private ObservableCollection<PlaceSuggestion> _locationSuggestions = new();
+        public ObservableCollection<PlaceSuggestion> LocationSuggestions
         {
             get => _locationSuggestions;
             set
