@@ -26,7 +26,7 @@ def run_cli(prompt: str) -> str:
     """Send the prompt to the QAI Hub model using the CLI."""
     cmd = [
         "qai-hub",
-        "submit-inference-job",
+        "submit-profile-job",
         "--model",
         MODEL_ID,
         "--inputs",
