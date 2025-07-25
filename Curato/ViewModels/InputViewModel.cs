@@ -190,8 +190,6 @@ namespace Curato.ViewModels
             }
         }
 
-        public ObservableCollection<PlaceSuggestion> LocationSuggestions { get; } = new ObservableCollection<PlaceSuggestion>();
-
         private bool _isLocationPopupOpen;
         public bool IsLocationPopupOpen
         {
@@ -205,8 +203,6 @@ namespace Curato.ViewModels
                 }
             }
         }
-
-        public (double Latitude, double Longitude)? SelectedLocationCoordinates { get; set; }
 
         public string PreferencesSummary => string.Join("        |        ", new[]
         {
