@@ -19,7 +19,7 @@ from constants import LOCATION
 from data.api_clients.kakao_api import format_kakao_places_for_prompt
 import subprocess
 
-MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct"
+MODEL_ID = "llama_v3_2_3b_instruct"
 
 
 def run_cli(prompt: str) -> str:
@@ -27,6 +27,7 @@ def run_cli(prompt: str) -> str:
     prompt_file = "phi_cli_prompt.json"
     with open(prompt_file, "w", encoding="utf-8") as f:
         json.dump({"prompt": [prompt]}, f, ensure_ascii=False)
+
     cmd = [
         "qai-hub",
         "job",
@@ -34,7 +35,6 @@ def run_cli(prompt: str) -> str:
         "submit",
         "--model",
         MODEL_ID,
-        "--inputs",
         "--inputs-file",
         prompt_file,
         "--device",
@@ -45,11 +45,24 @@ def run_cli(prompt: str) -> str:
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     except FileNotFoundError as exc:
         raise RuntimeError("qai-hub CLI is not installed") from exc
-    
+    finally:
+        if os.path.exists(prompt_file):
+            os.remove(prompt_file)
+
     if result.returncode != 0:
         raise RuntimeError(
             f"qai-hub CLI failed: {result.stderr.strip()}"
         )
+
+    for line in reversed(result.stdout.splitlines()):
+        candidate = line.strip()
+        if candidate.startswith("{") or candidate.startswith("["):
+            try:
+                json.loads(candidate)
+                return candidate
+            except json.JSONDecodeError:
+                continue
+
     return result.stdout.strip()
 
 def main() -> None:

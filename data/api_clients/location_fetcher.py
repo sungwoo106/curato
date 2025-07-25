@@ -32,4 +32,3 @@ def get_location_coordinates(location_name: str):
     except Exception:
         # On any failure return None so callers can fall back to defaults
         return None
-

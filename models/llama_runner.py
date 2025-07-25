@@ -24,4 +24,3 @@ def run_llama_runner(prompt: str) -> str:
     )
 
     return result.stdout.strip()
-

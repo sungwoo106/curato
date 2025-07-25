@@ -104,3 +104,4 @@ def fetch_and_save(path: str = "mock_kakao_output.json") -> None:
 
 if __name__ == "__main__":
     fetch_and_save()
+    
