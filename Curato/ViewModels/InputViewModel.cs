@@ -153,7 +153,39 @@ namespace Curato.ViewModels
         // Helper for style trigger
         public bool CategorySelected => SelectedCategories.Count > 0;
 
-        public string LocationQuery { get; set; } = "Search Location";
+        private string _locationQuery = "Search Location";
+        public string LocationQuery
+        {
+            get => _locationQuery;
+            set
+            {
+                if (_locationQuery != value)
+                {
+                    _locationQuery = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PreferencesSummary));
+                }
+            }
+        }
+
+        public ObservableCollection<PlaceSuggestion> LocationSuggestions { get; } = new ObservableCollection<PlaceSuggestion>();
+
+        private bool _isLocationPopupOpen;
+        public bool IsLocationPopupOpen
+        {
+            get => _isLocationPopupOpen;
+            set
+            {
+                if (_isLocationPopupOpen != value)
+                {
+                    _isLocationPopupOpen = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public (double Latitude, double Longitude)? SelectedLocationCoordinates { get; set; }
+        }
 
         public string PreferencesSummary => string.Join("        |        ", new[]
         {
@@ -163,6 +195,21 @@ namespace Curato.ViewModels
             string.IsNullOrWhiteSpace(SelectedSubTime) ? null : $"Start at {SelectedSubTime}",
             SelectedCategoriesText
         }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+        // Generated Emotional Story
+        private string? _planText;
+        public string? PlanText
+        {
+            get => _planText;
+            set
+            {
+                if (_planText != value)
+                {
+                    _planText = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public ICommand GeneratePlanCommand { get; }
 
@@ -225,9 +272,62 @@ namespace Curato.ViewModels
 
         private void GeneratePlan()
         {
-            // Future: Connect your existing AI + API logic here
-            // For now: simple placeholder action
-            System.Diagnostics.Debug.WriteLine("Generate Plan Clicked");
+            try
+            {
+                var payload = new
+                {
+                    companion_type = SelectedCompanion ?? "Solo",
+                    budget = SelectedBudget switch
+                    {
+                        "$" => "low",
+                        "$$" => "medium",
+                        "$$$" => "high",
+                        _ => "low"
+                    },
+                    starting_time = string.IsNullOrWhiteSpace(SelectedSubTime) ? 12 : int.Parse(SelectedSubTime.Split(':')[0]),
+                    location_query = string.IsNullOrWhiteSpace(LocationQuery) || LocationQuery == "Search Location" ? null : LocationQuery,
+                    categories = SelectedCategories.ToList()
+                };
+
+                string json = JsonSerializer.Serialize(payload);
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "python3",
+                    Arguments = "generate_plan.py",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                psi.Environment["INPUT_JSON"] = json;
+
+                using var process = Process.Start(psi)!;
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                try
+                {
+                    var result = JsonSerializer.Deserialize<PlanResult>(output);
+                    PlanText = result?.Itinerary ?? output;
+                }
+                catch
+                {
+                    PlanText = output;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to generate plan: {ex}");
+                PlanText = "Failed to generate plan.";
+            }
+        }
+
+        // Represents the result of the plan generation
+        // This is a simplified version, adjust as needed based on actual output structure
+        private class PlanResult
+        {
+            public string? Itinerary { get; set; }
         }
 
         private IEnumerable<string> FetchCompanionTypes()

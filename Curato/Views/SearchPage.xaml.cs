@@ -3,10 +3,15 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Shapes;
 using System.Windows.Media.Animation;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Data;
+using System.Windows.Threading;
+using System.Threading.Tasks;
 using Curato.ViewModels;
 using Curato;
 
@@ -14,10 +19,83 @@ namespace Curato.Views
 {
     public partial class SearchPage : UserControl
     {
+        private readonly DispatcherTimer _locationTimer = new DispatcherTimer();
+
         public SearchPage()
         {
             InitializeComponent();
             this.DataContext = AppState.SharedInputViewModel;
+            // Setup debounced search logic in the code-behind to call a Python helper script and populate suggestions asynchronously
+            _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
+            _locationTimer.Tick += LocationTimer_Tick;
+        }
+
+        private void LocationTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _locationTimer.Stop();
+            _locationTimer.Start();
+        }
+
+        private async void LocationTimer_Tick(object? sender, EventArgs e)
+        {
+            _locationTimer.Stop();
+            if (DataContext is not InputViewModel vm)
+                return;
+
+            string query = vm.LocationQuery;
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                vm.LocationSuggestions.Clear();
+                vm.IsLocationPopupOpen = false;
+                return;
+            }
+
+            var results = await FetchPlaceSuggestions(query);
+            vm.LocationSuggestions.Clear();
+            foreach (var r in results)
+                vm.LocationSuggestions.Add(r);
+
+            vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
+        }
+
+        private async Task<List<Models.PlaceSuggestion>> FetchPlaceSuggestions(string query)
+        {
+            const double lat = 37.5563;
+            const double lng = 126.9237;
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "python3",
+                Arguments = $"data/api_clients/search_cli.py \"{query}\" {lat.ToString(CultureInfo.InvariantCulture)} {lng.ToString(CultureInfo.InvariantCulture)} 5",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            try
+            {
+                using var process = Process.Start(psi)!;
+                string output = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                return JsonSerializer.Deserialize<List<Models.PlaceSuggestion>>(output) ?? new List<Models.PlaceSuggestion>();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to fetch suggestions: {ex}");
+                return new List<Models.PlaceSuggestion>();
+            }
+        }
+
+        private void LocationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is not InputViewModel vm)
+                return;
+            if (e.AddedItems.Count > 0 && e.AddedItems[0] is Models.PlaceSuggestion ps)
+            {
+                vm.LocationQuery = ps.Name;
+                vm.SelectedLocationCoordinates = (ps.Latitude, ps.Longitude);
+            }
+            vm.IsLocationPopupOpen = false;
         }
 
         private void CompanionButton_Click(object sender, RoutedEventArgs e)

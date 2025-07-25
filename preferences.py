@@ -82,7 +82,8 @@ class Preferences:
             self.budget,
             recommendations_json,
         )
-        return run_phi_runner(prompt)
+        # return run_phi_runner(prompt)
+        return "[]"
 
     def run_llama_story(self):
         """
@@ -99,5 +100,6 @@ class Preferences:
             self.companion_type,
             self.budget,
         )
-        return run_llama_runner(prompt)
+        # return run_llama_runner(prompt)
+        return "Generated itinerary would appear here"
     

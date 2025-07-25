@@ -198,9 +198,31 @@
                         </Border.Effect>
                         <DockPanel>
                             <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="0,0,10,0"/>
-                            <TextBox FontSize="24" BorderThickness="0" Background="Transparent" Foreground="#575757"
-                                     FontFamily="{StaticResource SatoshiMedium}" VerticalAlignment="Center"
-                                     Text="Search Location"/>
+                            <TextBox x:Name="LocationTextBox"
+                                     FontSize="24"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     Foreground="#575757"
+                                     FontFamily="{StaticResource SatoshiMedium}"
+                                     VerticalAlignment="Center"
+                                     Text="{Binding LocationQuery, UpdateSourceTrigger=PropertyChanged}"
+                                     TextChanged="LocationTextBox_TextChanged"/>
+                            <Popup x:Name="LocationPopup"
+                                   MinWidth="650"
+                                   MinHeight="400"
+                                   PlacementTarget="{Binding ElementName=LocationTextBox}"
+                                   Placement="Bottom"
+                                   StaysOpen="False"
+                                   AllowsTransparency="True"
+                                   PopupAnimation="Slide"
+                                   IsOpen="{Binding IsLocationPopupOpen}" >
+                                <Border Background="White" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
+                                    <ListBox x:Name="LocationListBox"
+                                             ItemsSource="{Binding LocationSuggestions}"
+                                             DisplayMemberPath="Name"
+                                             SelectionChanged="LocationListBox_SelectionChanged"/>
+                                </Border>
+                            </Popup>
                         </DockPanel>
                     </Border>
 
