@@ -14,7 +14,7 @@ from preferences import Preferences
 from constants import LOCATION
 
 
-LOCATION_QUERY = "홍대입구역 2번 출구"
+LOCATION_QUERY = "홍대입구"  # Default location for fetching places
 # Fallback coordinates around Hongdae Station entrance 2
 LAT = 37.5563
 LNG = 126.9237
@@ -104,4 +104,3 @@ def fetch_and_save(path: str = "mock_kakao_output.json") -> None:
 
 if __name__ == "__main__":
     fetch_and_save()
-    

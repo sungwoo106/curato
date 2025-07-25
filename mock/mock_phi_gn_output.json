@@ -1,0 +1,38 @@
+[
+  {
+    "place_name": "맨션나인",
+    "road_address_name": "서울 강남구 테헤란로34길 21-8",
+    "place_type": "전시회",
+    "distance": 1199,
+    "place_url": "http://place.map.kakao.com/1538835992",
+    "latitude": 37.5001700646975,
+    "longitude": 127.041307207858
+  },
+  {
+    "place_name": "팜팜",
+    "road_address_name": "서울 강남구 강남대로 지하 396",
+    "place_type": "테마카페",
+    "distance": 27,
+    "place_url": "http://place.map.kakao.com/924897969",
+    "latitude": 37.4981574435313,
+    "longitude": 127.028305636423
+  },
+  {
+    "place_name": "감성타코 강남역점",
+    "road_address_name": "서울 강남구 강남대로 406",
+    "place_type": "Restaurant",
+    "distance": 98,
+    "place_url": "http://place.map.kakao.com/1465968863",
+    "latitude": 37.498925267295,
+    "longitude": 127.027602518905
+  },
+  {
+    "place_name": "빽다방 강남역지하도점",
+    "road_address_name": "서울 강남구 강남대로 지하 396",
+    "place_type": "Cafe",
+    "distance": 16,
+    "place_url": "http://place.map.kakao.com/26808562",
+    "latitude": 37.49802059995652,
+    "longitude": 127.0278453221759
+  }
+]

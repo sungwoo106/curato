@@ -1,0 +1,38 @@
+[
+  {
+    "place_name": "그라운드시소 서촌",
+    "road_address_name": "서울 종로구 자하문로6길 18-8",
+    "place_type": "전시회",
+    "distance": 988,
+    "place_url": "http://place.map.kakao.com/341652379",
+    "latitude": 37.5778385914657,
+    "longitude": 126.972916300185
+  },
+  {
+    "place_name": "아뜰리에 안단테",
+    "road_address_name": "서울 종로구 효자로 107",
+    "place_type": "Restaurant",
+    "distance": 458,
+    "place_url": "http://place.map.kakao.com/526664023",
+    "latitude": 37.5836324967188,
+    "longitude": 126.971285022934
+  },
+  {
+    "place_name": "가진화랑",
+    "road_address_name": "서울 종로구 자하문로 74",
+    "place_type": "테마카페",
+    "distance": 575,
+    "place_url": "http://place.map.kakao.com/19721799",
+    "latitude": 37.58251786899157,
+    "longitude": 126.9708812759231
+  },
+  {
+    "place_name": "씨엘로",
+    "road_address_name": "서울 종로구 자하문로30길 19-12",
+    "place_type": "Cafe",
+    "distance": 325,
+    "place_url": "http://place.map.kakao.com/528619386",
+    "latitude": 37.5856417439544,
+    "longitude": 126.971418981816
+  }
+]
