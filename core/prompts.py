@@ -31,7 +31,7 @@ def build_llama_emotional_prompt(
     companion_type: str,
     budget_level: str,
 ) -> str:
-    style = TONE_STYLE_MAP.get(companion_type, TONE_STYLE_MAP["solo"])
+    style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
     locs_text = "\n".join([f"{i+1}. {loc}" for i, loc in enumerate(four_locations)])
 
     money_activities = {

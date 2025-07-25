@@ -1,0 +1,84 @@
+{
+  "Cafe": [
+    {
+      "address_name": "서울 마포구 동교동 159-1",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페 > 커피전문점 > 스타벅스",
+      "distance": "25",
+      "id": "22105109",
+      "phone": "1522-3232",
+      "place_name": "스타벅스 홍대역점",
+      "place_url": "http://place.map.kakao.com/22105109",
+      "road_address_name": "서울 마포구 양화로 165",
+      "x": "126.923637798148",
+      "y": "37.5572887166274"
+    }
+  ],
+  "야경 좋은 곳": [],
+  "데이트 스팟": [],
+  "전시회": [
+    {
+      "address_name": "서울 마포구 서교동 357-1",
+      "category_group_code": "AT4",
+      "category_group_name": "관광명소",
+      "category_name": "여행 > 관광,명소 > 테마파크",
+      "distance": "451",
+      "id": "1501236154",
+      "phone": "02-3144-6300",
+      "place_name": "트릭아이뮤지엄",
+      "place_url": "http://place.map.kakao.com/1501236154",
+      "road_address_name": "서울 마포구 홍익로3길 20",
+      "x": "126.921715487447",
+      "y": "37.5535158824572"
+    }
+  ],
+  "Restaurant": [
+    {
+      "address_name": "서울 마포구 동교동 166-15",
+      "category_group_code": "FD6",
+      "category_group_name": "음식점",
+      "category_name": "음식점 > 양식 > 이탈리안",
+      "distance": "91",
+      "id": "14543686",
+      "phone": "02-334-5588",
+      "place_name": "몰레꼴레 와이즈파크홍대점",
+      "place_url": "http://place.map.kakao.com/14543686",
+      "road_address_name": "서울 마포구 양화로 176",
+      "x": "126.924923449096",
+      "y": "37.557318373033"
+    }
+  ],
+  "테마카페": [
+    {
+      "address_name": "서울 마포구 동교동 165-5",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페 > 테마카페 > 디저트카페",
+      "distance": "85",
+      "id": "50216955",
+      "phone": "02-332-3315",
+      "place_name": "공미학 마포홍대점",
+      "place_url": "http://place.map.kakao.com/50216955",
+      "road_address_name": "서울 마포구 양화로 162",
+      "x": "126.92386955175071",
+      "y": "37.556429314936146"
+    }
+  ],
+  "분위기 좋은 카페": [
+    {
+      "address_name": "서울 서대문구 옥천동 103",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페 > 커피전문점",
+      "distance": "3552",
+      "id": "724119436",
+      "phone": "02-6956-1905",
+      "place_name": "루터커피",
+      "place_url": "http://place.map.kakao.com/724119436",
+      "road_address_name": "서울 서대문구 독립문로 26",
+      "x": "126.960902465187",
+      "y": "37.5697190627802"
+    }
+  ]
+}

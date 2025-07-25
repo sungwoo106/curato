@@ -38,7 +38,7 @@ class Preferences:
         self.max_distance_km = max_distance_km
 
     def select_place_types(self, user_selected_types=None):
-        companion_places = COMPANION_PLACE_TYPES.get(self.companion_type, [])
+        companion_places = COMPANION_PLACE_TYPES.get(self.companion_type.lower(), [])
         num_to_select = random.choice([4, 5])
         random_types = []
         if len(companion_places) >= num_to_select:

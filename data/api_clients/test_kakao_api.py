@@ -1,4 +1,4 @@
-from kakao_api import search_places
+from data.api_clients.kakao_api import search_places
 
 # Example coordinates (Seoul City Hall)
 lat = 37.5665
