@@ -555,7 +555,7 @@ namespace Curato.Views
         {
             try
             {
-                string path = Path.Combine(AppContext.BaseDirectory, "popular_place_click_log.txt");
+                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_click_log.txt");
 
                 if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
