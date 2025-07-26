@@ -478,46 +478,54 @@
                                 Tag="{Binding Title}"
                                 Cursor="Hand"
                                 PreviewMouseLeftButtonUp="PopularPlace_Click">
-                                <TextBlock Text="{Binding Title}" Foreground="Red" FontSize="16"/>
-                                <StackPanel VerticalAlignment="Top"
-                                    PreviewMouseLeftButtonUp="PopularPlace_Click"
-                                    Cursor="Hand"
-                                    Tag="{Binding Title}"
-                                    IsHitTestVisible="True">
-                                    <Grid Tag="{Binding Title}"
+                                <Grid>
+                                    <!-- Temporary Debug: Show the Title visibly -->
+                                    <TextBlock Text="{Binding Title}" 
+                                            Foreground="Red" 
+                                            FontSize="16"
+                                            Margin="5"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"/>
+                                    <StackPanel VerticalAlignment="Top"
+                                        PreviewMouseLeftButtonUp="PopularPlace_Click"
                                         Cursor="Hand"
-                                        PreviewMouseLeftButtonUp="PopularPlace_Click">
-                                        <Border Height="350"
-                                                CornerRadius="40"
-                                                ClipToBounds="True"
-                                                HorizontalAlignment="Stretch"
-                                                Background="Transparent">
-                                            <Image Source="{Binding ImagePath}"
-                                                   Stretch="UniformToFill" StretchDirection="Both"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   SnapsToDevicePixels="True"
-                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
-                                        </Border>
-                                        <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0">
-                                            <Border.Effect>
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
-                                            </Border.Effect>
-                                            <TextBlock Text="{Binding Label}" FontSize="16"
-                                                       FontFamily="{StaticResource SatoshiBold}" Foreground="#CC000000"/>
-                                        </Border>
-                                    </Grid>
-                                    <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0"
-                                               FontFamily="{StaticResource SatoshiBold}"
-                                               Tag="{Binding Title}"
-                                                Cursor="Hand"
-                                                PreviewMouseLeftButtonUp="PopularPlace_Click"/>
-                                    <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
-                                               Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"
-                                               Tag="{Binding Title}"
-                                                Cursor="Hand"
-                                                PreviewMouseLeftButtonUp="PopularPlace_Click"/>
-                                </StackPanel>
+                                        Tag="{Binding Title}"
+                                        IsHitTestVisible="True">
+                                        <Grid Tag="{Binding Title}"
+                                            Cursor="Hand"
+                                            PreviewMouseLeftButtonUp="PopularPlace_Click">
+                                            <Border Height="350"
+                                                    CornerRadius="40"
+                                                    ClipToBounds="True"
+                                                    HorizontalAlignment="Stretch"
+                                                    Background="Transparent">
+                                                <Image Source="{Binding ImagePath}"
+                                                    Stretch="UniformToFill" StretchDirection="Both"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    SnapsToDevicePixels="True"
+                                                    RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            </Border>
+                                            <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0">
+                                                <Border.Effect>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
+                                                </Border.Effect>
+                                                <TextBlock Text="{Binding Label}" FontSize="16"
+                                                        FontFamily="{StaticResource SatoshiBold}" Foreground="#CC000000"/>
+                                            </Border>
+                                        </Grid>
+                                        <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0"
+                                                FontFamily="{StaticResource SatoshiBold}"
+                                                Tag="{Binding Title}"
+                                                    Cursor="Hand"
+                                                    PreviewMouseLeftButtonUp="PopularPlace_Click"/>
+                                        <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
+                                                Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"
+                                                Tag="{Binding Title}"
+                                                    Cursor="Hand"
+                                                    PreviewMouseLeftButtonUp="PopularPlace_Click"/>
+                                    </StackPanel>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
