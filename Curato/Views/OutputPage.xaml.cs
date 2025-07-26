@@ -56,8 +56,8 @@ namespace Curato.Views
                 {
                     string html = File.ReadAllText(htmlPath)
                         .Replace("{{API_KEY}}", kakaoMapKey)
-                        .Replace("{{LAT}}", lat.ToString(CultureInfo.InvariantCulture))
-                        .Replace("{{LNG}}", lng.ToString(CultureInfo.InvariantCulture));
+                        .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
+                        .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture));
 
                     await MapWebView.EnsureCoreWebView2Async();
                     MapWebView.NavigateToString(html);
