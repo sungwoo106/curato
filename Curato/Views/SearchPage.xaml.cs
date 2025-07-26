@@ -83,19 +83,20 @@ namespace Curato.Views
                 using var process = Process.Start(psi);
                 string result = await process.StandardOutput.ReadToEndAsync();
                 // Debugging
-                Console.WriteLine($"[Python] Raw result: {result}");
+                File.WriteAllText("popup_result.json", result ?? "[null]");
                 await process.WaitForExitAsync();
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
                 // Debugging
-                Console.WriteLine($"[Python] Deserialized {suggestions?.Count ?? 0} suggestions");
+                File.WriteAllText("popup_deserialized.txt", $"Got {suggestions?.Count ?? 0} suggestions");
                 vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
                 // Debugging
                 Console.WriteLine($"[ViewModel] LocationSuggestions now has {vm.LocationSuggestions.Count} items");
 
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
                 // Debugging
-                Console.WriteLine($"[Popup] Suggestions: {vm.LocationSuggestions.Count}, IsOpen: {vm.IsLocationPopupOpen}");
+                File.WriteAllText("popup_summary.txt", $"Suggestions: {vm.LocationSuggestions.Count}, Popup: {vm.IsLocationPopupOpen}");
+");
             }
             catch (Exception ex)
             {
