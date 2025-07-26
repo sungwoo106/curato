@@ -477,8 +477,7 @@
                                 Padding="10"
                                 Tag="{Binding Title}"
                                 Cursor="Hand"
-                                PreviewMouseLeftButtonUp="PopularPlace_Click"
-                                IsHitTestVisible="True">
+                                PreviewMouseLeftButtonUp="PopularPlace_Click">
                                 <StackPanel VerticalAlignment="Top"
                                     PreviewMouseLeftButtonUp="PopularPlace_Click"
                                     Cursor="Hand"
