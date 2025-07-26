@@ -52,25 +52,33 @@ namespace Curato.Views
             try
             {
                 var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
-
                 var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
-                string html = File.ReadAllText(htmlPath)
-                    .Replace("{API_KEY}", kakaoMapKey)
-                    .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
-                    .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture));
+                // Build JavaScript array from AppState
+                    var plan = AppState.SharedTripPlan;
+                    string coordArray = "[]";
+                    if (plan?.RecommendedPlaces != null)
+                    {
+                        var points = plan.RecommendedPlaces
+                            .Where(p => p.Latitude != 0 && p.Longitude != 0)
+                            .Select(p => $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)} }}");
 
-                await MapWebView.EnsureCoreWebView2Async();
+                        coordArray = "[" + string.Join(",", points) + "]";
+                    }
 
-                MapWebView.NavigateToString(html);
+                    string html = File.ReadAllText(htmlPath)
+                        .Replace("{API_KEY}", kakaoMapKey)
+                        .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
+                        .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture))
+                        .Replace("{COORD_ARRAY}", coordArray);
 
-                
-            }
-            catch (Exception ex)
-            {
-                // ignore map errors
-
-            }
+                    await MapWebView.EnsureCoreWebView2Async();
+                    MapWebView.NavigateToString(html);
+                }
+                catch (Exception ex)
+                {
+                    // optional: log the error
+                }
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)

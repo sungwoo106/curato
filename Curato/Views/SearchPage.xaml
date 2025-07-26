@@ -501,9 +501,6 @@
                                                FontFamily="{StaticResource SatoshiBold}"/>
                                     <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
                                                Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"/>
-
-                                    <!-- Debug helper: shows the bound Tag -->
-                                    <TextBlock Text="{Binding Title}" FontSize="12" Foreground="Gray"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

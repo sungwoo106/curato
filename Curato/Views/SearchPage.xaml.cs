@@ -36,14 +36,6 @@ namespace Curato.Views
             _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
             _locationTimer.Tick += LocationTimer_Tick;
 
-            // Debug: Track what UI element receives the MouseLeftButtonUp event
-            EventManager.RegisterClassHandler(typeof(Border),
-                UIElement.MouseLeftButtonUpEvent,
-                new MouseButtonEventHandler((s, e) =>
-                {
-                    string path = System.IO.Path.Combine(AppContext.BaseDirectory, "event_trace.txt");
-                    File.AppendAllText(path, $"[Border] Click on: {s.GetType().Name}, Tag={((s as FrameworkElement)?.Tag ?? "null")}\n");
-                }));
         }
 
         private void LocationTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -561,42 +553,38 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
-            // debugging
-            string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_click_debug.txt");
-
             try
             {
-                if (sender is FrameworkElement fe)
+                string path = Path.Combine(AppContext.BaseDirectory, "popular_place_click_log.txt");
+
+                if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
-                    var data = fe.DataContext as PopularPlace;
-                    var dcType = data?.GetType().Name ?? "null";
-                    var title = data?.Title ?? "[no title]";
+                    File.AppendAllText(path, $"[Click] Got Title: {place.Title}\n");
 
-                    // Log everything
-                    File.AppendAllText(path, $"[Click] Sender={fe.GetType().Name}, Title={title}, DataContext={dcType}\n");
+                    // Set location query based on the clicked title
+                    if (place.Title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                        vm.LocationQuery = "Seongsu";
+                    else if (place.Title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                        vm.LocationQuery = "Hongdae";
+                    else if (place.Title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                        vm.LocationQuery = "Gangnam";
+                    else if (place.Title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                        vm.LocationQuery = "Itaewon";
+                    else if (place.Title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                        vm.LocationQuery = "Bukchon";
 
-                    if (DataContext is InputViewModel vm)
-                    {
-                        if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Seongsu";
-                        else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Hongdae";
-                        else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Gangnam";
-                        else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Itaewon";
-                        else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Bukchon";
-
-                        // Restart popup
-                        _locationTimer.Stop();
-                        _locationTimer.Start();
-                    }
+                    // Restart popup timer
+                    _locationTimer.Stop();
+                    _locationTimer.Start();
+                }
+                else
+                {
+                    File.AppendAllText(path, "[Click] No valid DataContext found.\n");
                 }
             }
             catch (Exception ex)
             {
-                File.AppendAllText(path, $"[Exception] {ex.Message}\n");
+                MessageBox.Show($"Error in click handler: {ex.Message}");
             }
         }
         
