@@ -52,4 +52,10 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <None Update="..\mock\mock_phi_hd_output.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

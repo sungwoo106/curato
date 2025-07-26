@@ -563,16 +563,31 @@ namespace Curato.Views
 
                     // Set location query based on the clicked title
                     if (place.Title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                    {
                         vm.LocationQuery = "Seongsu";
+                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                    }
                     else if (place.Title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                    {
                         vm.LocationQuery = "Hongdae";
+                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                    }
                     else if (place.Title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                    {
                         vm.LocationQuery = "Gangnam";
+                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                    }
                     else if (place.Title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                    {
                         vm.LocationQuery = "Itaewon";
+                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                    }
                     else if (place.Title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                    {
                         vm.LocationQuery = "Bukchon";
-
+                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                    }
+                    
                     // Restart popup timer
                     _locationTimer.Stop();
                     _locationTimer.Start();

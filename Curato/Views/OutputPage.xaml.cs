@@ -3,6 +3,9 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Curato.Models;
 using secure;
 
 namespace Curato.Views
@@ -87,6 +90,34 @@ namespace Curato.Views
                 {
                     File.WriteAllText("map_debug_error.txt", ex.ToString());
                 }
+
+                // TEMP: Load mock LLM output from file
+                try
+                {
+                    var mockJsonPath = Path.Combine(AppContext.BaseDirectory, "mock_phi_hd_output.json");
+                    if (File.Exists(mockJsonPath))
+                    {
+                        var json = File.ReadAllText(mockJsonPath);
+                        var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
+
+                        if (suggestions != null && suggestions.Any())
+                        {
+                            plan.SuggestedPlaces = suggestions
+                                .Where(p => p.latitude != 0 && p.longitude != 0)
+                                .Select(p => new PlaceSuggestion
+                                {
+                                    Name = p.place_name,
+                                    Latitude = p.latitude,
+                                    Longitude = p.longitude
+                                }).ToList();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    File.WriteAllText("mock_load_error.txt", ex.ToString());
+                }
+
 
                 string coordArray = "[]";
                 if (plan?.SuggestedPlaces != null)
