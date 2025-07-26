@@ -86,7 +86,9 @@ namespace Curato.Views
                 };
 
                 using var process = Process.Start(psi);
-                string result = await process.StandardOutput.ReadToEndAsync();
+                using var reader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8);
+                string result = await reader.ReadToEndAsync();
+
                 string error = await process.StandardError.ReadToEndAsync(); // capture stderr
                 
                 await process.WaitForExitAsync();
