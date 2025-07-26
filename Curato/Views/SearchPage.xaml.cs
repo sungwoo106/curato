@@ -70,21 +70,28 @@ namespace Curato.Views
             {
                 var scriptPath = System.IO.Path.Combine(AppContext.BaseDirectory, "core", "location_suggest.py");
 
+                // Debugging
+                File.WriteAllText("popup_query.txt", query ?? "[null]");
                 var psi = new ProcessStartInfo
                 {
                     // Change this to your Python executable path
                     FileName = @"C:\Users\sungw\AppData\Local\Programs\Python\Python310\python.exe",
                     Arguments = $"\"{scriptPath}\" \"{query}\"",
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true, // capture error
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
 
                 using var process = Process.Start(psi);
                 string result = await process.StandardOutput.ReadToEndAsync();
+                string error = await process.StandardError.ReadToEndAsync(); // capture stderr
+                
+                await process.WaitForExitAsync();
+
                 // Debugging
                 File.WriteAllText("popup_result.json", result ?? "[null]");
-                await process.WaitForExitAsync();
+                File.WriteAllText("popup_error.txt", error ?? "[none]");
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
                 // Debugging
