@@ -30,8 +30,6 @@ namespace Curato.Views
         {
             InitializeComponent();
             this.DataContext = AppState.SharedInputViewModel;
-            // force-wires the Popup to use the same InputViewModel as the rest of the page
-            LocationSuggestionPopup.DataContext = this.DataContext;
             // Setup debounced search logic in the code-behind to call a Python helper script and populate suggestions asynchronously
             _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
             _locationTimer.Tick += LocationTimer_Tick;

@@ -156,9 +156,9 @@
     <DropShadowEffect
       x:Key="ShadowEffect"
       Color="Black"
-      Opacity="0.13"
+      Opacity="0.3"
       BlurRadius="20"
-      ShadowDepth="2"/>
+      ShadowDepth="4"/>
     </UserControl.Resources>
 
 
@@ -215,8 +215,9 @@
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
                                 IsOpen="{Binding IsLocationPopupOpen}"
-                                MinWidth="650"
-                                Margin="0,5,0,0">
+                                MinWidth="600"
+                                HorizontalOffset="-40"
+                                Margin="0,40,0,0">
                                 <Border Background="White"
                                         Padding="5"
                                         CornerRadius="15"
@@ -227,10 +228,12 @@
                                                 <DataTemplate>
                                                     <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="10">
                                                         <TextBlock Text="{Binding Name}"
+                                                                Padding="10,8"
                                                                 FontSize="18"
                                                                 FontFamily="{StaticResource SatoshiMedium}"
                                                                 Foreground="Black"
                                                                 Cursor="Hand"
+                                                                Margin="5,2"
                                                                 MouseLeftButtonDown="Suggestion_Click" />
                                                     </Border>
                                                 </DataTemplate>
