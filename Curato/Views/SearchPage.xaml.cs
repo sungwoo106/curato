@@ -549,7 +549,27 @@ namespace Curato.Views
 
             CategoryPopup.IsOpen = true;
         }
-        
+
+        private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not Border border || border.DataContext is not PopularPlace pp)
+                return;
+            if (DataContext is not InputViewModel vm)
+                return;
+
+            string query = pp.Title;
+            if (query.StartsWith("Seongsu"))
+                vm.LocationQuery = "Seongsu";
+            else if (query.StartsWith("Hongdae"))
+                vm.LocationQuery = "Hongdae";
+            else if (query.StartsWith("Gangnam"))
+                vm.LocationQuery = "Gangnam";
+            else if (query.StartsWith("Itaewon"))
+                vm.LocationQuery = "Itaewon";
+            else if (query.StartsWith("Bukchon"))
+                vm.LocationQuery = "Bukchon";
+        }        
+
         private async void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is not InputViewModel vm)

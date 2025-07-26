@@ -466,7 +466,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Width="323" Height="Auto" Background="White" CornerRadius="20" Margin="10" Padding="10">
+                            <Border Width="323" Height="Auto" Background="White" CornerRadius="20" Margin="10" Padding="10" Cursor="Hand" MouseLeftButtonUp="PopularPlace_Click">
                                 <StackPanel VerticalAlignment="Top">
                                     <Grid>
                                         <Border Height="350"
