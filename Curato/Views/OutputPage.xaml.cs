@@ -49,7 +49,7 @@ namespace Curato.Views
 
             try
             {
-                var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Html", "map_template.html");
+                var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
                 if (File.Exists(htmlPath))
                 {
                     string html = File.ReadAllText(htmlPath)
