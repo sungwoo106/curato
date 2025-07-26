@@ -552,35 +552,52 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
-            // Traverse up the visual tree to find the tagged Border
-            DependencyObject? current = sender as DependencyObject;
-
-            while (current != null && current is not Border)
+            string logPath = "popular_place_debug.txt";
+            try
             {
-                current = VisualTreeHelper.GetParent(current);
-            }
+                File.WriteAllText(logPath, "[Click Triggered]\n");
 
-            if (current is Border border && border.Tag is string title && DataContext is InputViewModel vm)
+                if (sender is Border border)
+                {
+                    File.AppendAllText(logPath, $"Clicked Border found. Tag: {border.Tag}\n");
+
+                    if (border.Tag is string title && DataContext is InputViewModel vm)
+                    {
+                        File.AppendAllText(logPath, $"Tag is string: {title}\n");
+
+                        if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Seongsu";
+                        else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Hongdae";
+                        else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Gangnam";
+                        else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Itaewon";
+                        else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Bukchon";
+
+                        File.AppendAllText(logPath, $"LocationQuery set to: {vm.LocationQuery}\n");
+
+                        _locationTimer.Stop();
+                        _locationTimer.Start();
+                        File.AppendAllText(logPath, "LocationTimer restarted.\n");
+                    }
+                    else
+                    {
+                        File.AppendAllText(logPath, "Tag not found or DataContext is not InputViewModel.\n");
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(logPath, $"Sender is not Border. Type: {sender?.GetType().Name}\n");
+                }
+            }
+            catch (Exception ex)
             {
-                // Debugging
-                MessageBox.Show($"Sender: {sender.GetType().Name}, Tag: {(sender as FrameworkElement)?.Tag ?? "none"}");
-
-                if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Seongsu";
-                else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Hongdae";
-                else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Gangnam";
-                else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Itaewon";
-                else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Bukchon";
-
-                _locationTimer.Stop();
-                _locationTimer.Start();
+                File.AppendAllText(logPath, $"[Exception] {ex}\n");
             }
-        }        
-
+        }
+        
         private async void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is not InputViewModel vm)
