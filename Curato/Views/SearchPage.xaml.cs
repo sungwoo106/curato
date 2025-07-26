@@ -71,7 +71,7 @@ namespace Curato.Views
                 var psi = new ProcessStartInfo
                 {
                     // Change this to your Python executable path
-                    FileName = @"C:\Users\sungw\AppData\Local\Programs\Python\Python310\python.exe"
+                    FileName = @"C:\Users\sungw\AppData\Local\Programs\Python\Python310\python.exe",
                     Arguments = $"\"{scriptPath}\" \"{query}\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
