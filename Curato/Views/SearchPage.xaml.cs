@@ -69,11 +69,7 @@ namespace Curato.Views
             try
             {
                 var scriptPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\core\location_suggest.py"));
-                // Debugging
-                File.WriteAllText("popup_path_debug.txt", scriptPath);
 
-                // Debugging
-                File.WriteAllText("popup_query.txt", query ?? "[null]");
                 var psi = new ProcessStartInfo
                 {
                     // Change this to your Python executable path
@@ -88,21 +84,13 @@ namespace Curato.Views
                 using var process = Process.Start(psi);
                 using var reader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8);
                 string result = await reader.ReadToEndAsync();
-
-                string error = await process.StandardError.ReadToEndAsync(); // capture stderr
                 
                 await process.WaitForExitAsync();
-
-                // Debugging
-                File.WriteAllText("popup_result.json", result ?? "[null]");
-                File.WriteAllText("popup_error.txt", error ?? "[none]");
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
                 vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
 
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
-                // Debugging
-                File.WriteAllText("popup_summary.txt", $"Suggestions: {vm.LocationSuggestions.Count}, Popup: {vm.IsLocationPopupOpen}");
 
             }
             catch (Exception ex)
@@ -113,24 +101,7 @@ namespace Curato.Views
             }
 
         }
-
-        // Handle selection of a location from the suggestions
-        /*
-        private void LocationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (DataContext is not InputViewModel vm)
-                return;
-            if (e.AddedItems.Count > 0 && e.AddedItems[0] is Models.PlaceSuggestion ps)
-            {
-                vm.LocationQuery = ps.Name;
-                vm.SelectedLocationCoordinates = (ps.Latitude, ps.Longitude);
-            }
-            vm.IsLocationPopupOpen = false;
-        }
-        */
-
-        // Handle clicking on a suggestion directly in the popup
-        // This is used when the user clicks on a TextBlock in the ItemsControl
+        
         private void Suggestion_Click(object sender, MouseButtonEventArgs e)
         {
             if (sender is TextBlock tb && tb.DataContext is PlaceSuggestion suggestion)

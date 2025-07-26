@@ -54,21 +54,24 @@ def _format_sentences(text: str) -> str:
 
 
 def _load_mock_story(query: str | None) -> str | None:
-    """Return the formatted mock story if the query matches a known location."""
-    if not query:
-        return None
+    """Return a formatted mock story for the location or a default one."""
 
-    lower = query.lower()
-    for key, keywords in MOCK_KEYWORDS.items():
-        if any(k.lower() in lower for k in keywords):
-            path = os.path.join(_MOCK_DIR, MOCK_STORIES[key])
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    text = f.read()
-                return _format_sentences(text)
-            except Exception as exc:  # pragma: no cover - unlikely path
-                return f"Failed to load mock story: {exc}"
-    return None
+    # Fallback to the Hongdae mock story if no match is found.
+    path = os.path.join(_MOCK_DIR, MOCK_STORIES["hongdae"])
+
+    if query:
+        lower = query.lower()
+        for key, keywords in MOCK_KEYWORDS.items():
+            if any(k.lower() in lower for k in keywords):
+                path = os.path.join(_MOCK_DIR, MOCK_STORIES[key])
+                break
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        return _format_sentences(text)
+    except Exception as exc:  # pragma: no cover - unlikely path
+        return f"Failed to load mock story: {exc}"
 
 # The previous implementation only produced a placeholder summary.  Here we
 # replicate the workflow of "main.py" to call into the real backend logic.

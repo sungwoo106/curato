@@ -25,10 +25,6 @@ def suggest_locations(query):
                     "latitude": float(y)
                 })
 
-        # debugging
-        with open("popup_python_log.txt", "w", encoding="utf-8") as f:
-            f.write(json.dumps(suggestions, ensure_ascii=False))
-
         print(json.dumps(suggestions, ensure_ascii=False))
     except Exception as e:
         print(json.dumps([]))
