@@ -63,33 +63,19 @@ namespace Curato.Views
                 AppState.SharedTripPlan = JSplan;
 
                 // TEMP: Load mock LLM output from file
-                string location = AppState.SharedInputViewModel?.StartLocation?.ToLowerInvariant() ?? "";
+                string? location = AppState.SharedInputViewModel?.LocationQuery?.ToLowerInvariant();
 
-                var locationSuffixes = new Dictionary<string, string>
+                string selectedMockFile = location switch
                 {
-                    { "홍대", "hd" }, { "hongdae", "hd" },
-                    { "강남", "gn" }, { "gangnam", "gn" },
-                    { "북촌", "bc" }, { "bukchon", "bc" },
-                    { "이태원", "it" }, { "itaewon", "it" },
-                    { "신사", "ss" }, { "sinsa", "ss" }
+                    string s when s.Contains("hongdae") || s.Contains("홍대") => "mock_phi_hd_output.json",
+                    string s when s.Contains("gangnam") || s.Contains("강남") => "mock_phi_gn_output.json",
+                    string s when s.Contains("itaewon") || s.Contains("이태원") => "mock_phi_it_output.json",
+                    string s when s.Contains("seongsu") || s.Contains("성수") => "mock_phi_ss_output.json",
+                    string s when s.Contains("bukchon") || s.Contains("북촌") => "mock_phi_bc_output.json",
+                    _ => "mock_phi_hd_output.json" // fallback
                 };
 
-                string suffix = "hd";  // fallback
-                if (location != null)
-                {
-                    foreach (var kvp in locationSuffixes)
-                    {
-                        if (location.Contains(kvp.Key))
-                        {
-                            suffix = kvp.Value;
-                            break;
-                        }
-                    }
-                }
-
-                var mockJsonPath = Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", $"mock_phi_{suffix}_output.json");
-                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "mock_json_debug.txt"),
-                    $"Search query: {location}\nSuffix used: {suffix}\nPath: {mockJsonPath}");
+                var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", selectedMockFile);
 
                 if (File.Exists(mockJsonPath))
                 {
