@@ -466,7 +466,7 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate DataType="{x:Type local:PopularPlace}">
                             <Border Width="323"
                                 Height="Auto"
                                 Background="Transparent"
