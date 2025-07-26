@@ -41,7 +41,11 @@
 
   <!-- Secure assets required by Python utilities -->
   <ItemGroup>
-    <Content Include="..\secure\*.*">
+    <Content Include="..\secure\*.pem">
+      <Link>secure\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\secure\*.bin">
       <Link>secure\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
