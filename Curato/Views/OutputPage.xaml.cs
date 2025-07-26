@@ -36,6 +36,11 @@ namespace Curato.Views
 
         private async void OutputPage_Loaded(object sender, RoutedEventArgs e)
         {
+            // Debugging
+            string logPath = Path.Combine(AppContext.BaseDirectory, "map_debug_log.txt");
+            void Log(string msg) => File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {msg}\n");
+            Log("=== OutputPage_Loaded triggered ===");
+
             double lat = 37.5665; // default to Seoul
             double lng = 126.9780;
 
@@ -44,27 +49,74 @@ namespace Curato.Views
             {
                 lat = coords.Value.Latitude;
                 lng = coords.Value.Longitude;
+                // Debugging
+                Log($"Coordinates received: lat={lat}, lng={lng}");
+            }
+            // Debuggng
+            else
+            {
+                Log("⚠️ No coordinates provided, using default (Seoul)");
             }
 
             try
             {
                 var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
-                if (File.Exists(htmlPath))
-                {
-                    // Retrieve the Kakao Map API key from the secure helper
-                    var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
-                    string html = File.ReadAllText(htmlPath)
-                        .Replace("{API_KEY}", kakaoMapKey)
-                        .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
-                        .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture));
+                // Debugging
+                Log($"Checking HTML path: {htmlPath}");
 
-                    await MapWebView.EnsureCoreWebView2Async();
-                    MapWebView.NavigateToString(html);
+                // Debugging
+                if (!File.Exists(htmlPath))
+                {
+                    Log(" map_template.html NOT found!");
+                    return;
                 }
+                Log(" map_template.html found");
+
+                var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
+
+                // Debugging
+                Log($" Kakao API Key (length): {kakaoMapKey?.Length}");
+
+                string html = File.ReadAllText(htmlPath)
+                    .Replace("{API_KEY}", kakaoMapKey)
+                    .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
+                    .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture));
+
+                // Debugging
+                string debugHtmlPath = Path.Combine(AppContext.BaseDirectory, "debug_map_rendered.html");
+                File.WriteAllText(debugHtmlPath, html);
+                Log($" HTML output written to: {debugHtmlPath}");
+
+                await MapWebView.EnsureCoreWebView2Async();
+
+                // Debugging
+                MapWebView.NavigationCompleted += (s, args) =>
+                {
+                    if (args.IsSuccess)
+                        Log(" WebView2 loaded HTML successfully.");
+                    else
+                        Log($" WebView2 failed to load HTML: {args.WebErrorStatus}");
+                };
+                MapWebView.CoreWebView2InitializationCompleted += (s, args) =>
+                {
+                    if (args.IsSuccess)
+                        Log(" WebView2 CoreWebView2 initialized.");
+                    else
+                        Log($" CoreWebView2 init failed: {args.InitializationException?.Message}");
+                };
+
+                MapWebView.NavigateToString(html);
+
+                //Debugging
+                Log("🚀 Sent HTML to WebView2.");
+                
             }
             catch
             {
                 // ignore map errors
+
+                //Debugging
+                Log("❌ Exception in OutputPage_Loaded: " + ex);
             }
         }
 
