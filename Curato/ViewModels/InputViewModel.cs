@@ -19,7 +19,11 @@ namespace Curato.ViewModels
 {
     public class InputViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<PopularPlace> PopularPlaces { get; set; }
+        public ObservableCollection<PopularPlace> PopularPlaces { get; set; } = new ObservableCollection<PopularPlace>();
+
+        // ✅ Debug output to verify popular places are loaded
+        var path = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
+        System.IO.File.WriteAllText(path, string.Join("\n", PopularPlaces.Select(p => p.Title)));
 
         private ObservableCollection<PlaceSuggestion> _locationSuggestions = new();
         public ObservableCollection<PlaceSuggestion> LocationSuggestions
