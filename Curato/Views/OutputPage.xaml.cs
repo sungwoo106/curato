@@ -108,7 +108,7 @@ namespace Curato.Views
                     + "]";
 
                 var finalHtml = htmlTemplate
-                    .Replace("{KAKAO_MAP_KEY}", kakaoMapKey)
+                    .Replace("{API_KEY}", kakaoMapKey)
                     .Replace("{LAT}", plan.SuggestedPlaces.FirstOrDefault()?.Latitude.ToString(CultureInfo.InvariantCulture) ?? "37.5665")
                     .Replace("{LNG}", plan.SuggestedPlaces.FirstOrDefault()?.Longitude.ToString(CultureInfo.InvariantCulture) ?? "126.9780")
                     .Replace("{COORD_ARRAY}", coordArray);

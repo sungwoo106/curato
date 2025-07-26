@@ -588,15 +588,15 @@ namespace Curato.Views
                     string normalized = place.Title?.ToLowerInvariant() ?? "";
 
                     if (normalized.Contains("seongsu"))
-                        vm.LocationQuery = "Seongsu";
+                        vm.LocationQuery = string.Copy("Seongsu");
                     else if (normalized.Contains("hongdae"))
-                        vm.LocationQuery = "Hongdae";
+                        vm.LocationQuery = string.Copy("Hongdae");
                     else if (normalized.Contains("gangnam"))
-                        vm.LocationQuery = "Gangnam";
+                        vm.LocationQuery = string.Copy("Gangnam");
                     else if (normalized.Contains("itaewon"))
-                        vm.LocationQuery = "Itaewon";
+                        vm.LocationQuery = string.Copy("Itaewon");
                     else if (normalized.Contains("bukchon"))
-                        vm.LocationQuery = "Bukchon";
+                        vm.LocationQuery = string.Copy("Bukchon");
 
                     File.AppendAllText(debugPath, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
 
