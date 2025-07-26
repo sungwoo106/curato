@@ -4,7 +4,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 def get_kakao_map_api_key(
     encrypted_key_path: str = "secure/encrypted_api_key.bin",
-    private_key_path: str = "secure/private_key.pem",
+    private_key_path: str = "secure/private_key_rest.pem",
 ) -> str:
     """
     Decrypts the encrypted Kakao Map API key using the provided private key.
