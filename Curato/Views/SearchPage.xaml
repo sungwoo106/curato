@@ -475,7 +475,7 @@
                                 CornerRadius="20"
                                 Margin="10"
                                 Padding="10"
-                                Tag="{Binding Title}"
+                                Tag="{Binding Path=Title}"
                                 Cursor="Hand"
                                 PreviewMouseLeftButtonUp="PopularPlace_Click">
                                 <Grid>
@@ -486,12 +486,13 @@
                                             Margin="5"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"/>
+                                    
                                     <StackPanel VerticalAlignment="Top"
                                         PreviewMouseLeftButtonUp="PopularPlace_Click"
                                         Cursor="Hand"
-                                        Tag="{Binding Title}"
+                                        Tag="{Binding Path=Title}"
                                         IsHitTestVisible="True">
-                                        <Grid Tag="{Binding Title}"
+                                        <Grid Tag="{Binding Path=Title}"
                                             Cursor="Hand"
                                             PreviewMouseLeftButtonUp="PopularPlace_Click">
                                             <Border Height="350"
@@ -516,12 +517,12 @@
                                         </Grid>
                                         <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0"
                                                 FontFamily="{StaticResource SatoshiBold}"
-                                                Tag="{Binding Title}"
+                                                Tag="{Binding Path=Title}"
                                                     Cursor="Hand"
                                                     PreviewMouseLeftButtonUp="PopularPlace_Click"/>
                                         <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
                                                 Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"
-                                                Tag="{Binding Title}"
+                                                Tag="{Binding Path=Title}"
                                                     Cursor="Hand"
                                                     PreviewMouseLeftButtonUp="PopularPlace_Click"/>
                                     </StackPanel>
