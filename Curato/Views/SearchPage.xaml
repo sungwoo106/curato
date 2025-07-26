@@ -471,11 +471,11 @@
                                 Background="White"
                                 CornerRadius="20"
                                 Margin="10"
-                                Padding="10"
-                                MouseLeftButtonUp="PopularPlace_Click"
-                                Cursor="Hand"
-                                Tag="{Binding Title}">
-                                <StackPanel VerticalAlignment="Top">
+                                Padding="10">
+                                <StackPanel VerticalAlignment="Top"
+                                    MouseLeftButtonUp="PopularPlace_Click"
+                                    Cursor="Hand"
+                                    Tag="{Binding Title}">
                                     <Grid>
                                         <Border Height="350"
                                                 CornerRadius="40"
