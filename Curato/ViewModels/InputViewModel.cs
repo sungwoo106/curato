@@ -288,6 +288,17 @@ namespace Curato.ViewModels
                 }
             };
 
+            // Write debug file
+            try
+            {
+                var debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
+                System.IO.File.WriteAllText(debugPath, string.Join("\n", PopularPlaces.Select(p => $"{p.Title} - {p.Subtitle}")));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to write popular places debug file: {ex.Message}");
+            }
+
             GeneratePlanCommand = new RelayCommand(_ => GeneratePlan());
         }
 
