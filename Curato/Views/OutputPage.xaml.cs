@@ -103,12 +103,12 @@ namespace Curato.Views
                         if (suggestions != null && suggestions.Any())
                         {
                             plan.SuggestedPlaces = suggestions
-                                .Where(p => p.latitude != 0 && p.longitude != 0)
+                                .Where(p => p.Latitude != 0 && p.Longitude != 0)
                                 .Select(p => new PlaceSuggestion
                                 {
-                                    Name = p.place_name,
-                                    Latitude = p.latitude,
-                                    Longitude = p.longitude
+                                    Name = p.Name,
+                                    Latitude = p.Latitude,
+                                    Longitude = p.Longitude
                                 }).ToList();
                         }
                     }
