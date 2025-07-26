@@ -563,32 +563,32 @@ namespace Curato.Views
         {
             // debugging
             string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_click_debug.txt");
-            
+
             try
             {
                 if (sender is FrameworkElement fe)
                 {
-                    var tag = fe.Tag as string;
-                    var dcType = fe.DataContext?.GetType().Name ?? "null";
+                    var data = fe.DataContext as PopularPlace;
+                    var dcType = data?.GetType().Name ?? "null";
+                    var title = data?.Title ?? "[no title]";
 
-                    string log = $"[Border] Clicked: {fe.GetType().Name}, Tag={tag ?? "[null]"}, DataContext={dcType}\n";
-                    File.AppendAllText(path, log);
+                    // Log everything
+                    File.AppendAllText(path, $"[Click] Sender={fe.GetType().Name}, Title={title}, DataContext={dcType}\n");
 
-                    if (tag != null && DataContext is InputViewModel vm)
+                    if (DataContext is InputViewModel vm)
                     {
-                        if (tag.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                        if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
                             vm.LocationQuery = "Seongsu";
-                        else if (tag.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                        else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
                             vm.LocationQuery = "Hongdae";
-                        else if (tag.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                        else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
                             vm.LocationQuery = "Gangnam";
-                        else if (tag.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                        else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
                             vm.LocationQuery = "Itaewon";
-                        else if (tag.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                        else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
                             vm.LocationQuery = "Bukchon";
 
-                        vm.IsLocationPopupOpen = false;
-
+                        // Restart popup
                         _locationTimer.Stop();
                         _locationTimer.Start();
                     }
@@ -617,11 +617,26 @@ namespace Curato.Views
             var tripPlan = await PlannerEngine.GenerateTripPlan(request);
             AppState.SharedTripPlan = tripPlan;
 
-            var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
             {
-                // Swap out the current page without using navigation to avoid crashes
-                mainWindow.MainFrame.Content = new LoadingPage();
+                // Save coordinates from ViewModel
+                var (lat, lng) = vm.SelectedLocationCoordinates;
+
+                // Create and configure OutputPage
+                var outputPage = new OutputPage
+                {
+                    Latitude = lat,
+                    Longitude = lng
+                };
+
+                mainWindow.MainFrame.Content = new LoadingPage(() =>
+                {
+                    return new OutputPage
+                    {
+                        Latitude = lat,
+                        Longitude = lng
+                    };
+                });
             }
         }
     }

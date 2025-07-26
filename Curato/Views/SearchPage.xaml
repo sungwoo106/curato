@@ -474,8 +474,7 @@
                                 Margin="10"
                                 Padding="10"
                                 PreviewMouseLeftButtonUp="PopularPlace_Click"
-                                Cursor="Hand"
-                                Tag="{Binding Title}">
+                                Cursor="Hand">
                                 <StackPanel VerticalAlignment="Top">
                                     <Grid>
                                         <Border Height="350"

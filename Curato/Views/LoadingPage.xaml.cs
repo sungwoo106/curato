@@ -17,19 +17,21 @@ namespace Curato.Views
         private readonly string baseText = "Planning your trip";
         private double progress = 0;
 
-        public LoadingPage()
+        private readonly Func<UserControl>? _onFinished;
+
+        public LoadingPage(Func<UserControl>? onFinished = null)
         {
             InitializeComponent();
             Loaded += LoadingPage_Loaded;
 
-            // Setup dot animation timer
+            _onFinished = onFinished;
+
             dotTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(500)
             };
             dotTimer.Tick += DotTimer_Tick;
-            
-            // Fake loading progress bar timer
+
             progressTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(30)
@@ -57,7 +59,7 @@ namespace Curato.Views
                 var parentWindow = Window.GetWindow(this) as MainWindow;
                 if (parentWindow != null)
                 {
-                    parentWindow.MainFrame.Content = new OutputPage();
+                    parentWindow.MainFrame.Content = _onFinished?.Invoke() ?? new OutputPage();
                 }
             }
         }
