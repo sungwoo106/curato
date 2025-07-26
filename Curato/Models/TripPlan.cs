@@ -1,3 +1,5 @@
+using Curato.Models;
+
 public class TripPlan
 {
     public List<string> SelectedPlaces { get; set; } = new();
