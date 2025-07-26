@@ -36,6 +36,19 @@ namespace Curato.Views
             _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
             _locationTimer.Tick += LocationTimer_Tick;
 
+
+            // 🔍 Debug: Confirm DataContext matches shared instance
+            try
+            {
+                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "binding_check.txt");
+                bool isSame = object.ReferenceEquals(this.DataContext, AppState.SharedInputViewModel);
+                System.IO.File.AppendAllText(path, $"[ViewModel Link] Is same instance: {isSame}\n");
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.WriteAllText("binding_check_error.txt", $"Failed to write: {ex.Message}");
+            }
+
         }
 
         private void LocationTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -587,7 +600,7 @@ namespace Curato.Views
                         vm.LocationQuery = "Bukchon";
                         File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
                     }
-                    
+
                     // Restart popup timer
                     _locationTimer.Stop();
                     _locationTimer.Start();

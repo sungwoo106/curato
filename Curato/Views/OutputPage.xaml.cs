@@ -60,37 +60,6 @@ namespace Curato.Views
                 // Build JavaScript array from AppState
                 var plan = AppState.SharedTripPlan;
 
-                // ✅ Add debug block here
-                try
-                {
-                    var debugLogPath = Path.Combine(AppContext.BaseDirectory, "map_marker_debug.txt");
-
-                    if (plan == null)
-                    {
-                        File.WriteAllText(debugLogPath, "AppState.SharedTripPlan is null.");
-                    }
-                    else if (plan.SuggestedPlaces == null)
-                    {
-                        File.WriteAllText(debugLogPath, "SuggestedPlaces is null.");
-                    }
-                    else if (!plan.SuggestedPlaces.Any())
-                    {
-                        File.WriteAllText(debugLogPath, "SuggestedPlaces exists but is empty.");
-                    }
-                    else
-                    {
-                        var lines = plan.SuggestedPlaces
-                            .Select(p => $"{p.Name} - lat: {p.Latitude}, lng: {p.Longitude}")
-                            .ToList();
-
-                        File.WriteAllLines(debugLogPath, lines);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    File.WriteAllText("map_debug_error.txt", ex.ToString());
-                }
-
                 // TEMP: Load mock LLM output from file
                 try
                 {
@@ -108,9 +77,42 @@ namespace Curato.Views
                                 {
                                     Name = p.Name,
                                     Latitude = p.Latitude,
-                                    Longitude = p.Longitude
+                                    Longitude = p.ongitude
                                 }).ToList();
                         }
+
+                        // ✅ Add debug block here
+                        try
+                        {
+                            var debugLogPath = Path.Combine(AppContext.BaseDirectory, "map_marker_debug.txt");
+
+                            if (plan == null)
+                            {
+                                File.WriteAllText(debugLogPath, "AppState.SharedTripPlan is null.");
+                            }
+                            else if (plan.SuggestedPlaces == null)
+                            {
+                                File.WriteAllText(debugLogPath, "SuggestedPlaces is null.");
+                            }
+                            else if (!plan.SuggestedPlaces.Any())
+                            {
+                                File.WriteAllText(debugLogPath, "SuggestedPlaces exists but is empty.");
+                            }
+                            else
+                            {
+                                var lines = plan.SuggestedPlaces
+                                    .Select(p => $"{p.Name} - lat: {p.Latitude}, lng: {p.Longitude}")
+                                    .ToList();
+
+                                File.WriteAllLines(debugLogPath, lines);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            File.WriteAllText("map_debug_error.txt", ex.ToString());
+                        }
+
+                        
                     }
                 }
                 catch (Exception ex)
