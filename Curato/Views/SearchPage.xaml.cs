@@ -552,8 +552,16 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
-            string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_debug.txt");
-            File.WriteAllText(path, $"[{DateTime.Now}] PopularPlace_Click triggered.\n");
+            // Debugging
+            try
+            {
+                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_debug.txt");
+                File.WriteAllText(path, $"[{DateTime.Now}] Click detected");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Write failed: {ex.Message}");
+            }
 
             if (sender is FrameworkElement fe && fe.Tag is string title && DataContext is InputViewModel vm)
             {

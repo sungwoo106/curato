@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:Curato.Views"
              mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080">
 
     <UserControl.Resources>
@@ -464,7 +465,7 @@
                         Tag="TEST-DIRECT">
                     <TextBlock Text="Test Click" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                
+
                 <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,20,50"
                            FontFamily="{StaticResource SatoshiBold}"/>
                 <ItemsControl ItemsSource="{Binding PopularPlaces}" Focusable="False" IsHitTestVisible="True">
