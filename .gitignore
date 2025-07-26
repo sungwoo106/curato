@@ -6,6 +6,8 @@
 # added files
 /secure/encrypted_api_key.bin
 /secure/private_key.pem
+/Curato/secure/encrypted_js_api_key.bin
+/Curato/secure/public_key.pem
 
 # User-specific files
 *.rsuser
