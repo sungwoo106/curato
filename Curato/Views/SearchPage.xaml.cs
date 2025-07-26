@@ -567,38 +567,25 @@ namespace Curato.Views
             CategoryPopup.IsOpen = true;
         }
 
-        private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
+        private void PopularPlace_Click(object sender, RoutedEventArgs e)
         {
-
-            // Debugging
-            string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
-            string fallbackPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
 
             try
             {
-                if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
+                if (sender is Button btn && btn.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
 
-                    // Debugging
-                    string info = $"[Click] Time: {DateTime.Now}\n" +
-                                $"         Sender: {sender?.GetType().Name}\n" +
-                                $"         Title: {place?.Title}\n\n";
-                    File.AppendAllText(debugPath, info);
-
                     string normalized = place.Title?.ToLowerInvariant() ?? "";
-
                     if (normalized.Contains("seongsu"))
-                        vm.LocationQuery = string.Copy("Seongsu");
+                        vm.LocationQuery = "Seongsu";
                     else if (normalized.Contains("hongdae"))
-                        vm.LocationQuery = string.Copy("Hongdae");
+                        vm.LocationQuery = "Hongdae";
                     else if (normalized.Contains("gangnam"))
-                        vm.LocationQuery = string.Copy("Gangnam");
+                        vm.LocationQuery = "Gangnam";
                     else if (normalized.Contains("itaewon"))
-                        vm.LocationQuery = string.Copy("Itaewon");
+                        vm.LocationQuery = "Itaewon";
                     else if (normalized.Contains("bukchon"))
-                        vm.LocationQuery = string.Copy("Bukchon");
-
-                    File.AppendAllText(debugPath, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
+                        vm.LocationQuery = "Bukchon";
 
                     // Restart popup timer to fetch suggestions for the new location
                     vm.IsLocationPopupOpen = false;
@@ -607,17 +594,12 @@ namespace Curato.Views
                 }
                 else
                 {
-                    // Fallback logging if DataContext is not set
-                    string fallbackInfo = $"[Fail] Time: {DateTime.Now}\n" +
-                                        $"       Sender: {sender?.GetType().Name}\n" +
-                                        $"       DataContext type: {(sender is FrameworkElement f ? f.DataContext?.GetType().Name : "null")}\n\n";
 
-                    File.AppendAllText(fallbackPath, fallbackInfo);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error in PopularPlace_Click: {ex.Message}");
+                MessageBox.Show($"PopularPlace_Click failed: {ex.Message}");
             }
         }
         
