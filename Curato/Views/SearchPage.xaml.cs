@@ -552,6 +552,9 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
+            // debugging
+            MessageBox.Show("Card clicked!");
+            
             if (sender is Border border && border.Tag is string tag && DataContext is InputViewModel vm)
             {
                 if (tag.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))

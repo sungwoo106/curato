@@ -458,7 +458,7 @@
             <StackPanel Grid.Row="2" Margin="120,40,120,0">
                 <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,20,50"
                            FontFamily="{StaticResource SatoshiBold}"/>
-                <ItemsControl ItemsSource="{Binding PopularPlaces}">
+                <ItemsControl ItemsSource="{Binding PopularPlaces}" Focusable="False" IsHitTestVisible="True">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel HorizontalAlignment="Left" ItemWidth="323"/>
