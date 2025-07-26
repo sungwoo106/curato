@@ -572,33 +572,41 @@ namespace Curato.Views
 
                 if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
-                    File.AppendAllText(path, $"[Click] Got Title: {place.Title}\n");
+
+                        // Debugging
+                        string debugPath = Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
+                        File.AppendAllText(debugPath, $"[Click] Time: {DateTime.Now}\n" +
+                                                    $"         Sender: {sender?.GetType().Name}\n" +
+                                                    $"         Title: {place?.Title}\n" +
+                                                    $"         Subtitle: {place?.Subtitle}\n" +
+                                                    $"         Label: {place?.Label}\n" +
+                                                    $"         ImagePath: {place?.ImagePath}\n\n");
 
                     // Set location query based on the clicked title
                     if (place.Title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
                     {
                         vm.LocationQuery = "Seongsu";
-                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
                     }
                     else if (place.Title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
                     {
                         vm.LocationQuery = "Hongdae";
-                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
                     }
                     else if (place.Title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
                     {
                         vm.LocationQuery = "Gangnam";
-                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
                     }
                     else if (place.Title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
                     {
                         vm.LocationQuery = "Itaewon";
-                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
                     }
                     else if (place.Title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
                     {
                         vm.LocationQuery = "Bukchon";
-                        File.AppendAllText(path, $"[Query Set] LocationQuery = {vm.LocationQuery}\n");
+                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
                     }
 
                     // Restart popup timer
