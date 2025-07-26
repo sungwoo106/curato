@@ -68,7 +68,9 @@ namespace Curato.Views
                     {
                         
                         //Debugging
-                        File.WriteAllText("check_json_path.txt", $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
+                        var debugPath = Path.Combine(AppContext.BaseDirectory, "check_json_path.txt");
+                        File.WriteAllText(debugPath, $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
+
 
                         var json = File.ReadAllText(mockJsonPath);
                         var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
@@ -113,7 +115,11 @@ namespace Curato.Views
                         }
                         catch (Exception ex)
                         {
-                            File.WriteAllText("map_debug_error.txt", ex.ToString());
+
+                            // Debugging
+                            var errorPath = Path.Combine(AppContext.BaseDirectory, "map_debug_error.txt");
+                            File.WriteAllText(errorPath, ex.ToString());
+
                         }
 
 
@@ -121,7 +127,11 @@ namespace Curato.Views
                 }
                 catch (Exception ex)
                 {
-                    File.WriteAllText("mock_load_error.txt", ex.ToString());
+                    
+                    // Debugging
+                    var mockErrorPath = Path.Combine(AppContext.BaseDirectory, "mock_load_error.txt");
+                    File.WriteAllText(mockErrorPath, ex.ToString());
+
                 }
 
 

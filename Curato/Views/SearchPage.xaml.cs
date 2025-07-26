@@ -59,9 +59,12 @@ namespace Curato.Views
 
         private void LocationTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (DataContext is InputViewModel vm && vm.LocationQuery == "Search Location")
+            if (sender is TextBox tb && DataContext is InputViewModel vm)
             {
-                vm.LocationQuery = string.Empty;
+                if (tb.Text == "Search Location")
+                {
+                    vm.LocationQuery = string.Empty;
+                }
             }
         }
 
@@ -568,46 +571,33 @@ namespace Curato.Views
         {
             try
             {
-                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
+                string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
 
                 if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
 
-                        // Debugging
-                        string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
-                        File.AppendAllText(debugPath, $"[Click] Time: {DateTime.Now}\n" +
-                                                    $"         Sender: {sender?.GetType().Name}\n" +
-                                                    $"         Title: {place?.Title}\n" +
-                                                    $"         Subtitle: {place?.Subtitle}\n" +
-                                                    $"         Label: {place?.Label}\n" +
-                                                    $"         ImagePath: {place?.ImagePath}\n\n");
+                    // Debugging
+                    string path = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
 
-                    // Set location query based on the clicked title
-                    if (place.Title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
-                    {
+                    string info = $"[Click] Time: {DateTime.Now}\n" +
+                                $"         Sender: {sender?.GetType().Name}\n" +
+                                $"         Source: {e?.OriginalSource}\n";
+                    File.AppendAllText(debugPath, info);
+
+                    string normalized = place.Title?.ToLowerInvariant() ?? "";
+
+                    if (normalized.Contains("seongsu"))
                         vm.LocationQuery = "Seongsu";
-                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
-                    }
-                    else if (place.Title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
-                    {
+                    else if (normalized.Contains("hongdae"))
                         vm.LocationQuery = "Hongdae";
-                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
-                    }
-                    else if (place.Title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
-                    {
+                    else if (normalized.Contains("gangnam"))
                         vm.LocationQuery = "Gangnam";
-                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
-                    }
-                    else if (place.Title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
-                    {
+                    else if (normalized.Contains("itaewon"))
                         vm.LocationQuery = "Itaewon";
-                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
-                    }
-                    else if (place.Title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
-                    {
+                    else if (normalized.Contains("bukchon"))
                         vm.LocationQuery = "Bukchon";
-                        System.IO.File.AppendAllText(path, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
-                    }
+
+                    File.AppendAllText(debugPath, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
 
                     // Restart popup timer
                     _locationTimer.Stop();
@@ -615,7 +605,7 @@ namespace Curato.Views
                 }
                 else
                 {
-                    File.AppendAllText(path, "[Click] No valid DataContext found.\n");
+                    File.AppendAllText(debugPath, "[Click] No valid DataContext found.\n");
                 }
             }
             catch (Exception ex)
