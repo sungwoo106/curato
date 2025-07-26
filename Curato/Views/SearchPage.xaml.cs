@@ -32,6 +32,8 @@ namespace Curato.Views
             // Setup debounced search logic in the code-behind to call a Python helper script and populate suggestions asynchronously
             _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
             _locationTimer.Tick += LocationTimer_Tick;
+            // force-wires the Popup to use the same InputViewModel as the rest of the page
+            LocationSuggestionPopup.DataContext = this.DataContext;
         }
 
         private void LocationTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -81,6 +83,8 @@ namespace Curato.Views
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
                 vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
+                // Debugging
+                Debug.WriteLine($"[Popup] Suggestions: {vm.LocationSuggestions.Count}, IsOpen: {vm.IsLocationPopupOpen}");
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
             }
             catch (Exception ex)

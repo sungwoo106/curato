@@ -210,21 +210,23 @@
                                      GotFocus="LocationTextBox_GotFocus"/>
                             <Popup x:Name="LocationSuggestionPopup"
                                    MinWidth="650"
-                                   MinHeight="400"
                                    PlacementTarget="{Binding ElementName=LocationTextBox}"
                                    Placement="Bottom"
                                    StaysOpen="False"
+                                   AllowsTransparency="True"
                                    PopupAnimation="Slide"
-                                   IsOpen="{Binding PlacementTarget.DataContext.IsLocationPopupOpen, RelativeSource={RelativeSource Self}}">
+                                   IsOpen="{Binding IsLocationPopupOpen}">
                                 <Border Background="White" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
-                                    <ItemsControl ItemsSource="{Binding PlacementTarget.DataContext.LocationSuggestions, RelativeSource={RelativeSource AncestorType=Popup}}">
+                                    <ItemsControl ItemsSource="{Binding LocationSuggestions}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding Name}"
                                                     Padding="10,8"
                                                     FontSize="16"
-                                                    MouseLeftButtonDown="Suggestion_Click"
                                                     Cursor="Hand"
+                                                    Focusable="True"
+                                                    IsHitTestVisible="True"
+                                                    MouseLeftButtonDown="Suggestion_Click"
                                                     Margin="5,2"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
