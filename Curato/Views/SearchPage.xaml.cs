@@ -569,17 +569,20 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
+
+            // Debugging
+                string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
+                string fallbackPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
+
             try
             {
-                // Debugging
-                string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
                 if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
 
                     // Debugging
                     string info = $"[Click] Time: {DateTime.Now}\n" +
                                 $"         Sender: {sender?.GetType().Name}\n" +
-                                $"         Source: {e?.OriginalSource}\n";
+                                $"         Title: {place?.Title}\n\n";
                     File.AppendAllText(debugPath, info);
 
                     string normalized = place.Title?.ToLowerInvariant() ?? "";
@@ -604,12 +607,16 @@ namespace Curato.Views
                 }
                 else
                 {
-                    File.AppendAllText(debugPath, "[Click] No valid DataContext found.\n");
+                    // Fallback logging if DataContext is not set
+                    string fallbackInfo = $"[Fail] Time: {DateTime.Now}\n" +
+                                        $"       Sender: {sender?.GetType().Name}\n" +
+                                        $"       DataContext type: {sender is FrameworkElement f ? f.DataContext?.GetType().Name : "null"}\n\n";
+                    File.AppendAllText(fallbackPath, fallbackInfo);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error in click handler: {ex.Message}");
+                MessageBox.Show($"Error in PopularPlace_Click: {ex.Message}");
             }
         }
         
