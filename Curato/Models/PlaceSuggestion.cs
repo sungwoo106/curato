@@ -1,9 +1,16 @@
+using System.Text.Json.Serialization;
+
 namespace Curato.Models
 {
     public class PlaceSuggestion
     {
-        public string Name { get; set; } = string.Empty;
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    [JsonPropertyName("latitude")]
+    public double Latitude { get; set; }
+
+    [JsonPropertyName("longitude")]
+    public double Longitude { get; set; }
     }
 }

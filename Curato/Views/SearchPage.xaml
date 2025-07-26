@@ -237,6 +237,7 @@
                                                         <TextBlock Text="{Binding Name}"
                                                                 Padding="10,8"
                                                                 FontSize="18"
+                                                                FontFamily="{StaticResource SatoshiMedium}"
                                                                 Foreground="Black"
                                                                 Cursor="Hand"
                                                                 Margin="5,2"
