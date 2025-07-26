@@ -35,6 +35,15 @@ namespace Curato.Views
             // Setup debounced search logic in the code-behind to call a Python helper script and populate suggestions asynchronously
             _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
             _locationTimer.Tick += LocationTimer_Tick;
+
+            // Debug: Track what UI element receives the MouseLeftButtonUp event
+            EventManager.RegisterClassHandler(typeof(Border),
+                UIElement.MouseLeftButtonUpEvent,
+                new MouseButtonEventHandler((s, e) =>
+                {
+                    string path = System.IO.Path.Combine(AppContext.BaseDirectory, "event_trace.txt");
+                    File.AppendAllText(path, $"[Border] Click on: {s.GetType().Name}, Tag={((s as FrameworkElement)?.Tag ?? "null")}\n");
+                }));
         }
 
         private void LocationTextBox_TextChanged(object sender, TextChangedEventArgs e)

@@ -477,11 +477,13 @@
                                 Padding="10"
                                 Tag="{Binding Title}"
                                 Cursor="Hand"
-                                PreviewMouseLeftButtonUp="PopularPlace_Click">
+                                PreviewMouseLeftButtonUp="PopularPlace_Click"
+                                IsHitTestVisible="True">
                                 <StackPanel VerticalAlignment="Top"
                                     PreviewMouseLeftButtonUp="PopularPlace_Click"
                                     Cursor="Hand"
-                                    Tag="{Binding Title}">
+                                    Tag="{Binding Title}"
+                                    IsHitTestVisible="True">
                                     <Grid Tag="{Binding Title}"
                                         Cursor="Hand"
                                         PreviewMouseLeftButtonUp="PopularPlace_Click">
