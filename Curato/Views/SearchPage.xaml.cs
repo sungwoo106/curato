@@ -552,11 +552,13 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
+            // Declare the path at the beginning so it's accessible throughout
+            string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_debug.txt");
+
             // Debugging
             try
             {
-                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_debug.txt");
-                File.WriteAllText(path, $"[{DateTime.Now}] Click detected");
+                File.WriteAllText(path, $"[{DateTime.Now}] Click detected\n");
             }
             catch (Exception ex)
             {
@@ -565,7 +567,11 @@ namespace Curato.Views
 
             if (sender is FrameworkElement fe && fe.Tag is string title && DataContext is InputViewModel vm)
             {
-                File.AppendAllText(path, $"[Tag] {title}\n");
+                try
+                {
+                    File.AppendAllText(path, $"[Tag] {title}\n");
+                }
+                catch { /* Fails silently to avoid crashing */ }
 
                 if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Seongsu";
