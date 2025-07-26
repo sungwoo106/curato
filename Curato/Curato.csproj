@@ -20,7 +20,9 @@
 
   <!-- HTML resources for WebView2 -->
   <ItemGroup>
-    <Content Include="Resources\html\*.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Resources\html\map_template.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <!-- NuGet packages -->
