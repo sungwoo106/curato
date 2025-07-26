@@ -472,11 +472,11 @@
                                 Background="White"
                                 CornerRadius="20"
                                 Margin="10"
-                                Padding="10">
-                                <StackPanel VerticalAlignment="Top"
-                                    PreviewMouseLeftButtonUp="PopularPlace_Click"
-                                    Cursor="Hand"
-                                    Tag="{Binding Title}">
+                                Padding="10"
+                                PreviewMouseLeftButtonUp="PopularPlace_Click"
+                                Cursor="Hand"
+                                Tag="{Binding Title}">
+                                <StackPanel VerticalAlignment="Top">
                                     <Grid>
                                         <Border Height="350"
                                                 CornerRadius="40"
@@ -502,6 +502,9 @@
                                                FontFamily="{StaticResource SatoshiBold}"/>
                                     <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
                                                Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"/>
+
+                                    <!-- Debug helper: shows the bound Tag -->
+                                    <TextBlock Text="{Binding Title}" FontSize="12" Foreground="Gray"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

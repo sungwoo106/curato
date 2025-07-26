@@ -563,40 +563,40 @@ namespace Curato.Views
         {
             // debugging
             string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_click_debug.txt");
+            
             try
             {
-                var clickedElement = sender as FrameworkElement;
-                var tag = clickedElement?.Tag as string;
-                var dcType = clickedElement?.DataContext?.GetType().Name ?? "null";
-                var log = $"[Clicked] Element={clickedElement?.GetType().Name}, Tag={tag}, DataContext={dcType}\n";
-                File.AppendAllText(path, log);
+                if (sender is FrameworkElement fe)
+                {
+                    var tag = fe.Tag as string;
+                    var dcType = fe.DataContext?.GetType().Name ?? "null";
+
+                    string log = $"[Border] Clicked: {fe.GetType().Name}, Tag={tag ?? "[null]"}, DataContext={dcType}\n";
+                    File.AppendAllText(path, log);
+
+                    if (tag != null && DataContext is InputViewModel vm)
+                    {
+                        if (tag.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Seongsu";
+                        else if (tag.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Hongdae";
+                        else if (tag.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Gangnam";
+                        else if (tag.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Itaewon";
+                        else if (tag.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                            vm.LocationQuery = "Bukchon";
+
+                        vm.IsLocationPopupOpen = false;
+
+                        _locationTimer.Stop();
+                        _locationTimer.Start();
+                    }
+                }
             }
             catch (Exception ex)
             {
                 File.AppendAllText(path, $"[Exception] {ex.Message}\n");
-            }
-
-            if (sender is FrameworkElement fe && fe.Tag is string title && DataContext is InputViewModel vm)
-            {
-                try
-                {
-                    File.AppendAllText(path, $"[Tag] {title}\n");
-                }
-                catch { /* Fails silently to avoid crashing */ }
-
-                if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Seongsu";
-                else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Hongdae";
-                else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Gangnam";
-                else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Itaewon";
-                else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
-                    vm.LocationQuery = "Bukchon";
-
-                _locationTimer.Stop();
-                _locationTimer.Start();
             }
         }
         
