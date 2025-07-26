@@ -107,7 +107,8 @@ namespace Curato.Views
                 string coordArray = "["
                     + string.Join(",", JSplan.SuggestedPlaces
                         .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                        .Select(p => $"{{ lat: {p.Latitude}, lng: {p.Longitude} }}"))
+                        .Select((p, i) =>
+                            $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
                     + "]";
 
                 var finalHtml = htmlTemplate
