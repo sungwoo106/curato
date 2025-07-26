@@ -111,7 +111,7 @@ namespace Curato.Views
                 Log(" Sent HTML to WebView2.");
                 
             }
-            catch
+            catch (Exception ex)
             {
                 // ignore map errors
 
