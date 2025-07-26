@@ -63,7 +63,7 @@ namespace Curato.Views
                 AppState.SharedTripPlan = JSplan;
 
                 // TEMP: Load mock LLM output from file
-                string? location = AppState.SharedInputViewModel?.Location?.ToLowerInvariant();
+                string location = AppState.SharedInputViewModel?.StartLocation?.ToLowerInvariant() ?? "";
 
                 var locationSuffixes = new Dictionary<string, string>
                 {
