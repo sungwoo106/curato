@@ -552,11 +552,19 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
-            // debugging
-            MessageBox.Show("Card clicked!");
+            // Traverse up the visual tree to find the tagged Border
+            DependencyObject? current = sender as DependencyObject;
 
-            if (sender is Border border && border.Tag is string title && DataContext is InputViewModel vm)
+            while (current != null && current is not Border)
             {
+                current = VisualTreeHelper.GetParent(current);
+            }
+
+            if (current is Border border && border.Tag is string title && DataContext is InputViewModel vm)
+            {
+                // Debugging
+                MessageBox.Show($"Sender: {sender.GetType().Name}, Tag: {(sender as FrameworkElement)?.Tag ?? "none"}");
+
                 if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Seongsu";
                 else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
@@ -568,7 +576,6 @@ namespace Curato.Views
                 else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Bukchon";
 
-                // Optionally restart the suggestion popup
                 _locationTimer.Stop();
                 _locationTimer.Start();
             }
