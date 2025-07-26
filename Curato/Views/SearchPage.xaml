@@ -213,10 +213,10 @@
                                    PlacementTarget="{Binding ElementName=LocationTextBox}"
                                    Placement="Bottom"
                                    StaysOpen="False"
-                                   AllowsTransparency="True"
+                                   AllowsTransparency="False"
                                    PopupAnimation="Slide"
                                    IsOpen="{Binding IsLocationPopupOpen}">
-                                <Border Background="White" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
+                                <Border Background="LightYellow" Padding="10" CornerRadius="15" Effect="{StaticResource ShadowEffect}">
                                     <ItemsControl ItemsSource="{Binding LocationSuggestions}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>

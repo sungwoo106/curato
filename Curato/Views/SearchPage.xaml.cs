@@ -29,11 +29,11 @@ namespace Curato.Views
         {
             InitializeComponent();
             this.DataContext = AppState.SharedInputViewModel;
+            // force-wires the Popup to use the same InputViewModel as the rest of the page
+            LocationSuggestionPopup.DataContext = this.DataContext;
             // Setup debounced search logic in the code-behind to call a Python helper script and populate suggestions asynchronously
             _locationTimer.Interval = TimeSpan.FromMilliseconds(500);
             _locationTimer.Tick += LocationTimer_Tick;
-            // force-wires the Popup to use the same InputViewModel as the rest of the page
-            LocationSuggestionPopup.DataContext = this.DataContext;
         }
 
         private void LocationTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -57,6 +57,8 @@ namespace Curato.Views
                 return;
 
             string query = vm.LocationQuery;
+            // Debugging
+            Console.WriteLine($"[Timer] LocationTimer_Tick fired with query: '{query}'");
             if (string.IsNullOrWhiteSpace(query))
             {
                 vm.LocationSuggestions.Clear();
@@ -80,17 +82,24 @@ namespace Curato.Views
 
                 using var process = Process.Start(psi);
                 string result = await process.StandardOutput.ReadToEndAsync();
+                // Debugging
+                Console.WriteLine($"[Python] Raw result: {result}");
                 await process.WaitForExitAsync();
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
+                // Debugging
+                Console.WriteLine($"[Python] Deserialized {suggestions?.Count ?? 0} suggestions");
                 vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
                 // Debugging
-                Debug.WriteLine($"[Popup] Suggestions: {vm.LocationSuggestions.Count}, IsOpen: {vm.IsLocationPopupOpen}");
+                Console.WriteLine($"[ViewModel] LocationSuggestions now has {vm.LocationSuggestions.Count} items");
+
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
+                // Debugging
+                Console.WriteLine($"[Popup] Suggestions: {vm.LocationSuggestions.Count}, IsOpen: {vm.IsLocationPopupOpen}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error fetching location suggestions: {ex.Message}");
+                Console.WriteLine($"Error fetching location suggestions: {ex.Message}");
                 vm.LocationSuggestions = new();
                 vm.IsLocationPopupOpen = false;
             }

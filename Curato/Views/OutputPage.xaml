@@ -142,7 +142,11 @@
 
             <!-- WebView Map -->
             <Border Grid.Column="0" CornerRadius="30" Margin="0,0,10,0">
-                <wv2:WebView2 x:Name="MapWebView" />
+                <wv2:WebView2 x:Name="MapWebView"
+                    Width="Auto"
+                    Height="Auto"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" />
             </Border>
 
             <!-- Emotional Itinerary -->
