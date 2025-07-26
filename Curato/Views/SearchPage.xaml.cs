@@ -610,7 +610,8 @@ namespace Curato.Views
                     // Fallback logging if DataContext is not set
                     string fallbackInfo = $"[Fail] Time: {DateTime.Now}\n" +
                                         $"       Sender: {sender?.GetType().Name}\n" +
-                                        $"       DataContext type: {sender is FrameworkElement f ? f.DataContext?.GetType().Name : "null"}\n\n";
+                                        $"       DataContext type: {(sender is FrameworkElement f ? f.DataContext?.GetType().Name : "null")}\n\n";
+
                     File.AppendAllText(fallbackPath, fallbackInfo);
                 }
             }

@@ -54,116 +54,75 @@ namespace Curato.Views
 
             try
             {
-                var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
+                var htmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
+                var htmlTemplate = File.ReadAllText(htmlPath);
                 var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
+                // Debug 1: Confirm method fired
+                File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "outputpage_loaded.txt"), "OutputPage_Loaded fired");
+
                 // Build JavaScript array from AppState
-                var plan = AppState.SharedTripPlan;
+                var plan = AppState.SharedTripPlan ?? new TripPlan();
+                AppState.SharedTripPlan = plan;
 
                 // TEMP: Load mock LLM output from file
-                try
+                var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "mock_phi_hd_output.json");
+                //Debugging
+                File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "check_json_path.txt"),
+                $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
+                
+                if (File.Exists(mockJsonPath))
                 {
-                    var mockJsonPath = Path.Combine(AppContext.BaseDirectory, "mock_phi_hd_output.json");
-                    if (File.Exists(mockJsonPath))
+
+                    var json = File.ReadAllText(mockJsonPath);
+                    var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
+
+                    // Debug 3: Suggestions loaded
+                    File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "mock_suggestion_debug.txt"),
+                    $"Suggestions count: {suggestions?.Count}");
+
+                    if (suggestions != null && suggestions.Any())
                     {
-                        
-                        //Debugging
-                        var debugPath = Path.Combine(AppContext.BaseDirectory, "check_json_path.txt");
-                        File.WriteAllText(debugPath, $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
+                        plan.SuggestedPlaces = suggestions
+                            .Where(p => p.Latitude != 0 && p.Longitude != 0)
+                            .ToList();
 
+                        // Debug 4: Final assigned suggestions
+                        File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "plan_suggestions.txt"),
+                        string.Join("\n", plan.SuggestedPlaces.Select(p => $"{p.Name}: {p.Latitude}, {p.Longitude}")));
 
-                        var json = File.ReadAllText(mockJsonPath);
-                        var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
-
-                        if (suggestions != null && suggestions.Any())
+                        // If no center coordinates were provided, use the first suggestion
+                        if (!coords.HasValue && plan.SuggestedPlaces.Count > 0)
                         {
-                            plan.SuggestedPlaces = suggestions
-                                .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                                .Select(p => new PlaceSuggestion
-                                {
-                                    Name = p.Name,
-                                    Latitude = p.Latitude,
-                                    Longitude = p.Longitude
-                                }).ToList();
-
-                            // If no center coordinates were provided, use the first suggestion
-                            if (!coords.HasValue && plan.SuggestedPlaces.Count > 0)
-                            {
-                                lat = plan.SuggestedPlaces[0].Latitude;
-                                lng = plan.SuggestedPlaces[0].Longitude;
-                            }
+                            lat = plan.SuggestedPlaces[0].Latitude;
+                            lng = plan.SuggestedPlaces[0].Longitude;
                         }
-
-                        // ✅ Add debug block here
-                        try
-                        {
-                            var debugLogPath = Path.Combine(AppContext.BaseDirectory, "map_marker_debug.txt");
-
-                            if (plan == null)
-                            {
-                                File.WriteAllText(debugLogPath, "AppState.SharedTripPlan is null.");
-                            }
-                            else if (plan.SuggestedPlaces == null)
-                            {
-                                File.WriteAllText(debugLogPath, "SuggestedPlaces is null.");
-                            }
-                            else if (!plan.SuggestedPlaces.Any())
-                            {
-                                File.WriteAllText(debugLogPath, "SuggestedPlaces exists but is empty.");
-                            }
-                            else
-                            {
-                                var lines = plan.SuggestedPlaces
-                                    .Select(p => $"{p.Name} - lat: {p.Latitude}, lng: {p.Longitude}")
-                                    .ToList();
-
-                                File.WriteAllLines(debugLogPath, lines);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-
-                            // Debugging
-                            var errorPath = Path.Combine(AppContext.BaseDirectory, "map_debug_error.txt");
-                            File.WriteAllText(errorPath, ex.ToString());
-
-                        }
-
-
                     }
-                }
-                catch (Exception ex)
-                {
-
-                    // Debugging
-                    var mockErrorPath = Path.Combine(AppContext.BaseDirectory, "mock_load_error.txt");
-                    File.WriteAllText(mockErrorPath, ex.ToString());
 
                 }
 
-
-                string coordArray = "[]";
-                if (plan?.SuggestedPlaces != null)
-                {
-                    var points = plan.SuggestedPlaces
+                string coordArray = "["
+                    + string.Join(",", plan.SuggestedPlaces
                         .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                        .Select(p => $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)} }}");
+                        .Select(p => $"{{ lat: {p.Latitude}, lng: {p.Longitude} }}"))
+                    + "]";
 
-                    coordArray = "[" + string.Join(",", points) + "]";
-                }
-
-                string html = File.ReadAllText(htmlPath)
-                    .Replace("{API_KEY}", kakaoMapKey)
-                    .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
-                    .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture))
+                var finalHtml = htmlTemplate
+                    .Replace("{KAKAO_MAP_KEY}", kakaoMapKey)
+                    .Replace("{LAT}", plan.SuggestedPlaces.FirstOrDefault()?.Latitude.ToString(CultureInfo.InvariantCulture) ?? "37.5665")
+                    .Replace("{LNG}", plan.SuggestedPlaces.FirstOrDefault()?.Longitude.ToString(CultureInfo.InvariantCulture) ?? "126.9780")
                     .Replace("{COORD_ARRAY}", coordArray);
 
+                // Debug 5: Output final rendered HTML
+                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "final_html_rendered.html"), finalHtml);
+
                 await MapWebView.EnsureCoreWebView2Async();
-                MapWebView.NavigateToString(html);
+                MapWebView.NavigateToString(finalHtml);
             }
             catch (Exception ex)
             {
-                // optional: log the error
+                // Debug 6
+                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "map_debug_error.txt"), ex.ToString());
             }
         }
 
