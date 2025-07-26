@@ -617,10 +617,12 @@ namespace Curato.Views
             var tripPlan = await PlannerEngine.GenerateTripPlan(request);
             AppState.SharedTripPlan = tripPlan;
 
+            var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
             {
                 // Save coordinates from ViewModel
-                var (lat, lng) = vm.SelectedLocationCoordinates;
+                double lat = vm.SelectedLocationCoordinates?.Latitude ?? 37.5665;
+                double lng = vm.SelectedLocationCoordinates?.Longitude ?? 126.9780;
 
                 // Create and configure OutputPage
                 var outputPage = new OutputPage

@@ -9,11 +9,13 @@ namespace Curato.Views
 {
     public partial class OutputPage : UserControl
     {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+
         public OutputPage()
         {
             InitializeComponent();
             this.DataContext = AppState.SharedTripPlan;
-
             this.Loaded += OutputPage_Loaded;
 
             // Load the emotional narrative into the TextBlock
