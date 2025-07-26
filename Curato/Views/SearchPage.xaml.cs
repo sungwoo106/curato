@@ -562,17 +562,18 @@ namespace Curato.Views
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
             // debugging
+            string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_click_debug.txt");
             try
             {
-                var fe = sender as FrameworkElement;
-                var tag = fe?.Tag as string;
-                var dcType = fe?.DataContext?.GetType().Name ?? "null";
-                var log = $"[Clicked] Element={fe?.GetType().Name}, Tag={tag}, DataContext={dcType}\n";
-                File.AppendAllText("popular_click_debug.txt", log);
+                var clickedElement = sender as FrameworkElement;
+                var tag = clickedElement?.Tag as string;
+                var dcType = clickedElement?.DataContext?.GetType().Name ?? "null";
+                var log = $"[Clicked] Element={clickedElement?.GetType().Name}, Tag={tag}, DataContext={dcType}\n";
+                File.AppendAllText(path, log);
             }
             catch (Exception ex)
             {
-                File.AppendAllText("popular_click_debug.txt", $"[Exception] {ex.Message}\n");
+                File.AppendAllText(path, $"[Exception] {ex.Message}\n");
             }
 
             if (sender is FrameworkElement fe && fe.Tag is string title && DataContext is InputViewModel vm)
