@@ -571,8 +571,8 @@ namespace Curato.Views
         {
 
             // Debugging
-                string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
-                string fallbackPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
+            string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
+            string fallbackPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
 
             try
             {

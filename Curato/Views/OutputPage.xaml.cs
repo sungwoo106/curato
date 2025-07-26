@@ -66,7 +66,7 @@ namespace Curato.Views
                 AppState.SharedTripPlan = plan;
 
                 // TEMP: Load mock LLM output from file
-                var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "mock_phi_hd_output.json");
+                var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", "mock_phi_hd_output.json");
                 //Debugging
                 File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "check_json_path.txt"),
                 $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
@@ -74,8 +74,8 @@ namespace Curato.Views
                 if (File.Exists(mockJsonPath))
                 {
 
-                    var json = File.ReadAllText(mockJsonPath);
-                    var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
+                    var phiJson = File.ReadAllText(mockJsonPath);
+                    var phiPlaces = JsonSerializer.Deserialize<List<PhiPlace>>(phiJson);
 
                     // Debug 3: Suggestions loaded
                     File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "mock_suggestion_debug.txt"),

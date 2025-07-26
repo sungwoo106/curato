@@ -53,24 +53,19 @@
 
 
   <ItemGroup>
-  <None Update="..\mock\mock_phi_hd_output.json">
-    <Link>mock_phi_hd_output.json</Link>
+  <None Include="Resources\MockData\mock_phi_hd_output.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
-  <None Update="..\mock\mock_phi_bc_output.json">
-    <Link>mock_phi_bc_output.json</Link>
+  <None Include="Resources\MockData\mock_phi_bc_output.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
-  <None Update="..\mock\mock_phi_gn_output.json">
-    <Link>mock_phi_gn_output.json</Link>
+  <None Include="Resources\MockData\mock_phi_gn_output.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
-  <None Update="..\mock\mock_phi_it_output.json">
-    <Link>mock_phi_it_output.json</Link>
+  <None Include="Resources\MockData\mock_phi_it_output.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
-  <None Update="..\mock\mock_phi_ss_output.json">
-    <Link>mock_phi_ss_output.json</Link>
+  <None Include="Resources\MockData\mock_phi_ss_output.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   </ItemGroup>
