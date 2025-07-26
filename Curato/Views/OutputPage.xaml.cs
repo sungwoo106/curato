@@ -62,8 +62,8 @@ namespace Curato.Views
                 File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "outputpage_loaded.txt"), "OutputPage_Loaded fired");
 
                 // Build JavaScript array from AppState
-                var plan = AppState.SharedTripPlan ?? new TripPlan();
-                AppState.SharedTripPlan = plan;
+                var JSplan = AppState.SharedTripPlan ?? new TripPlan();
+                AppState.SharedTripPlan = JSplan;
 
                 // TEMP: Load mock LLM output from file
                 var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", "mock_phi_hd_output.json");
@@ -79,38 +79,44 @@ namespace Curato.Views
 
                     // Debug 3: Suggestions loaded
                     File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "mock_suggestion_debug.txt"),
-                    $"Suggestions count: {suggestions?.Count}");
+                    $"Suggestions count: {phiPlaces?.Count}");
 
-                    if (suggestions != null && suggestions.Any())
+                    if (phiPlaces != null && phiPlaces.Any())
                     {
-                        plan.SuggestedPlaces = suggestions
+                        JSplan.SuggestedPlaces = phiPlaces
                             .Where(p => p.Latitude != 0 && p.Longitude != 0)
+                            .Select(p => new PhiPlace
+                            {
+                                Name = p.Name,
+                                Latitude = p.Latitude,
+                                Longitude = p.Longitude
+                            })
                             .ToList();
 
                         // Debug 4: Final assigned suggestions
-                        File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "plan_suggestions.txt"),
-                        string.Join("\n", plan.SuggestedPlaces.Select(p => $"{p.Name}: {p.Latitude}, {p.Longitude}")));
+                        File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "JSplan_suggestions.txt"),
+                        string.Join("\n", JSplan.SuggestedPlaces.Select(p => $"{p.Name}: {p.Latitude}, {p.Longitude}")));
 
                         // If no center coordinates were provided, use the first suggestion
-                        if (!coords.HasValue && plan.SuggestedPlaces.Count > 0)
+                        if (!coords.HasValue && JSplan.SuggestedPlaces.Count > 0)
                         {
-                            lat = plan.SuggestedPlaces[0].Latitude;
-                            lng = plan.SuggestedPlaces[0].Longitude;
+                            lat = JSplan.SuggestedPlaces[0].Latitude;
+                            lng = JSplan.SuggestedPlaces[0].Longitude;
                         }
                     }
 
                 }
 
                 string coordArray = "["
-                    + string.Join(",", plan.SuggestedPlaces
+                    + string.Join(",", JSplan.SuggestedPlaces
                         .Where(p => p.Latitude != 0 && p.Longitude != 0)
                         .Select(p => $"{{ lat: {p.Latitude}, lng: {p.Longitude} }}"))
                     + "]";
 
                 var finalHtml = htmlTemplate
                     .Replace("{API_KEY}", kakaoMapKey)
-                    .Replace("{LAT}", plan.SuggestedPlaces.FirstOrDefault()?.Latitude.ToString(CultureInfo.InvariantCulture) ?? "37.5665")
-                    .Replace("{LNG}", plan.SuggestedPlaces.FirstOrDefault()?.Longitude.ToString(CultureInfo.InvariantCulture) ?? "126.9780")
+                    .Replace("{LAT}", JSplan.SuggestedPlaces.FirstOrDefault()?.Latitude.ToString(CultureInfo.InvariantCulture) ?? "37.5665")
+                    .Replace("{LNG}", JSplan.SuggestedPlaces.FirstOrDefault()?.Longitude.ToString(CultureInfo.InvariantCulture) ?? "126.9780")
                     .Replace("{COORD_ARRAY}", coordArray);
 
                 // Debug 5: Output final rendered HTML
