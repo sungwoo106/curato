@@ -46,18 +46,21 @@ namespace Curato.Views
                 lng = coords.Value.Longitude;
             }
 
-            // Retrieve the Kakao Map API key from the secure helper
-            var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
-
             try
             {
                 var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
+                Console.WriteLine("HTML Path: " + htmlPath);
                 if (File.Exists(htmlPath))
                 {
+                    // Retrieve the Kakao Map API key from the secure helper
+                    var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
                     string html = File.ReadAllText(htmlPath)
                         .Replace("{API_KEY}", kakaoMapKey)
                         .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
                         .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture));
+
+                    Console.WriteLine("==== HTML OUTPUT ====");
+                    Console.WriteLine(html);
 
                     await MapWebView.EnsureCoreWebView2Async();
                     MapWebView.NavigateToString(html);
