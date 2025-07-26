@@ -38,6 +38,8 @@
             var locations = {COORD_ARRAY};  // Injected array
             var path = [];
 
+            var sharedInfoWindow = new kakao.maps.InfoWindow();
+
             locations.forEach(function(place, index) {
                 var marker = new kakao.maps.Marker({
                     position: new kakao.maps.LatLng(place.lat, place.lng),
@@ -47,17 +49,27 @@
 
                 var label = new kakao.maps.CustomOverlay({
                     position: marker.getPosition(),
-                    content: '<div style="background:#fff;padding:2px 5px;border:1px solid #333;border-radius:4px;font-size:12px;">' + place.index + '</div>',
+                    content: '<div class="marker-label">' + place.index + '</div>',
                     yAnchor: 1
                 });
                 label.setMap(map);
 
+                var infowindow = new kakao.maps.InfoWindow({
+                    content: '<div style="padding:5px;font-size:14px;">' + place.name + '</div>'
+                });
+
                 kakao.maps.event.addListener(marker, 'click', function () {
-                    alert(place.name || 'No name provided');
+                    sharedInfoWindow.setContent('<div style="padding:5px;font-size:14px;">' + place.name + '</div>');
+                    sharedInfoWindow.open(map, marker);
                 });
 
                 path.push(marker.getPosition());
             });
+
+            kakao.maps.event.addListener(map, 'click', function () {
+                sharedInfoWindow.close();
+            });
+
 
             // Draw line connecting the places
             var polyline = new kakao.maps.Polyline({
