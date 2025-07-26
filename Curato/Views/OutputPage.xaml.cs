@@ -77,7 +77,7 @@ namespace Curato.Views
                                 {
                                     Name = p.Name,
                                     Latitude = p.Latitude,
-                                    Longitude = p.ongitude
+                                    Longitude = p.Longitude
                                 }).ToList();
                         }
 
@@ -112,7 +112,7 @@ namespace Curato.Views
                             File.WriteAllText("map_debug_error.txt", ex.ToString());
                         }
 
-                        
+
                     }
                 }
                 catch (Exception ex)
