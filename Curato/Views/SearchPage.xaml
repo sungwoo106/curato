@@ -480,7 +480,8 @@
                                         <Border Height="350"
                                                 CornerRadius="40"
                                                 ClipToBounds="True"
-                                                HorizontalAlignment="Stretch">
+                                                HorizontalAlignment="Stretch"
+                                                Background="Transparent">
                                             <Image Source="{Binding ImagePath}"
                                                    Stretch="UniformToFill" StretchDirection="Both"
                                                    HorizontalAlignment="Center"

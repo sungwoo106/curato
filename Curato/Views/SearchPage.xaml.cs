@@ -554,18 +554,18 @@ namespace Curato.Views
         {
             // debugging
             MessageBox.Show("Card clicked!");
-            
-            if (sender is Border border && border.Tag is string tag && DataContext is InputViewModel vm)
+
+            if (sender is Border border && border.Tag is string title && DataContext is InputViewModel vm)
             {
-                if (tag.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Seongsu";
-                else if (tag.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Hongdae";
-                else if (tag.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Gangnam";
-                else if (tag.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Itaewon";
-                else if (tag.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
                     vm.LocationQuery = "Bukchon";
 
                 // Optionally restart the suggestion popup
