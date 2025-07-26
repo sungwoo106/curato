@@ -552,22 +552,23 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
-            if (sender is not Border border || border.DataContext is not PopularPlace pp)
-                return;
-            if (DataContext is not InputViewModel vm)
-                return;
+            if (sender is Border border && border.Tag is string tag && DataContext is InputViewModel vm)
+            {
+                if (tag.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Seongsu";
+                else if (tag.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Hongdae";
+                else if (tag.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Gangnam";
+                else if (tag.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Itaewon";
+                else if (tag.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Bukchon";
 
-            string query = pp.Title;
-            if (query.StartsWith("Seongsu"))
-                vm.LocationQuery = "Seongsu";
-            else if (query.StartsWith("Hongdae"))
-                vm.LocationQuery = "Hongdae";
-            else if (query.StartsWith("Gangnam"))
-                vm.LocationQuery = "Gangnam";
-            else if (query.StartsWith("Itaewon"))
-                vm.LocationQuery = "Itaewon";
-            else if (query.StartsWith("Bukchon"))
-                vm.LocationQuery = "Bukchon";
+                // Optionally restart the suggestion popup
+                _locationTimer.Stop();
+                _locationTimer.Start();
+            }
         }        
 
         private async void GenerateButton_Click(object sender, RoutedEventArgs e)

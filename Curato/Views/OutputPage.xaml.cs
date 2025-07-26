@@ -50,19 +50,19 @@ namespace Curato.Views
                 lat = coords.Value.Latitude;
                 lng = coords.Value.Longitude;
                 // Debugging
-                Log($"Coordinates received: lat={lat}, lng={lng}");
+                Log($" Coordinates received: lat={lat}, lng={lng}");
             }
             // Debuggng
             else
             {
-                Log("⚠️ No coordinates provided, using default (Seoul)");
+                Log(" No coordinates provided, using default (Seoul)");
             }
 
             try
             {
                 var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
                 // Debugging
-                Log($"Checking HTML path: {htmlPath}");
+                Log($" Checking HTML path: {htmlPath}");
 
                 // Debugging
                 if (!File.Exists(htmlPath))
@@ -108,7 +108,7 @@ namespace Curato.Views
                 MapWebView.NavigateToString(html);
 
                 //Debugging
-                Log("🚀 Sent HTML to WebView2.");
+                Log(" Sent HTML to WebView2.");
                 
             }
             catch
@@ -116,7 +116,7 @@ namespace Curato.Views
                 // ignore map errors
 
                 //Debugging
-                Log("❌ Exception in OutputPage_Loaded: " + ex);
+                Log(" Exception in OutputPage_Loaded: " + ex);
             }
         }
 
