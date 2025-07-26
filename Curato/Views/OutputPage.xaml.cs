@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Globalization;
 using System.IO;
+using secure;
 
 namespace Curato.Views
 {
@@ -45,7 +46,8 @@ namespace Curato.Views
                 lng = coords.Value.Longitude;
             }
 
-            string apiKey = Environment.GetEnvironmentVariable("KAKAO_MAP_API_KEY") ?? "";
+            // Retrieve the Kakao Map API key from the secure helper
+            var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
             try
             {
@@ -53,7 +55,7 @@ namespace Curato.Views
                 if (File.Exists(htmlPath))
                 {
                     string html = File.ReadAllText(htmlPath)
-                        .Replace("{{API_KEY}}", apiKey)
+                        .Replace("{{API_KEY}}", kakaoMapKey)
                         .Replace("{{LAT}}", lat.ToString(CultureInfo.InvariantCulture))
                         .Replace("{{LNG}}", lng.ToString(CultureInfo.InvariantCulture));
 
