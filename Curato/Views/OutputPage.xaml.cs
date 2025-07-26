@@ -58,51 +58,58 @@ namespace Curato.Views
                 var htmlTemplate = File.ReadAllText(htmlPath);
                 var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
-                // Debug 1: Confirm method fired
-                File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "outputpage_loaded.txt"), "OutputPage_Loaded fired");
-
                 // Build JavaScript array from AppState
                 var JSplan = AppState.SharedTripPlan ?? new TripPlan();
                 AppState.SharedTripPlan = JSplan;
 
                 // TEMP: Load mock LLM output from file
-                var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", "mock_phi_hd_output.json");
-                
+                string? location = AppState.SharedInputViewModel?.Location?.ToLowerInvariant();
+
+                var locationSuffixes = new Dictionary<string, string>
+                {
+                    { "홍대", "hd" }, { "hongdae", "hd" },
+                    { "강남", "gn" }, { "gangnam", "gn" },
+                    { "북촌", "bc" }, { "bukchon", "bc" },
+                    { "이태원", "it" }, { "itaewon", "it" },
+                    { "신사", "ss" }, { "sinsa", "ss" }
+                };
+
+                string suffix = "hd";  // fallback
+                if (location != null)
+                {
+                    foreach (var kvp in locationSuffixes)
+                    {
+                        if (location.Contains(kvp.Key))
+                        {
+                            suffix = kvp.Value;
+                            break;
+                        }
+                    }
+                }
+
+                var mockJsonPath = Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", $"mock_phi_{suffix}_output.json");
+                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "mock_json_debug.txt"),
+                    $"Search query: {location}\nSuffix used: {suffix}\nPath: {mockJsonPath}");
+
                 if (File.Exists(mockJsonPath))
                 {
-
                     var phiJson = File.ReadAllText(mockJsonPath);
                     var phiPlaces = JsonSerializer.Deserialize<List<PhiPlace>>(phiJson);
-
-                    // Debug 3: Suggestions loaded
-                    File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "mock_suggestion_debug.txt"),
-                    $"Suggestions count: {phiPlaces?.Count}");
 
                     if (phiPlaces != null && phiPlaces.Any())
                     {
                         JSplan.SuggestedPlaces = phiPlaces
                             .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                            .Select(p => new PhiPlace
-                            {
-                                Name = p.Name,
-                                Latitude = p.Latitude,
-                                Longitude = p.Longitude
-                            })
                             .ToList();
 
-                        // Debug 4: Final assigned suggestions
-                        File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "JSplan_suggestions.txt"),
-                        string.Join("\n", JSplan.SuggestedPlaces.Select(p => $"{p.Name}: {p.Latitude}, {p.Longitude}")));
-
-                        // If no center coordinates were provided, use the first suggestion
                         if (!coords.HasValue && JSplan.SuggestedPlaces.Count > 0)
                         {
                             lat = JSplan.SuggestedPlaces[0].Latitude;
                             lng = JSplan.SuggestedPlaces[0].Longitude;
                         }
                     }
-
                 }
+
 
                 string coordArray = "["
                     + string.Join(",", JSplan.SuggestedPlaces
@@ -117,16 +124,12 @@ namespace Curato.Views
                     .Replace("{LNG}", JSplan.SuggestedPlaces.FirstOrDefault()?.Longitude.ToString(CultureInfo.InvariantCulture) ?? "126.9780")
                     .Replace("{COORD_ARRAY}", coordArray);
 
-                // Debug 5: Output final rendered HTML
-                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "final_html_rendered.html"), finalHtml);
-
                 await MapWebView.EnsureCoreWebView2Async();
                 MapWebView.NavigateToString(finalHtml);
             }
             catch (Exception ex)
             {
-                // Debug 6
-                File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "map_debug_error.txt"), ex.ToString());
+
             }
         }
 
