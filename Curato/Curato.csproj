@@ -18,6 +18,16 @@
     <Resource Include="Fonts\*.ttf" />
   </ItemGroup>
 
+  <!-- HTML resources for WebView2 -->
+  <ItemGroup>
+    <Content Include="Resources\html\*.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- NuGet packages -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2420.47" />
+  </ItemGroup>
+
   <!-- Copy required Python files next to the executable -->
   <ItemGroup>
     <Content Include="..\generate_plan.py" CopyToOutputDirectory="PreserveNewest" />
@@ -26,5 +36,5 @@
     <Content Include="..\core\**\*.*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\data\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  
+
 </Project>
