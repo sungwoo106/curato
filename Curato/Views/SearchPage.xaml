@@ -216,8 +216,8 @@
                                 PopupAnimation="Slide"
                                 IsOpen="{Binding IsLocationPopupOpen}"
                                 MinWidth="600"
-                                HorizontalOffset="-40"
-                                Margin="0,40,0,0">
+                                HorizontalOffset="-45"
+                                VerticalOffset="40">
                                 <Border Background="White"
                                         Padding="5"
                                         CornerRadius="15"
