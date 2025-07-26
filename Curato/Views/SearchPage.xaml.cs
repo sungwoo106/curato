@@ -554,6 +554,7 @@ namespace Curato.Views
         {
             // Declare the path at the beginning so it's accessible throughout
             string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_debug.txt");
+            File.AppendAllText(path, "Testing file access\n");
 
             // Debugging
             try

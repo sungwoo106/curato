@@ -457,15 +457,6 @@
 
             <!-- Recommendations -->
             <StackPanel Grid.Row="2" Margin="120,40,120,0">
-                <!-- Debugging -->
-                <Border Width="200" Height="50" Background="Red"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        PreviewMouseLeftButtonUp="PopularPlace_Click"
-                        Tag="TEST-DIRECT">
-                    <TextBlock Text="Test Click" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-
                 <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,20,50"
                            FontFamily="{StaticResource SatoshiBold}"/>
                 <ItemsControl ItemsSource="{Binding PopularPlaces}" Focusable="False" IsHitTestVisible="True">
@@ -478,7 +469,9 @@
                         <DataTemplate>
                             <Border Width="323"
                                 Height="Auto"
-                                Background="White"
+                                Background="Transparent"
+                                Focusable="True"
+                                IsHitTestVisible="True"
                                 CornerRadius="20"
                                 Margin="10"
                                 Padding="10"
