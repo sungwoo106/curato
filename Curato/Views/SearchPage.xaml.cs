@@ -552,49 +552,26 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, MouseButtonEventArgs e)
         {
-            string logPath = "popular_place_debug.txt";
-            try
+            string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popular_place_debug.txt");
+            File.WriteAllText(path, $"[{DateTime.Now}] PopularPlace_Click triggered.\n");
+
+            if (sender is FrameworkElement fe && fe.Tag is string title && DataContext is InputViewModel vm)
             {
-                File.WriteAllText(logPath, "[Click Triggered]\n");
+                File.AppendAllText(path, $"[Tag] {title}\n");
 
-                if (sender is Border border)
-                {
-                    File.AppendAllText(logPath, $"Clicked Border found. Tag: {border.Tag}\n");
+                if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Seongsu";
+                else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Hongdae";
+                else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Gangnam";
+                else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Itaewon";
+                else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
+                    vm.LocationQuery = "Bukchon";
 
-                    if (border.Tag is string title && DataContext is InputViewModel vm)
-                    {
-                        File.AppendAllText(logPath, $"Tag is string: {title}\n");
-
-                        if (title.Contains("Seongsu", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Seongsu";
-                        else if (title.Contains("Hongdae", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Hongdae";
-                        else if (title.Contains("Gangnam", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Gangnam";
-                        else if (title.Contains("Itaewon", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Itaewon";
-                        else if (title.Contains("Bukchon", StringComparison.OrdinalIgnoreCase))
-                            vm.LocationQuery = "Bukchon";
-
-                        File.AppendAllText(logPath, $"LocationQuery set to: {vm.LocationQuery}\n");
-
-                        _locationTimer.Stop();
-                        _locationTimer.Start();
-                        File.AppendAllText(logPath, "LocationTimer restarted.\n");
-                    }
-                    else
-                    {
-                        File.AppendAllText(logPath, "Tag not found or DataContext is not InputViewModel.\n");
-                    }
-                }
-                else
-                {
-                    File.AppendAllText(logPath, $"Sender is not Border. Type: {sender?.GetType().Name}\n");
-                }
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(logPath, $"[Exception] {ex}\n");
+                _locationTimer.Stop();
+                _locationTimer.Start();
             }
         }
         

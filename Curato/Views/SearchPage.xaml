@@ -474,14 +474,14 @@
                                 Padding="10"
                                 Tag="{Binding Title}"
                                 Cursor="Hand"
-                                MouseLeftButtonUp="PopularPlace_Click">
+                                PreviewMouseLeftButtonUp="PopularPlace_Click">
                                 <StackPanel VerticalAlignment="Top"
-                                    MouseLeftButtonUp="PopularPlace_Click"
+                                    PreviewMouseLeftButtonUp="PopularPlace_Click"
                                     Cursor="Hand"
                                     Tag="{Binding Title}">
                                     <Grid Tag="{Binding Title}"
                                         Cursor="Hand"
-                                        MouseLeftButtonUp="PopularPlace_Click">
+                                        PreviewMouseLeftButtonUp="PopularPlace_Click">
                                         <Border Height="350"
                                                 CornerRadius="40"
                                                 ClipToBounds="True"
@@ -506,12 +506,12 @@
                                                FontFamily="{StaticResource SatoshiBold}"
                                                Tag="{Binding Title}"
                                                 Cursor="Hand"
-                                                MouseLeftButtonUp="PopularPlace_Click"/>
+                                                PreviewMouseLeftButtonUp="PopularPlace_Click"/>
                                     <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
                                                Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"
                                                Tag="{Binding Title}"
                                                 Cursor="Hand"
-                                                MouseLeftButtonUp="PopularPlace_Click"/>
+                                                PreviewMouseLeftButtonUp="PopularPlace_Click"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
