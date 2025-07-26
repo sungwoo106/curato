@@ -62,17 +62,25 @@ namespace Curato.Views
                 {
                     var debugLogPath = Path.Combine(AppContext.BaseDirectory, "map_marker_debug.txt");
 
-                    if (plan?.SuggestedPlaces != null)
+                    if (plan == null)
+                    {
+                        File.WriteAllText(debugLogPath, "AppState.SharedTripPlan is null.");
+                    }
+                    else if (plan.SuggestedPlaces == null)
+                    {
+                        File.WriteAllText(debugLogPath, "SuggestedPlaces is null.");
+                    }
+                    else if (!plan.SuggestedPlaces.Any())
+                    {
+                        File.WriteAllText(debugLogPath, "SuggestedPlaces exists but is empty.");
+                    }
+                    else
                     {
                         var lines = plan.SuggestedPlaces
                             .Select(p => $"{p.Name} - lat: {p.Latitude}, lng: {p.Longitude}")
                             .ToList();
 
                         File.WriteAllLines(debugLogPath, lines);
-                    }
-                    else
-                    {
-                        File.WriteAllText(debugLogPath, "No suggested places available.");
                     }
                 }
                 catch (Exception ex)

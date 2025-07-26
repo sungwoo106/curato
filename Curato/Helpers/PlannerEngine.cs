@@ -44,7 +44,6 @@ public static class PlannerEngine
         }
         catch (Exception ex)
         {
-            Debug.WriteLine("Trip generation failed: " + ex.Message);
             return new TripPlan();
         }
     }

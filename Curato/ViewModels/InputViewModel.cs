@@ -288,17 +288,6 @@ namespace Curato.ViewModels
                 }
             };
 
-            // Write debug file
-            try
-            {
-                var debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
-                System.IO.File.WriteAllText(debugPath, string.Join("\n", PopularPlaces.Select(p => $"{p.Title} - {p.Subtitle}")));
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to write popular places debug file: {ex.Message}");
-            }
-
             GeneratePlanCommand = new RelayCommand(_ => GeneratePlan());
         }
 
@@ -344,7 +333,6 @@ namespace Curato.ViewModels
 
                 if (process.ExitCode != 0)
                 {
-                    Debug.WriteLine($"generate_plan.py failed: {err}");
                     PlanText = "Failed to generate plan.";
                     return;
                 }
@@ -361,7 +349,6 @@ namespace Curato.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to generate plan: {ex}");
                 PlanText = "Failed to generate plan.";
             }
         }
@@ -393,7 +380,6 @@ namespace Curato.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to load companion types: {ex}");
                 return new List<string> { "tSolo", "tCouple", "tFriends", "tFamily" };
             }
         }
@@ -418,7 +404,6 @@ namespace Curato.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to load categories: {ex}");
                 return new List<string> { "Cafe", "Restaurant", "Park" };
             }
         }
