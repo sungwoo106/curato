@@ -67,9 +67,6 @@ namespace Curato.Views
 
                 // TEMP: Load mock LLM output from file
                 var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", "mock_phi_hd_output.json");
-                //Debugging
-                File.WriteAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "check_json_path.txt"),
-                $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
                 
                 if (File.Exists(mockJsonPath))
                 {

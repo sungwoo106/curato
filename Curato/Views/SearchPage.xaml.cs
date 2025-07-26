@@ -538,7 +538,7 @@ namespace Curato.Views
                 if (isSelected)
                 {
                     btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
-                    btn.Foreground = Brushes.White;
+                    btn.Foreground = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
                 }
 
                 btn.Click += (_, _) =>
@@ -546,14 +546,14 @@ namespace Curato.Views
                     if (vm.SelectedCategories.Contains(cat))
                     {
                         vm.SelectedCategories.Remove(cat);
-                        btn.Background = Brushes.White;
-                        btn.Foreground = Brushes.Black;
+                        btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                        btn.Foreground = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
                     }
                     else
                     {
                         vm.SelectedCategories.Add(cat);
                         btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
-                        btn.Foreground = Brushes.White;
+                        btn.Foreground = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
                     }
                 };
 
