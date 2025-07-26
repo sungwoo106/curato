@@ -555,6 +555,8 @@ namespace Curato.Views
         {
             try
             {
+                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
+
                 if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
                     File.AppendAllText(path, $"[Click] Got Title: {place.Title}\n");
