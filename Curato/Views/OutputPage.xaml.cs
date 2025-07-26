@@ -85,6 +85,13 @@ namespace Curato.Views
                                     Latitude = p.Latitude,
                                     Longitude = p.Longitude
                                 }).ToList();
+
+                            // If no center coordinates were provided, use the first suggestion
+                            if (!coords.HasValue && plan.SuggestedPlaces.Count > 0)
+                            {
+                                lat = plan.SuggestedPlaces[0].Latitude;
+                                lng = plan.SuggestedPlaces[0].Longitude;
+                            }
                         }
 
                         // ✅ Add debug block here
@@ -127,7 +134,7 @@ namespace Curato.Views
                 }
                 catch (Exception ex)
                 {
-                    
+
                     // Debugging
                     var mockErrorPath = Path.Combine(AppContext.BaseDirectory, "mock_load_error.txt");
                     File.WriteAllText(mockErrorPath, ex.ToString());

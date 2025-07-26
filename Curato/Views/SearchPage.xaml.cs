@@ -571,14 +571,12 @@ namespace Curato.Views
         {
             try
             {
-                string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "popularplaces_debug.txt");
-
+                // Debugging
+                string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
                 if (sender is FrameworkElement fe && fe.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
 
                     // Debugging
-                    string path = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
-
                     string info = $"[Click] Time: {DateTime.Now}\n" +
                                 $"         Sender: {sender?.GetType().Name}\n" +
                                 $"         Source: {e?.OriginalSource}\n";
@@ -599,7 +597,8 @@ namespace Curato.Views
 
                     File.AppendAllText(debugPath, $"[LocationQuery Updated] Now: {vm.LocationQuery}\n");
 
-                    // Restart popup timer
+                    // Restart popup timer to fetch suggestions for the new location
+                    vm.IsLocationPopupOpen = false;
                     _locationTimer.Stop();
                     _locationTimer.Start();
                 }

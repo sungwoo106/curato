@@ -474,7 +474,7 @@
                                 CornerRadius="20"
                                 Margin="10"
                                 Padding="10"
-                                PreviewMouseLeftButtonUp="PopularPlace_Click"
+                                MouseLeftButtonUp="PopularPlace_Click"
                                 Cursor="Hand">
                                 <StackPanel VerticalAlignment="Top">
                                     <Grid>
