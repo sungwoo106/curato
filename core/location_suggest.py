@@ -1,7 +1,12 @@
 import sys
 import json
-from data.api_clients.kakao_api import autocomplete_location
+import os
 
+# Add project root to Python path
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(ROOT_DIR)
+
+from data.api_clients.kakao_api import autocomplete_location
 def suggest_locations(query):
     try:
         results = autocomplete_location(query)
@@ -21,7 +26,7 @@ def suggest_locations(query):
         print(json.dumps(suggestions, ensure_ascii=False))
     except Exception as e:
         print(json.dumps([]))
-        
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps([]))
