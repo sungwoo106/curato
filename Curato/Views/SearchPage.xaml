@@ -159,6 +159,13 @@
       Opacity="0.3"
       BlurRadius="20"
       ShadowDepth="4"/>
+    
+    <DropShadowEffect x:Key="StrongShadowEffect"
+        BlurRadius="25"
+        ShadowDepth="8"
+        Direction="270"
+        Opacity="0.6"
+        Color="Black" />
     </UserControl.Resources>
 
 
@@ -216,12 +223,12 @@
                                 PopupAnimation="Slide"
                                 IsOpen="{Binding IsLocationPopupOpen}"
                                 MinWidth="600"
-                                HorizontalOffset="-55"
+                                HorizontalOffset="-57"
                                 VerticalOffset="60">
                                 <Border Background="White"
                                         Padding="5"
                                         CornerRadius="15"
-                                        Effect="{StaticResource ShadowEffect}">
+                                        Effect="{StaticResource StrongShadowEffect}">
                                     <StackPanel>
                                         <ItemsControl ItemsSource="{Binding LocationSuggestions}">
                                             <ItemsControl.ItemTemplate>
