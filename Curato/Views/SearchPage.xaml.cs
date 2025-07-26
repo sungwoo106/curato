@@ -68,7 +68,9 @@ namespace Curato.Views
 
             try
             {
-                var scriptPath = System.IO.Path.Combine(AppContext.BaseDirectory, "core", "location_suggest.py");
+                var scriptPath = var scriptPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\core\location_suggest.py"));
+                // Debugging
+                File.WriteAllText("popup_path_debug.txt", scriptPath);
 
                 // Debugging
                 File.WriteAllText("popup_query.txt", query ?? "[null]");
