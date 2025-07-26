@@ -39,4 +39,11 @@
     <Content Include="..\data\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Secure assets required by Python utilities -->
+  <ItemGroup>
+    <Content Include="..\secure\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
