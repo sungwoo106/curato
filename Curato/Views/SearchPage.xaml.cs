@@ -58,8 +58,7 @@ namespace Curato.Views
                 return;
 
             string query = vm.LocationQuery;
-            // Debugging
-            Console.WriteLine($"[Timer] LocationTimer_Tick fired with query: '{query}'");
+
             if (string.IsNullOrWhiteSpace(query))
             {
                 vm.LocationSuggestions.Clear();
@@ -99,11 +98,7 @@ namespace Curato.Views
                 File.WriteAllText("popup_error.txt", error ?? "[none]");
 
                 var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
-                // Debugging
-                File.WriteAllText("popup_deserialized.txt", $"Got {suggestions?.Count ?? 0} suggestions");
                 vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
-                // Debugging
-                Console.WriteLine($"[ViewModel] LocationSuggestions now has {vm.LocationSuggestions.Count} items");
 
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
                 // Debugging
@@ -138,12 +133,14 @@ namespace Curato.Views
         // This is used when the user clicks on a TextBlock in the ItemsControl
         private void Suggestion_Click(object sender, MouseButtonEventArgs e)
         {
-            if (sender is FrameworkElement fe && fe.DataContext is PlaceSuggestion ps && DataContext is InputViewModel vm)
+            if (sender is TextBlock tb && tb.DataContext is PlaceSuggestion suggestion)
             {
-                vm.LocationQuery = ps.Name;
-                vm.SelectedLocationCoordinates = (ps.Latitude, ps.Longitude);
-                vm.LocationSuggestions = new();
-                vm.IsLocationPopupOpen = false;
+                if (DataContext is InputViewModel vm)
+                {
+                    vm.LocationQuery = suggestion.Name;
+                    vm.SelectedLocationCoordinates = (suggestion.Latitude, suggestion.Longitude);
+                    vm.IsLocationPopupOpen = false;
+                }
             }
         }
 
