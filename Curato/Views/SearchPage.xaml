@@ -118,6 +118,7 @@
         <!-- pressed -->
         <Trigger Property="IsPressed" Value="True">
         <Setter Property="Background" Value="#FFD699"/>
+        <Setter Property="Foreground" Value="White"/>
         </Trigger>
     </Style.Triggers>
     </Style>

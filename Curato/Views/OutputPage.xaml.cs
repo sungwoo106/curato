@@ -41,65 +41,94 @@ namespace Curato.Views
 
         private async void OutputPage_Loaded(object sender, RoutedEventArgs e)
         {
+
+            double lat = 37.5665; // default to Seoul
+            double lng = 126.9780;
+
+            var coords = AppState.SharedInputViewModel.SelectedLocationCoordinates;
+            if (coords.HasValue)
+            {
+                lat = coords.Value.Latitude;
+                lng = coords.Value.Longitude;
+            }
+
             try
             {
-                double lat = 37.5665; // default to Seoul
-                double lng = 126.9780;
+                var htmlPath = Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
+                var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
-                var coords = AppState.SharedInputViewModel.SelectedLocationCoordinates;
-                if (coords.HasValue)
+                // Build JavaScript array from AppState
+                var plan = AppState.SharedTripPlan;
+
+                // TEMP: Load mock LLM output from file
+                try
                 {
-                    lat = coords.Value.Latitude;
-                    lng = coords.Value.Longitude;
-                }
-
-                var mockJsonPath = Path.Combine(AppContext.BaseDirectory, "mock_phi_hd_output.json");
-
-                // 🔍 Confirm file presence and path
-                File.WriteAllText("check_json_path.txt", $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
-
-                if (File.Exists(mockJsonPath))
-                {
-                    var json = File.ReadAllText(mockJsonPath);
-                    var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
-
-                    if (suggestions != null && suggestions.Any())
+                    var mockJsonPath = Path.Combine(AppContext.BaseDirectory, "mock_phi_hd_output.json");
+                    if (File.Exists(mockJsonPath))
                     {
-                        var plan = AppState.SharedTripPlan;
-                        plan.SuggestedPlaces = suggestions
-                            .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                            .Select(p => new PlaceSuggestion
+                        
+                        //Debugging
+                        File.WriteAllText("check_json_path.txt", $"Exists: {File.Exists(mockJsonPath)}\nPath: {mockJsonPath}");
+
+                        var json = File.ReadAllText(mockJsonPath);
+                        var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(json);
+
+                        if (suggestions != null && suggestions.Any())
+                        {
+                            plan.SuggestedPlaces = suggestions
+                                .Where(p => p.Latitude != 0 && p.Longitude != 0)
+                                .Select(p => new PlaceSuggestion
+                                {
+                                    Name = p.Name,
+                                    Latitude = p.Latitude,
+                                    Longitude = p.Longitude
+                                }).ToList();
+                        }
+
+                        // ✅ Add debug block here
+                        try
+                        {
+                            var debugLogPath = Path.Combine(AppContext.BaseDirectory, "map_marker_debug.txt");
+
+                            if (plan == null)
                             {
-                                Name = p.Name,
-                                Latitude = p.Latitude,
-                                Longitude = p.Longitude
-                            }).ToList();
+                                File.WriteAllText(debugLogPath, "AppState.SharedTripPlan is null.");
+                            }
+                            else if (plan.SuggestedPlaces == null)
+                            {
+                                File.WriteAllText(debugLogPath, "SuggestedPlaces is null.");
+                            }
+                            else if (!plan.SuggestedPlaces.Any())
+                            {
+                                File.WriteAllText(debugLogPath, "SuggestedPlaces exists but is empty.");
+                            }
+                            else
+                            {
+                                var lines = plan.SuggestedPlaces
+                                    .Select(p => $"{p.Name} - lat: {p.Latitude}, lng: {p.Longitude}")
+                                    .ToList();
+
+                                File.WriteAllLines(debugLogPath, lines);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            File.WriteAllText("map_debug_error.txt", ex.ToString());
+                        }
+
+
                     }
                 }
+                catch (Exception ex)
+                {
+                    File.WriteAllText("mock_load_error.txt", ex.ToString());
+                }
 
-                var debugLogPath = Path.Combine(AppContext.BaseDirectory, "map_marker_debug.txt");
-                var debugPlan = AppState.SharedTripPlan;
-                if (debugPlan?.SuggestedPlaces == null)
-                {
-                    File.WriteAllText(debugLogPath, "SuggestedPlaces is null.");
-                }
-                else if (!debugPlan.SuggestedPlaces.Any())
-                {
-                    File.WriteAllText(debugLogPath, "SuggestedPlaces exists but is empty.");
-                }
-                else
-                {
-                    var lines = debugPlan.SuggestedPlaces
-                        .Select(p => $"{p.Name} - lat: {p.Latitude}, lng: {p.Longitude}")
-                        .ToList();
-
-                    File.WriteAllLines(debugLogPath, lines);
-                }
 
                 string coordArray = "[]";
-                if (debugPlan?.SuggestedPlaces != null)
+                if (plan?.SuggestedPlaces != null)
                 {
-                    var points = debugPlan.SuggestedPlaces
+                    var points = plan.SuggestedPlaces
                         .Where(p => p.Latitude != 0 && p.Longitude != 0)
                         .Select(p => $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)} }}");
 
@@ -117,8 +146,19 @@ namespace Curato.Views
             }
             catch (Exception ex)
             {
-                File.WriteAllText("map_debug_error.txt", ex.ToString());
+                // optional: log the error
+            }
+        }
+
+        private void EditButton_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindow = Window.GetWindow(this) as MainWindow;
+            if (mainWindow != null)
+            {
+                mainWindow.MainFrame.Content = new SearchPage();
             }
         }
     }
 }
+
+

@@ -574,7 +574,7 @@ namespace Curato.Views
                 {
 
                         // Debugging
-                        string debugPath = Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
+                        string debugPath = System.IO.Path.Combine(AppContext.BaseDirectory, "click_debug.txt");
                         File.AppendAllText(debugPath, $"[Click] Time: {DateTime.Now}\n" +
                                                     $"         Sender: {sender?.GetType().Name}\n" +
                                                     $"         Title: {place?.Title}\n" +
