@@ -96,7 +96,7 @@ namespace Curato.Views
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;
                 // Debugging
                 File.WriteAllText("popup_summary.txt", $"Suggestions: {vm.LocationSuggestions.Count}, Popup: {vm.IsLocationPopupOpen}");
-");
+
             }
             catch (Exception ex)
             {
