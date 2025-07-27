@@ -1,0 +1,68 @@
+{
+  "전시회": [
+    {
+      "address_name": "서울 종로구 통의동 35-17",
+      "category_group_code": "CT1",
+      "category_group_name": "문화시설",
+      "category_name": "문화,예술 > 문화시설 > 전시관",
+      "distance": "988",
+      "id": "341652379",
+      "phone": "1522-1796",
+      "place_name": "그라운드시소 서촌",
+      "place_url": "http://place.map.kakao.com/341652379",
+      "road_address_name": "서울 종로구 자하문로6길 18-8",
+      "x": "126.972916300185",
+      "y": "37.5778385914657"
+    }
+  ],
+  "데이트 스팟": [],
+  "Restaurant": [
+    {
+      "address_name": "서울 종로구 궁정동 29-2",
+      "category_group_code": "FD6",
+      "category_group_name": "음식점",
+      "category_name": "음식점 > 양식",
+      "distance": "458",
+      "id": "526664023",
+      "phone": "010-4363-9725",
+      "place_name": "아뜰리에 안단테",
+      "place_url": "http://place.map.kakao.com/526664023",
+      "road_address_name": "서울 종로구 효자로 107",
+      "x": "126.971285022934",
+      "y": "37.5836324967188"
+    }
+  ],
+  "분위기 좋은 식당": [],
+  "테마카페": [
+    {
+      "address_name": "서울 종로구 효자동 58",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페 > 테마카페 > 갤러리카페",
+      "distance": "575",
+      "id": "19721799",
+      "phone": "02-738-3581",
+      "place_name": "가진화랑",
+      "place_url": "http://place.map.kakao.com/19721799",
+      "road_address_name": "서울 종로구 자하문로 74",
+      "x": "126.9708812759231",
+      "y": "37.58251786899157"
+    }
+  ],
+  "Cafe": [
+    {
+      "address_name": "서울 종로구 청운동 90",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페",
+      "distance": "325",
+      "id": "528619386",
+      "phone": "02-730-9081",
+      "place_name": "씨엘로",
+      "place_url": "http://place.map.kakao.com/528619386",
+      "road_address_name": "서울 종로구 자하문로30길 19-12",
+      "x": "126.971418981816",
+      "y": "37.5856417439544"
+    }
+  ]
+}

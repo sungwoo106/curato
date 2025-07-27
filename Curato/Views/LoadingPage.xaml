@@ -1,0 +1,56 @@
+<UserControl x:Class="Curato.Views.LoadingPage"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            mc:Ignorable="d"
+            d:DesignHeight="1920" d:DesignWidth="1080">
+    <UserControl.Resources>
+        <!-- Simple drop-shadow for the progress bar -->
+        <DropShadowEffect x:Key="ShadowEffect"
+                          Color="Black"
+                          Opacity="0.13"
+                          BlurRadius="10"
+                          ShadowDepth="2"/>
+    </UserControl.Resources>
+    <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Background="White" Height="80" Grid.Row="0">
+            <TextBlock Text="Curato" VerticalAlignment="Center" Margin="75,40,0,0"
+                       FontSize="46"
+                       FontFamily="{StaticResource SatoshiBold}"
+                       Foreground="#FFB31A"/>
+        </Grid>
+
+        <!-- Center StackPanel -->
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Animated Text -->
+            <TextBlock x:Name="LoadingTextBlock"
+                       Text="Planning your trip..."
+                       FontSize="46"
+                       FontFamily="{StaticResource SatoshiMedium}"
+                       Foreground="#FFB31A"
+                       HorizontalAlignment="Center"/>
+
+            <!-- Progress Bar (static look) -->
+            <Border Width="800" Height="24"
+                    Background="#FFF5F5F5"
+                    CornerRadius="20"
+                    SnapsToDevicePixels="True"
+                    Margin="0,70,0,0"
+                    Effect="{StaticResource ShadowEffect}">
+                <Border x:Name="ProgressBarFill"
+                        Width="0"
+                        Height="24"
+                        Background="#FFB31A"
+                        CornerRadius="20"
+                        HorizontalAlignment="Left"/>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

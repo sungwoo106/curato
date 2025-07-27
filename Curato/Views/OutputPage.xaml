@@ -1,0 +1,167 @@
+<UserControl x:Class="Curato.Views.OutputPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Curato.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             mc:Ignorable="d" Background="White">
+
+    <UserControl.Resources>
+        <Style x:Key="PillChipStyle" TargetType="Label">
+            <Setter Property="Background" Value="#FFB31A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="{StaticResource SatoshiMedium}"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Label">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="20"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+
+    <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Bar (white, shadowed) -->
+        <Border Grid.Row="0"
+                Background="White"
+                Padding="30,20"
+                SnapsToDevicePixels="True"
+                MinHeight="230">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Logo -->
+                <TextBlock Grid.Column="0"
+                           Text="Curato"
+                           FontSize="46"
+                           FontFamily="{StaticResource SatoshiBold}"
+                           Height="80"
+                           Foreground="#FFB31A"
+                           VerticalAlignment="Center"
+                           Margin="40,-100,0,0"/>
+
+                <!-- Preferences -->
+                <Border Grid.Column="1"
+                        Background="White"
+                        BorderBrush="#DDD"
+                        BorderThickness="1"
+                        CornerRadius="40"
+                        Padding="14,6"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MinWidth="1100"
+                        Height="75"
+                        Margin="-100,0,0,0">
+                    <TextBlock x:Name="PreferencesSummaryLabel"
+                               FontSize="20"
+                               FontFamily="{StaticResource SatoshiMedium}"
+                               Foreground="#575757"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Stretch"
+                               VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Edit Plan Button -->
+                <Button Grid.Column="2" Content="Edit Plan"
+                        FontSize="18"
+                        FontFamily="{StaticResource SatoshiMedium}"
+                        Padding="12,6"
+                        MinWidth="170"
+                        Height="75"
+                        Click="EditButton_Click"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+                    <Button.RenderTransform>
+                        <TranslateTransform X="-150"/>
+                    </Button.RenderTransform>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                            <Setter Property="BorderBrush" Value="#DDD"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="30">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"
+                                                              Margin="10,2"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FFF2CC"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#FFD699"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="30,30,30,30">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- WebView Map -->
+            <Border Grid.Column="0" CornerRadius="30" Margin="0,0,10,0">
+                <wv2:WebView2 x:Name="MapWebView"
+                    Width="Auto"
+                    Height="Auto"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" />
+            </Border>
+
+            <!-- Emotional Itinerary -->
+            <ScrollViewer Grid.Column="1" Margin="20" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Padding="20">
+                        <TextBlock x:Name="EmotionalItineraryTextBlock"
+                                   TextWrapping="Wrap"
+                                   FontSize="16"
+                                   FontFamily="{StaticResource SatoshiMedium}"
+                                   LineStackingStrategy="BlockLineHeight"
+                                   LineHeight="32"/>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

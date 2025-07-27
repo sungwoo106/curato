@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+    <!-- Ensure that image and font assets are packaged with the application -->
+  <ItemGroup>
+    <!-- Icons and general images used by the UI -->
+    <Resource Include="Resources\Icons\*.png" />
+    <Resource Include="Resources\Images\*.jpg" />
+
+    <!-- Custom fonts referenced in App.xaml -->
+    <Resource Include="Fonts\*.ttf" />
+  </ItemGroup>
+
+  <!-- HTML resources for WebView2 -->
+  <ItemGroup>
+    <Content Include="Resources\html\map_template.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- NuGet packages -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2420.47" />
+  </ItemGroup>
+
+  <!-- Copy required Python files next to the executable -->
+  <ItemGroup>
+    <Content Include="..\generate_plan.py" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\preferences.py" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\constants.py" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\core\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\data\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Secure assets required by Python utilities -->
+  <ItemGroup>
+    <Content Include="..\secure\*.pem">
+      <Link>secure\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\secure\*.bin">
+      <Link>secure\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+
+  <ItemGroup>
+  <None Include="Resources\MockData\mock_phi_hd_output.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Include="Resources\MockData\mock_phi_bc_output.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Include="Resources\MockData\mock_phi_gn_output.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Include="Resources\MockData\mock_phi_it_output.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Include="Resources\MockData\mock_phi_ss_output.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  </ItemGroup>
+
+</Project>

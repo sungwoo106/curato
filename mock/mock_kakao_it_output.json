@@ -1,0 +1,83 @@
+{
+  "미술관": [
+    {
+      "address_name": "서울 용산구 이태원동 76-13",
+      "category_group_code": "CT1",
+      "category_group_name": "문화시설",
+      "category_name": "문화,예술 > 문화시설 > 미술관",
+      "distance": "275",
+      "id": "1375299974",
+      "phone": "",
+      "place_name": "해마아트스페이스",
+      "place_url": "http://place.map.kakao.com/1375299974",
+      "road_address_name": "서울 용산구 이태원로16길 33",
+      "x": "126.991752128295",
+      "y": "37.5330654314137"
+    }
+  ],
+  "Cafe": [
+    {
+      "address_name": "서울 용산구 이태원동 127-11",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페",
+      "distance": "16",
+      "id": "1701159992",
+      "phone": "",
+      "place_name": "히트커피로스터스 이태원",
+      "place_url": "http://place.map.kakao.com/1701159992",
+      "road_address_name": "서울 용산구 이태원로 182",
+      "x": "126.9942693843667",
+      "y": "37.53435220976861"
+    }
+  ],
+  "분위기 좋은 카페": [
+    {
+      "address_name": "서울 용산구 이태원동 64-56",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페",
+      "distance": "253",
+      "id": "86140892",
+      "phone": "010-2759-3411",
+      "place_name": "안다미로 식물카페",
+      "place_url": "http://place.map.kakao.com/86140892",
+      "road_address_name": "서울 용산구 이태원로20길 2-12",
+      "x": "126.991523488553",
+      "y": "37.5339303761845"
+    }
+  ],
+  "테마카페": [
+    {
+      "address_name": "서울 용산구 이태원동 130-10",
+      "category_group_code": "CE7",
+      "category_group_name": "카페",
+      "category_name": "음식점 > 카페",
+      "distance": "115",
+      "id": "1115440212",
+      "phone": "",
+      "place_name": "라이온프라이드",
+      "place_url": "http://place.map.kakao.com/1115440212",
+      "road_address_name": "서울 용산구 이태원로26길 19",
+      "x": "126.99357023179188",
+      "y": "37.53363317504026"
+    }
+  ],
+  "분위기 좋은 식당": [],
+  "Restaurant": [
+    {
+      "address_name": "서울 용산구 이태원동 127-12",
+      "category_group_code": "FD6",
+      "category_group_name": "음식점",
+      "category_name": "음식점 > 양식 > 피자",
+      "distance": "31",
+      "id": "810938405",
+      "phone": "",
+      "place_name": "맘스피자 이태원점",
+      "place_url": "http://place.map.kakao.com/810938405",
+      "road_address_name": "서울 용산구 이태원로 180",
+      "x": "126.99422526926584",
+      "y": "37.534221562491915"
+    }
+  ]
+}
