@@ -499,7 +499,6 @@ namespace Curato.Views
                     Text              = cat,
                     FontSize          = 20,
                     FontFamily        = satoshi,
-                    Foreground        = Brushes.Black,
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 var panel = new StackPanel
@@ -524,8 +523,8 @@ namespace Curato.Views
                 // If it’s the selected category, tint it
                 if (isSelected)
                 {
-                    btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
-                    btn.Foreground = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                    btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
+                    btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
                 }
 
                 btn.Click += (_, _) =>
@@ -533,14 +532,14 @@ namespace Curato.Views
                     if (vm.SelectedCategories.Contains(cat))
                     {
                         vm.SelectedCategories.Remove(cat);
-                        btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
-                        btn.Foreground = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
+                        btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                        btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
                     }
                     else
                     {
                         vm.SelectedCategories.Add(cat);
-                        btn.Background = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
-                        btn.Foreground = (Brush)new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                        btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB31A"));
+                        btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
                     }
                 };
 
