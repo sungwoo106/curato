@@ -15,7 +15,9 @@ namespace Curato.Views
         private readonly DispatcherTimer progressTimer;
         private int dotCount = 0;
         private readonly string baseText = "Planning your trip";
+        private double MaxBarWidth = 800;
         private double progress = 0;
+
 
         private readonly Func<UserControl>? _onFinished;
 
@@ -47,8 +49,8 @@ namespace Curato.Views
 
         private void ProgressTimer_Tick(object sender, EventArgs e)
         {
-            progress += 2;
-            ProgressBarFill.Width = progress * 3; // Max 300 width
+            progress += 1;
+            ProgressBarFill.Width = progress / 100 * MaxBarWidth;
 
             if (progress >= 100)
             {

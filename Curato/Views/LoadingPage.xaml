@@ -42,6 +42,7 @@
                     Background="#FFF5F5F5"
                     CornerRadius="20"
                     SnapsToDevicePixels="True"
+                    Margin="0,70,0,0"
                     Effect="{StaticResource ShadowEffect}">
                 <Border x:Name="ProgressBarFill"
                         Width="0"
