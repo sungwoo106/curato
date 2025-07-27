@@ -45,6 +45,24 @@ This enables:
 
 ---
 
+---
+
+## Why Edge AI?
+
+Curato is specifically architected for on-device execution to meet the demands of real-time, privacy-sensitive, and network-independent itinerary planning. Rather than relying on external cloud infrastructure, all AI reasoning—including location selection, context-aware ordering, and narrative generation—is performed locally using quantized language models.
+
+This design offers the following advantages:
+
+- **Low latency:** Inference is executed directly on the device, enabling immediate response to user input.
+- **Privacy preservation:** Sensitive user context—such as real-time location, time availability, and companion identity (e.g., a romantic partner or family member)—is processed entirely on-device. This prevents the exposure of personally identifiable information to external servers, which is especially critical in scenarios involving relationship dynamics or situational intent that users may not wish to disclose.
+- **Offline readiness:** Cached place data allows Curato to operate reliably even in low-connectivity environments.
+- **Energy-efficient processing:** Quantized models running on the Snapdragon NPU optimize for both performance and power efficiency.
+- **Robustness and reliability:** By avoiding cloud dependencies, Curato ensures consistent availability and reduced operational risk.
+
+Edge AI enables Curato to function as a trusted, context-aware assistant that delivers personalized itineraries securely and responsively—regardless of network conditions.
+
+---
+
 ## Key Features
 
 | Component                      | Description |
