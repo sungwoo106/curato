@@ -206,7 +206,7 @@ Users may click Edit Plan to re-generate at any time.
 ---
 
 ## Screenshots
-[Youtube link]()
+[Youtube link](https://www.youtube.com/watch?v=SLvkNsRBMl0)
 
 #### 1. Input Interface (Search Page)
 Shows the user’s search flow, companion/budget/time selection, and suggested areas.
