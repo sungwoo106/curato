@@ -45,8 +45,6 @@ This enables:
 
 ---
 
----
-
 ## Why Edge AI?
 
 Curato is specifically architected for on-device execution to meet the demands of real-time, privacy-sensitive, and network-independent itinerary planning. Rather than relying on external cloud infrastructure, all AI reasoning—including location selection, context-aware ordering, and narrative generation—is performed locally using quantized language models.
