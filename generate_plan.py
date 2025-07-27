@@ -4,14 +4,6 @@ import sys, os
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Get the root directory of the entire project
-# Change this to your actual path later
-sys.path.insert(0, r"C:\Users\sungw\Documents\curato")
-with open("python_used.txt", "w") as f:
-    f.write(sys.executable)
-
-
-
 """CLI entry for the WPF frontend.
 
 This script reads a JSON payload from the ``INPUT_JSON`` environment variable

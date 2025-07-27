@@ -315,7 +315,7 @@ namespace Curato.ViewModels
                 var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "python3",
+                    FileName = "python",
                     Arguments = scriptPath,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -366,7 +366,7 @@ namespace Curato.ViewModels
             {
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "python3",
+                    FileName = "python",
                     Arguments = "-c \"import json, constants; print(json.dumps(constants.COMPANION_TYPES))\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
@@ -390,7 +390,7 @@ namespace Curato.ViewModels
             {
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "python3",
+                    FileName = "python",
                     Arguments = "-c \"import json, constants; print(json.dumps(constants.USER_SELECTABLE_PLACE_TYPES))\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
