@@ -30,8 +30,6 @@ To reduce network usage, **place data is locally cached and filtered** after ret
 
 ## Privacy & Trust
 
-## Privacy & Trust
-
 Planning a day with AI may not involve government IDs or credit cards — but it still requires personal context:
 - Real-time location  
 - Companion or relationship type (e.g., “I’m with my girlfriend”)  
