@@ -183,6 +183,36 @@ Users may click Edit Plan to re-generate at any time.
 
 ---
 
+## Screenshots
+[Youtube link]()
+
+#### 1. Input Interface (Search Page)
+Shows the user’s search flow, companion/budget/time selection, and suggested areas.
+
+![SearchPage](./screenshots/SearchPage.png)
+
+#### 2. Autocomplete in Action
+Location search with debounced Kakao Map API keyword recommendations.
+
+![Search Autocomplete](./screenshots/SearchBar_click.png)
+
+#### 3. Loading Animation
+On-device inference in progress after clicking the Generate button.
+
+![Loading](./screenshots/LoadingPage.png)
+
+#### 4. Output Interface (Map + Narrative)
+Curato displays a generated emotional story and Kakao map with visit order.
+
+![Output with Map](./screenshots/OutputPage.png)
+
+#### 5. Hover Interaction (Optional)
+When user clicks into generated places or edits plan.
+
+![Click View](./screenshots/OutputPage_click.png)
+
+---
+
 ## License
 
 This project is licensed under the [MIT License](./LICENSE).
