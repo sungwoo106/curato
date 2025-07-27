@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# added files
+/secure/*.bin
+/secure/*.pem
+
 # User-specific files
 *.rsuser
 *.suo
