@@ -14,17 +14,20 @@ Each prompt is dynamically crafted based on user preferences like location, time
 
 ## Edge AI Architecture
 
-Curato uses a **hybrid LLM design** for performance and modular inference:
+Curato uses a **multi-model architecture** designed specifically for real-time, on-device itinerary generation:
 
 - **Phi 3.5 Mini** (quantized):  
   A lightweight LLM that filters and selects top-rated locations based on distance and category relevance.
+- **Qwen2.5‑7B‑Instruct** (quantized):  
+  Evaluated as a potential substitute for Phi 3.5 Mini, offering comparable or better speed and efficiency in lightweight selection tasks.
 - **Llama‑v3.2‑3B‑Instruct** (quantized):  
   A heavier LLM that generates the final course narrative and detailed daily story using the user’s context.
 
-All AI tasks are executed using the **Genie SDK** on the Snapdragon NPU.  
-No cloud requests, no remote inference — just real-time, on-device generation.
+All models are quantized and executed entirely on-device using **Qualcomm’s Genie SDK**, running on the **Snapdragon X Elite’s NPU** for low-latency and energy-efficient inference.
 
 To reduce network usage, **place data is locally cached and filtered** after retrieval from the Kakao Map API. This improves consistency and responsiveness.
+
+> **Note:** *Phi 3.5 Mini was not profiled because it is not officially available on Qualcomm AI Hub as of submission time.*
 
 ---
 
