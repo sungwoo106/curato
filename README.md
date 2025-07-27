@@ -30,18 +30,23 @@ To reduce network usage, **place data is locally cached and filtered** after ret
 
 ## Privacy & Trust
 
-Planning a day with AI often involves sensitive personal data:
-- Real-time location
-- Relationship or companion context (e.g., “I’m with my girlfriend”)
-- Budget and time availability
+## Privacy & Trust
+
+Planning a day with AI may not involve government IDs or credit cards — but it still requires personal context:
+- Real-time location  
+- Companion or relationship type (e.g., “I’m with my girlfriend”)  
+- Budget and time availability  
+
+Even though this isn’t traditionally classified as “sensitive data,” it reveals intent, habits, emotional state, and social context: aspects of daily life users may prefer to keep private.
 
 Most AI services send this data to the cloud.  
 **Curato doesn’t.** All reasoning and generation happens entirely on-device.
 
 This enables:
-- **True privacy** for sensitive decision-making
-- **Offline functionality** in low-connectivity environments
-- **Increased user trust**, which enhances adoption
+- **True privacy** for spontaneous decisions, without outside exposure  
+- **Offline functionality** in low-connectivity environments  
+- **Higher trust**, especially in emotionally sensitive or socially private situations
+
 
 ---
 
@@ -57,7 +62,7 @@ This design offers the following advantages:
 - **Energy-efficient processing:** Quantized models running on the Snapdragon NPU optimize for both performance and power efficiency.
 - **Robustness and reliability:** By avoiding cloud dependencies, Curato ensures consistent availability and reduced operational risk.
 
-Edge AI enables Curato to function as a trusted, context-aware assistant that delivers personalized itineraries securely and responsively—regardless of network conditions.
+Edge AI enables Curato to function as a trusted, context-aware assistant that delivers personalized itineraries securely and responsively—regardless of network conditions. Curato demonstrates real-time on-device inference, privacy-preserving architecture, and practical responsiveness that cannot be achieved through traditional server-based approaches.
 
 ---
 
