@@ -402,7 +402,10 @@ class Preferences:
             self.budget,                            # Budget level for activity suggestions
         )
         
-        # TODO: Uncomment when Qwen model integration is complete
-        # return run_qwen_runner(prompt)
-        return "Generated itinerary would appear here (Qwen model disabled for now)"
+        # Run the Qwen model to generate emotional storytelling
+        try:
+            return run_qwen_runner(prompt)
+        except Exception as e:
+            print(f"Qwen model failed: {e}", file=sys.stderr)
+            return f"Failed to generate emotional story: {e}"
     
