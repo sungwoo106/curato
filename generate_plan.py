@@ -193,6 +193,8 @@ def main() -> None:
         # =============================================================================
         # AI-POWERED ITINERARY GENERATION
         # =============================================================================
+        route_plan_json = None  # Initialize route plan variable
+        
         try:
             # Build the Preferences instance and invoke the main workflow.
             # This creates a personalized planner based on user preferences
@@ -214,8 +216,10 @@ def main() -> None:
             
             if route_plan_json:
                 send_progress_update(75, "Route plan generated successfully")
+                print(f"✅ Route plan generated: {route_plan_json[:200]}...", file=sys.stderr)
             else:
                 send_progress_update(75, "Route plan generation failed")
+                print("❌ Route plan generation failed", file=sys.stderr)
 
             # Generate the emotional itinerary text using the Qwen model
             send_progress_update(80, "Generating emotional story with Qwen model...")
@@ -242,6 +246,7 @@ def main() -> None:
 
         # Send final completion
         send_progress_update(100, "Trip planning completed!")
+        print(f"📤 Sending completion - Route plan: {route_plan_json is not None}, Itinerary: {itinerary is not None}", file=sys.stderr)
         send_completion_update(route_plan_json, itinerary)
 
     except Exception as e:

@@ -104,12 +104,23 @@ public static class PlannerEngine
                                 finalRoutePlan = routePlanElement.GetString();
                                 Logger.LogInfo($"Received route plan: {finalRoutePlan?.Substring(0, Math.Min(100, finalRoutePlan?.Length ?? 0))}...");
                             }
+                            else
+                            {
+                                Logger.LogInfo("No route_plan property found in completion message");
+                            }
                             
                             if (progressData.TryGetProperty("itinerary", out var itineraryElement))
                             {
                                 finalItinerary = itineraryElement.GetString();
                                 Logger.LogInfo($"Received itinerary: {finalItinerary?.Substring(0, Math.Min(100, finalItinerary?.Length ?? 0))}...");
                             }
+                            else
+                            {
+                                Logger.LogInfo("No itinerary property found in completion message");
+                            }
+                            
+                            // Log the complete completion message for debugging
+                            Logger.LogInfo($"Complete completion message: {e.Data}");
                             
                             hasCompleted = true;
                         }
@@ -144,6 +155,19 @@ public static class PlannerEngine
             
             // Wait a bit for any pending output processing
             await Task.Delay(100);
+            
+            // Log the final values for debugging
+            Logger.LogInfo($"Final values - Route plan: {finalRoutePlan is not null}, Itinerary: {finalItinerary is not null}");
+            if (finalRoutePlan != null)
+            {
+                Logger.LogInfo($"Final route plan length: {finalRoutePlan.Length}");
+                Logger.LogInfo($"Final route plan preview: {finalRoutePlan.Substring(0, Math.Min(200, finalRoutePlan.Length))}");
+            }
+            if (finalItinerary != null)
+            {
+                Logger.LogInfo($"Final itinerary length: {finalItinerary.Length}");
+                Logger.LogInfo($"Final itinerary preview: {finalItinerary.Substring(0, Math.Min(200, finalItinerary.Length))}");
+            }
             
             // If we didn't get a completion message, try to parse the final output
             if (string.IsNullOrEmpty(finalItinerary))
