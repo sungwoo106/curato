@@ -101,11 +101,30 @@ namespace Curato.Views
                 {
                     Logger.LogInfo($"Using {JSplan.SuggestedPlaces.Count} suggested places from generated plan");
                     
+                    // Log all places for debugging
+                    for (int i = 0; i < JSplan.SuggestedPlaces.Count; i++)
+                    {
+                        var place = JSplan.SuggestedPlaces[i];
+                        Logger.LogInfo($"Place {i + 1}: {place.Name} at ({place.Latitude}, {place.Longitude})");
+                    }
+                    
                     // Find the first valid coordinate set
                     var firstValidPlace = JSplan.SuggestedPlaces.FirstOrDefault(p => 
                         p.Latitude != 0 && p.Longitude != 0 && 
                         p.Latitude >= 33.0 && p.Latitude <= 38.5 &&  // Valid Korea latitude range
-                        p.Longitude >= 124.0 && p.Longitude <= 132.0); // Valid Korea longitude range
+                        p.Longitude >= 124.0 && p.Longitude <= 132.0 && // Valid Korea longitude range
+                        // Filter out fake/placeholder coordinates
+                        !(p.Latitude == 37.123456 && p.Longitude == 126.123456) &&
+                        !(p.Latitude == 37.0 && p.Longitude == 126.0) &&
+                        !(p.Latitude == 0.0 && p.Longitude == 0.0) &&
+                        // Filter out generic placeholder names
+                        !string.IsNullOrWhiteSpace(p.Name) &&
+                        p.Name != "Location Name" &&
+                        p.Name != "Full Address" &&
+                        p.Name != "Category" &&
+                        p.Name != "Distance from start" &&
+                        p.Name != "Kakao Map URL"
+                    );
                     
                     if (firstValidPlace != null)
                     {
@@ -134,7 +153,19 @@ namespace Curato.Views
                     var validPlaces = JSplan.SuggestedPlaces.Where(p => 
                         p.Latitude != 0 && p.Longitude != 0 && 
                         p.Latitude >= 33.0 && p.Latitude <= 38.5 &&  // Valid Korea latitude range
-                        p.Longitude >= 124.0 && p.Longitude <= 132.0).ToList(); // Valid Korea longitude range
+                        p.Longitude >= 124.0 && p.Longitude <= 132.0 && // Valid Korea longitude range
+                        // Filter out fake/placeholder coordinates
+                        !(p.Latitude == 37.123456 && p.Longitude == 126.123456) &&
+                        !(p.Latitude == 37.0 && p.Longitude == 126.0) &&
+                        !(p.Latitude == 0.0 && p.Longitude == 0.0) &&
+                        // Filter out generic placeholder names
+                        !string.IsNullOrWhiteSpace(p.Name) &&
+                        p.Name != "Location Name" &&
+                        p.Name != "Full Address" &&
+                        p.Name != "Category" &&
+                        p.Name != "Distance from start" &&
+                        p.Name != "Kakao Map URL"
+                    ).ToList();
                     
                     if (validPlaces.Any())
                     {
