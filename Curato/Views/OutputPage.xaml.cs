@@ -116,7 +116,7 @@ namespace Curato.Views
                     }
                     else
                     {
-                        Logger.LogWarning("No valid coordinates found in suggested places, using default Seoul coordinates");
+                        Logger.LogInfo("No valid coordinates found in suggested places, using default Seoul coordinates");
                         lat = 37.5665; // Seoul
                         lng = 126.9780;
                     }
@@ -148,7 +148,7 @@ namespace Curato.Views
                     }
                     else
                     {
-                        Logger.LogWarning("No valid coordinates found after filtering, using empty array");
+                        Logger.LogInfo("No valid coordinates found after filtering, using empty array");
                     }
                 }
                 else
