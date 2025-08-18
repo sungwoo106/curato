@@ -57,6 +57,19 @@
             z-index: 1000;
         }
 
+        .route-stats {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 1000;
+        }
+
         .route-info h4 {
             margin: 0 0 8px 0;
             color: #333;
@@ -168,9 +181,7 @@
                 var estimatedTime = Math.ceil(totalDistance / 80); // Assuming 80 meters per minute walking speed
                 
                 var routeStats = document.createElement('div');
-                routeStats.className = 'route-info';
-                routeStats.style.bottom = '10px';
-                routeStats.style.right = '10px';
+                routeStats.className = 'route-stats';
                 routeStats.innerHTML = `
                     <h4>📊 Route Summary</h4>
                     <p>📍 ${locations.length} locations</p>

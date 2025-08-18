@@ -97,42 +97,68 @@ namespace Curato.Views
                 var JSplan = AppState.SharedTripPlan ?? new TripPlan();
                 
                 // Use the actual suggested places from the generated plan
-                if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Any())
+                if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Count > 0)
                 {
                     Logger.LogInfo($"Using {JSplan.SuggestedPlaces.Count} suggested places from generated plan");
                     
-                    // Update coordinates if we have places
-                    if (!coords.HasValue && JSplan.SuggestedPlaces.Count > 0)
+                    // Find the first valid coordinate set
+                    var firstValidPlace = JSplan.SuggestedPlaces.FirstOrDefault(p => 
+                        p.Latitude != 0 && p.Longitude != 0 && 
+                        p.Latitude >= 33.0 && p.Latitude <= 38.5 &&  // Valid Korea latitude range
+                        p.Longitude >= 124.0 && p.Longitude <= 132.0); // Valid Korea longitude range
+                    
+                    if (firstValidPlace != null)
                     {
-                        lat = JSplan.SuggestedPlaces[0].Latitude;
-                        lng = JSplan.SuggestedPlaces[0].Longitude;
+                        // Use the first valid place for map center
+                        lat = firstValidPlace.Latitude;
+                        lng = firstValidPlace.Longitude;
+                        Logger.LogInfo($"Using first valid place coordinates: lat={lat}, lng={lng}");
+                    }
+                    else
+                    {
+                        Logger.LogWarning("No valid coordinates found in suggested places, using default Seoul coordinates");
+                        lat = 37.5665; // Seoul
+                        lng = 126.9780;
                     }
                 }
                 else
                 {
-                    Logger.LogInfo("No suggested places in plan, using default coordinates");
+                    Logger.LogInfo("No suggested places in plan, using default Seoul coordinates");
                 }
 
                 string coordArray = "[]"; // Default empty array
                 
                 if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Any())
                 {
-                    coordArray = "["
-                        + string.Join(",", JSplan.SuggestedPlaces
-                            .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                            .Select((p, i) =>
-                                $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
-                        + "]";
+                    // Filter out invalid coordinates and create the array
+                    var validPlaces = JSplan.SuggestedPlaces.Where(p => 
+                        p.Latitude != 0 && p.Longitude != 0 && 
+                        p.Latitude >= 33.0 && p.Latitude <= 38.5 &&  // Valid Korea latitude range
+                        p.Longitude >= 124.0 && p.Longitude <= 132.0).ToList(); // Valid Korea longitude range
                     
-                    Logger.LogInfo($"Generated coordinate array with {JSplan.SuggestedPlaces.Count(p => p.Latitude != 0 && p.Longitude != 0)} valid coordinates");
+                    if (validPlaces.Any())
+                    {
+                        coordArray = "["
+                            + string.Join(",", validPlaces
+                                .Select((p, i) =>
+                                    $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
+                            + "]";
+                        
+                        Logger.LogInfo($"Generated coordinate array with {validPlaces.Count} valid coordinates");
+                    }
+                    else
+                    {
+                        Logger.LogWarning("No valid coordinates found after filtering, using empty array");
+                    }
                 }
                 else
                 {
-                    Logger.LogInfo("No valid coordinates found, using empty coordinate array");
+                    Logger.LogInfo("No suggested places found, using empty coordinate array");
                 }
 
                 Logger.LogInfo($"Map center coordinates: lat={lat}, lng={lng}");
                 Logger.LogInfo($"Coordinate array length: {coordArray.Length}");
+                Logger.LogInfo($"Coordinate array content: {coordArray}");
 
                 var finalHtml = htmlTemplate
                     .Replace("{API_KEY}", kakaoMapKey)
