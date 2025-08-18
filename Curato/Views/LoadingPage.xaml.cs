@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Windows;
+using Curato.Helpers;
 
 namespace Curato.Views
 {

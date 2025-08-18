@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Curato.ViewModels;
 using Curato.Models;
 using Curato;
+using Curato.Helpers;
 
 namespace Curato.Views
 {
