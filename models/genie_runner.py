@@ -44,6 +44,38 @@ class GenieRunner:
             phi_bundle_path (str): Path to the Phi model bundle directory (auto-detected if None)
             qwen_bundle_path (str): Path to the Qwen model bundle directory (auto-detected if None)
             working_dir (str): Working directory for temporary files (optional)
+        
+        Configuration Priority (highest to lowest):
+        1. Explicit paths passed to constructor
+        2. Environment variables (PHI_BUNDLE_PATH, QWEN_BUNDLE_PATH, GENIE_EXECUTABLE_PATH)
+        3. config.py fallback paths
+        4. Auto-detection in common locations
+        
+        Examples for different devices:
+        
+        # Windows Device 1:
+        runner = GenieRunner(
+            phi_bundle_path=r"C:\curato\phi_bundle",
+            qwen_bundle_path=r"C:\curato\qwen_bundle",
+            genie_executable=r"C:\curato\phi_bundle\genie-t2t-run.exe"
+        )
+        
+        # Windows Device 2 (different paths):
+        runner = GenieRunner(
+            phi_bundle_path=r"D:\ai_models\phi_bundle",
+            qwen_bundle_path=r"D:\ai_models\qwen_bundle",
+            genie_executable=r"D:\ai_models\phi_bundle\genie-t2t-run.exe"
+        )
+        
+        # macOS/Linux Device:
+        runner = GenieRunner(
+            phi_bundle_path="/home/user/ai_models/phi_bundle",
+            qwen_bundle_path="/home/user/ai_models/qwen_bundle",
+            genie_executable="/home/user/ai_models/phi_bundle/genie-t2t-run"
+        )
+        
+        # Auto-detection (recommended for development):
+        runner = GenieRunner()  # Will auto-detect all paths
         """
         self.working_dir = Path(working_dir) if working_dir else Path.cwd()
         
@@ -63,7 +95,25 @@ class GenieRunner:
         self._validate_paths()
     
     def _auto_detect_phi_bundle(self) -> str:
-        """Auto-detect the Phi bundle path."""
+        """
+        Auto-detect the Phi bundle path.
+        
+        Detection order:
+        1. Environment variable PHI_BUNDLE_PATH
+        2. config.py fallback paths
+        3. Common locations (./phi_bundle, ../phi_bundle, etc.)
+        
+        To customize for different devices:
+        - Set PHI_BUNDLE_PATH environment variable, OR
+        - Modify config.py with your device paths, OR
+        - Place bundles in common locations (./phi_bundle)
+        
+        Common locations checked:
+        - ./phi_bundle (current directory)
+        - ../phi_bundle (parent directory)
+        - ~/curato/phi_bundle (user home)
+        - C:\curato\phi_bundle (Windows default)
+        """
         # Check environment variable first
         env_path = os.environ.get('PHI_BUNDLE_PATH')
         if env_path and os.path.exists(env_path):
@@ -102,7 +152,25 @@ class GenieRunner:
         return default_path
     
     def _auto_detect_qwen_bundle(self) -> str:
-        """Auto-detect the Qwen bundle path."""
+        """
+        Auto-detect the Qwen bundle path.
+        
+        Detection order:
+        1. Environment variable QWEN_BUNDLE_PATH
+        2. config.py fallback paths
+        3. Common locations (./qwen_bundle, ../qwen_bundle, etc.)
+        
+        To customize for different devices:
+        - Set QWEN_BUNDLE_PATH environment variable, OR
+        - Modify config.py with your device paths, OR
+        - Place bundles in common locations (./qwen_bundle)
+        
+        Common locations checked:
+        - ./qwen_bundle (current directory)
+        - ../qwen_bundle (parent directory)
+        - ~/curato/qwen_bundle (user home)
+        - C:\curato\qwen_bundle (Windows default)
+        """
         # Check environment variable first
         env_path = os.environ.get('QWEN_BUNDLE_PATH')
         if env_path and os.path.exists(env_path):
@@ -141,7 +209,25 @@ class GenieRunner:
         return default_path
     
     def _auto_detect_genie_executable(self, phi_bundle_path: str) -> str:
-        """Auto-detect the genie-t2t-run executable."""
+        """
+        Auto-detect the genie-t2t-run executable.
+        
+        Detection order:
+        1. Environment variable GENIE_EXECUTABLE_PATH
+        2. config.py fallback paths
+        3. Inside phi_bundle directory (most likely location)
+        4. Common locations (./genie-t2t-run.exe, etc.)
+        
+        To customize for different devices:
+        - Set GENIE_EXECUTABLE_PATH environment variable, OR
+        - Modify config.py with your device paths, OR
+        - Place executable in phi_bundle directory
+        
+        Common locations checked:
+        - Inside phi_bundle directory (recommended)
+        - ./genie-t2t-run.exe (current directory)
+        - C:\curato\genie-t2t-run.exe (Windows default)
+        """
         # Check environment variable first
         env_path = os.environ.get('GENIE_EXECUTABLE_PATH')
         if env_path and os.path.exists(env_path):
