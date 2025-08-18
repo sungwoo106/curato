@@ -51,7 +51,6 @@
                     <Border x:Name="ProgressBarFill"
                             Width="0"
                             Height="24"
-                            Background="#FFB31A"
                             CornerRadius="20"
                             HorizontalAlignment="Left">
                         <!-- Add a subtle gradient for better visual appeal -->
