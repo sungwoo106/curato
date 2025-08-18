@@ -3,6 +3,37 @@ import re
 import sys, os
 import io
 from pathlib import Path
+
+# Add the project root to Python path so imports work when running from compiled output
+script_dir = Path(__file__).parent
+project_root = script_dir.parent  # Go up one level from bin/Debug/net9.0-windows/
+
+print(f"Script directory: {script_dir}", file=sys.stderr)
+print(f"Project root: {project_root}", file=sys.stderr)
+print(f"Project root exists: {project_root.exists()}", file=sys.stderr)
+print(f"Data folder in project root: {(project_root / 'data').exists()}", file=sys.stderr)
+
+if project_root.exists() and (project_root / "data").exists():
+    sys.path.insert(0, str(project_root))
+    print(f"Added {project_root} to Python path", file=sys.stderr)
+elif (script_dir / "data").exists():
+    # If data folder is in the same directory as the script
+    print("Data folder found in script directory", file=sys.stderr)
+    pass
+else:
+    # Try to find the project root by looking for data folder
+    current = script_dir
+    while current.parent != current:
+        current = current.parent
+        if (current / "data").exists():
+            sys.path.insert(0, str(current))
+            print(f"Found data folder in {current}, added to Python path", file=sys.stderr)
+            break
+    else:
+        print("Could not find data folder in any parent directory", file=sys.stderr)
+
+print(f"Python path: {sys.path[:3]}", file=sys.stderr)
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 """CLI entry for the WPF frontend.
