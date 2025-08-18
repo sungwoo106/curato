@@ -11,6 +11,12 @@ public static class PlannerEngine
         {
             string json = JsonSerializer.Serialize(request);
             var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
+            
+            // Debug: Log the resolved script path for troubleshooting
+            System.Diagnostics.Debug.WriteLine($"Resolved script path: {scriptPath}");
+            System.Diagnostics.Debug.WriteLine($"Script file exists: {File.Exists(scriptPath)}");
+            System.Diagnostics.Debug.WriteLine($"Working directory: {AppContext.BaseDirectory}");
+            
             var psi = new ProcessStartInfo
             {
                 FileName = "python",
@@ -30,14 +36,22 @@ public static class PlannerEngine
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
+            // Debug: Log stderr output for troubleshooting
+            if (!string.IsNullOrEmpty(error))
+            {
+                System.Diagnostics.Debug.WriteLine($"Python stderr output: {error}");
+            }
+
             try
             {
                 using var doc = JsonDocument.Parse(result);
                 string? itinerary = doc.RootElement.GetProperty("itinerary").GetString();
                 return new TripPlan { EmotionalNarrative = itinerary ?? result };
             }
-            catch
+            catch (Exception parseEx)
             {
+                System.Diagnostics.Debug.WriteLine($"Failed to parse Python output: {parseEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"Raw output: {result}");
                 return new TripPlan { EmotionalNarrative = result };
             }
         }

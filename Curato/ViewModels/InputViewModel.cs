@@ -313,6 +313,12 @@ namespace Curato.ViewModels
                 string json = JsonSerializer.Serialize(payload);
 
                 var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
+                
+                // Debug: Log the resolved script path for troubleshooting
+                System.Diagnostics.Debug.WriteLine($"Resolved script path: {scriptPath}");
+                System.Diagnostics.Debug.WriteLine($"Script file exists: {File.Exists(scriptPath)}");
+                System.Diagnostics.Debug.WriteLine($"Working directory: {AppContext.BaseDirectory}");
+                
                 var psi = new ProcessStartInfo
                 {
                     FileName = "python",
@@ -331,9 +337,17 @@ namespace Curato.ViewModels
                 string err = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
+                // Debug: Log stderr output for troubleshooting
+                if (!string.IsNullOrEmpty(err))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Python stderr output: {err}");
+                }
+
                 if (process.ExitCode != 0)
                 {
-                    PlanText = "Failed to generate plan.";
+                    System.Diagnostics.Debug.WriteLine($"Python process failed with exit code: {process.ExitCode}");
+                    System.Diagnostics.Debug.WriteLine($"Python stderr: {err}");
+                    PlanText = $"Failed to generate plan. Exit code: {process.ExitCode}. Error: {err}";
                     return;
                 }
 

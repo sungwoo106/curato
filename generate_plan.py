@@ -2,6 +2,7 @@ import json
 import re
 import sys, os
 import io
+from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 """CLI entry for the WPF frontend.
@@ -16,8 +17,14 @@ from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 
-# Mock directory for testing purposes
-_MOCK_DIR = r"C:\Users\sungw\Documents\curato\mock"
+# Mock directory for testing purposes - use pathlib for cross-platform compatibility
+_MOCK_DIR = Path(__file__).parent / "mock"
+
+# Debug: Print resolved mock directory path for troubleshooting
+print(f"Resolved mock directory: {_MOCK_DIR}", file=sys.stderr)
+print(f"Mock directory exists: {_MOCK_DIR.exists()}", file=sys.stderr)
+if _MOCK_DIR.exists():
+    print(f"Mock directory contents: {list(_MOCK_DIR.glob('*.txt'))}", file=sys.stderr)
 
 # Map of location slug to mock story filename
 MOCK_STORIES = {
@@ -48,22 +55,36 @@ def _format_sentences(text: str) -> str:
 def _load_mock_story(query: str | None) -> str | None:
     """Return a formatted mock story for the location or a default one."""
 
+    # Check if mock directory exists
+    if not _MOCK_DIR.exists():
+        error_msg = f"Mock directory does not exist: {_MOCK_DIR}"
+        print(error_msg, file=sys.stderr)
+        return f"Failed to load mock story: {error_msg}"
+
     # Fallback to the Hongdae mock story if no match is found.
-    path = os.path.join(_MOCK_DIR, MOCK_STORIES["hongdae"])
+    path = _MOCK_DIR / MOCK_STORIES["hongdae"]
 
     if query:
         lower = query.lower()
         for key, keywords in MOCK_KEYWORDS.items():
             if any(k.lower() in lower for k in keywords):
-                path = os.path.join(_MOCK_DIR, MOCK_STORIES[key])
+                path = _MOCK_DIR / MOCK_STORIES[key]
                 break
+
+    # Check if the specific file exists
+    if not path.exists():
+        error_msg = f"Mock story file does not exist: {path}"
+        print(error_msg, file=sys.stderr)
+        return f"Failed to load mock story: {error_msg}"
 
     try:
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
         return _format_sentences(text)
     except Exception as exc:  # pragma: no cover - unlikely path
-        return f"Failed to load mock story: {exc}"
+        error_msg = f"Failed to load mock story: {exc}"
+        print(error_msg, file=sys.stderr)
+        return error_msg
 
 # The previous implementation only produced a placeholder summary.  Here we
 # replicate the workflow of "main.py" to call into the real backend logic.
