@@ -21,8 +21,9 @@ def test_phi_only():
     try:
         from models.phi_runner import run_phi_runner
         
-        # Simple test prompt for route planning
-        test_prompt = """You are a travel planner. Generate a JSON response with exactly 4 locations for a day trip in Seoul, Korea.
+        # Use the correct Phi prompt format
+        test_prompt = """<|system|>
+You are a travel planner. Generate a JSON response with exactly 4 locations for a day trip in Seoul, Korea.
 
 Starting location: Hongdae area
 Companion type: Solo traveler
@@ -41,15 +42,33 @@ Please respond with a JSON array containing exactly 4 locations, each with:
 - description: Brief description
 - estimated_time: Time to spend there (in hours)
 
-Format your response as valid JSON only."""
+Format your response as valid JSON only.
+<|end|>
+<|user|>
+Generate a day trip plan for Seoul with 4 locations.
+<|end|>
+<|assistant|>"""
 
         print(f"📝 Sending test prompt to Phi model...")
         print(f"📝 Prompt length: {len(test_prompt)} characters")
+        print(f"📝 Using Phi-specific prompt format")
         
-        # Run the Phi model
+        # Add progress monitoring
+        print("🚀 Starting Phi model inference...")
+        print("⏳ This may take a few minutes depending on your NPU performance...")
+        print("💡 Tip: You can monitor NPU usage in Task Manager (Performance tab)")
+        
+        # Run the Phi model with progress indication
+        import time
+        start_time = time.time()
+        
         response = run_phi_runner(test_prompt)
         
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
         print(f"✅ Phi model response received!")
+        print(f"⏱️ Processing time: {processing_time:.2f} seconds")
         print(f"📄 Response length: {len(response)} characters")
         print(f"📄 Response preview: {response[:300]}...")
         

@@ -270,6 +270,12 @@ class GenieRunner:
             print(f"📁 Working directory: {self.working_dir}")
             print(f"🔧 Executable: {self.genie_executable}")
             
+            # Show NPU processing information
+            print("🚀 Starting NPU inference...")
+            print("⏳ Model is now processing on your NPU...")
+            print("💡 Monitor NPU usage in Task Manager > Performance tab")
+            print("🔍 You can also check GPU-Z or similar tools for detailed NPU stats")
+            
             # Execute the genie-t2t-run executable with the correct parameters
             # Format: genie-t2t-run.exe -c genie_config.json --prompt_file prompt.txt
             # Note: We run from the bundle directory so it can find its config and model files
@@ -282,6 +288,10 @@ class GenieRunner:
             print(f"🚀 Running command: {' '.join(cmd)}")
             print(f"🚀 From directory: {bundle_path}")
             
+            # Add progress indicator
+            import time
+            start_time = time.time()
+            
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -289,6 +299,11 @@ class GenieRunner:
                 cwd=bundle_path,  # Run from the bundle directory
                 encoding="utf-8"
             )
+            
+            end_time = time.time()
+            processing_time = end_time - start_time
+            
+            print(f"✅ NPU inference completed in {processing_time:.2f} seconds!")
             
             # Print command output for debugging
             if result.stdout:
