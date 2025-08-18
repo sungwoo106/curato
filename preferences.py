@@ -179,10 +179,8 @@ class Preferences:
         2. Builds a prompt for the Phi model
         3. Generates a route plan with 4 optimal locations
         
-        Note: Currently returns a placeholder as the Phi model integration is pending.
-        
         Returns:
-            str: JSON string containing the route plan (currently placeholder)
+            str: JSON string containing the route plan
         """
         # Collect and format place recommendations
         self.collect_best_place()
@@ -197,8 +195,76 @@ class Preferences:
             json.dumps(recommendations, ensure_ascii=False),  # Place recommendations
         )
         
-        # TODO: Uncomment when Phi model integration is complete
-        return run_phi_runner(prompt)
+        try:
+            # Run the Phi model
+            raw_output = run_phi_runner(prompt)
+            
+            # Clean the output to extract just the JSON content
+            # The model might output debug info before/after the actual JSON
+            cleaned_output = self._extract_json_from_output(raw_output)
+            
+            if cleaned_output:
+                return cleaned_output
+            else:
+                print(f"Could not extract valid JSON from Phi model output: {raw_output[:200]}...")
+                return None
+                
+        except Exception as e:
+            print(f"Phi model execution failed: {e}")
+            return None
+    
+    def _extract_json_from_output(self, raw_output: str) -> str:
+        """
+        Extract JSON content from the raw model output.
+        
+        The model might output debug information, so we need to find
+        the actual JSON content within the output.
+        
+        Args:
+            raw_output (str): Raw output from the Phi model
+            
+        Returns:
+            str: Cleaned JSON string, or None if no valid JSON found
+        """
+        if not raw_output:
+            return None
+            
+        # Look for JSON content in the output
+        # Try to find content between [ and ] or { and }
+        import re
+        
+        # Look for JSON array or object patterns
+        json_patterns = [
+            r'\[.*\]',  # JSON array
+            r'\{.*\}',  # JSON object
+        ]
+        
+        for pattern in json_patterns:
+            matches = re.findall(pattern, raw_output, re.DOTALL)
+            for match in matches:
+                try:
+                    # Validate that it's actually valid JSON
+                    json.loads(match)
+                    return match
+                except json.JSONDecodeError:
+                    continue
+        
+        # If no JSON found, try to extract content after the last [PROMPT]: marker
+        if '[PROMPT]:' in raw_output:
+            parts = raw_output.split('[PROMPT]:')
+            if len(parts) > 1:
+                content_after_prompt = parts[-1].strip()
+                # Look for JSON in this content
+                for pattern in json_patterns:
+                    matches = re.findall(pattern, content_after_prompt, re.DOTALL)
+                    for match in matches:
+                        try:
+                            json.loads(match)
+                            return match
+                        except json.JSONDecodeError:
+                            continue
+        
+        return None
 
     def run_qwen_story(self):
         """
@@ -214,12 +280,15 @@ class Preferences:
         # Get the route plan from the route planner
         route_plan_json = self.run_route_planner()
         
+        if not route_plan_json:
+            return "Failed to generate route plan - cannot create itinerary"
+        
         try:
             # Parse the JSON route plan
             four_locations = json.loads(route_plan_json)
         except Exception as e:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
-            return None
+            return f"Failed to parse route plan: {e}"
         
         # Build the prompt for the Qwen model to generate emotional storytelling
         prompt = build_qwen_emotional_prompt(
