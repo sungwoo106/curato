@@ -7,6 +7,14 @@
 /secure/*.bin
 /secure/*.pem
 
+# Ignore LLM bundles (large model files)
+phi_bundle/
+qwen_bundle/
+*.bin
+*.safetensors
+*.gguf
+*.ggml
+
 # User-specific files
 *.rsuser
 *.suo

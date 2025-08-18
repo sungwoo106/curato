@@ -199,8 +199,7 @@ class Preferences:
         )
         
         # TODO: Uncomment when Phi model integration is complete
-        # return run_phi_runner(prompt)
-        return "[]"
+        return run_phi_runner(prompt)
 
     def run_llama_story(self):
         """
@@ -232,5 +231,5 @@ class Preferences:
         
         # TODO: Uncomment when Llama model integration is complete
         # return run_llama_runner(prompt)
-        return "Generated itinerary would appear here"
+        return "Generated itinerary would appear here (Qwen model disabled for now)"
     

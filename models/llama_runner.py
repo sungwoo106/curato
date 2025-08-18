@@ -1,55 +1,52 @@
 """
-Llama Language Model Runner
+Qwen Language Model Runner (Updated for Genie Integration)
 
-This module provides an interface to run the Llama language model locally for
-generating emotional, storytelling itineraries. It handles the communication
-between the Python application and the local Llama executable.
+This module now uses the unified Genie runner for better integration
+with your phi_bundle and qwen_bundle. It maintains backward compatibility
+while leveraging the improved Genie SDK integration.
+
+Note: This module is named 'llama_runner' for backward compatibility,
+but it actually runs the Qwen model as per your current setup.
 
 The module works by:
-1. Writing the generated prompt to a temporary text file
-2. Calling the local Llama executable with the prompt file
-3. Capturing and returning the generated text output
+1. Using the unified GenieRunner class
+2. Calling the local genie-t2t-run executable with your qwen_bundle
+3. Capturing and returning the generated emotional itinerary text
 
-Note: This requires a local installation of the Llama model and the genie-t2t-run
+Note: This requires your pre-configured qwen_bundle and genie-t2t-run
 executable to function properly.
 """
 
-import subprocess
+from .genie_runner import GenieRunner
+
+# Create a global GenieRunner instance for efficiency
+_genie_runner = GenieRunner()
 
 def run_llama_runner(prompt: str) -> str:
     """
-    Run the Llama LLM with the given prompt using a local executable.
+    Run the Qwen LLM with the given prompt using the Genie runner.
     
     This function serves as a bridge between the Python application and the
-    local Llama language model. It takes a carefully crafted prompt (built
+    local Qwen language model. It takes a carefully crafted prompt (built
     by the prompt generation functions) and returns the AI-generated
     emotional itinerary text.
     
-    The function works by:
-    1. Writing the prompt to a temporary text file (llama_prompt.txt)
-    2. Executing the local Llama runner with the prompt file
-    3. Capturing the stdout output and returning it as a string
-    
     Args:
-        prompt (str): The complete prompt to send to the Llama model.
-                     This should include system instructions, user context,
-                     and any specific formatting requirements.
-                     
-                     Example prompt structure:
+        prompt (str): The complete prompt to send to the Qwen model.
+                     This should include:
                      - System instructions for tone and style
                      - Location information and companion type
                      - Budget-specific activity suggestions
                      - Style guidelines for the output
     
     Returns:
-        str: The generated itinerary text from the Llama model.
+        str: The generated itinerary text from the Qwen model.
              This will be a narrative, emotional description of the day
              that matches the specified companion type and budget.
     
     Raises:
-        subprocess.CalledProcessError: If the Llama executable fails to run
-        FileNotFoundError: If the genie-t2t-run executable is not found
-        OSError: For other system-related errors during execution
+        RuntimeError: If the Qwen model fails to run
+        FileNotFoundError: If the qwen_bundle is not found
     
     Example:
         >>> prompt = "Generate a romantic itinerary for a couple visiting..."
@@ -58,30 +55,8 @@ def run_llama_runner(prompt: str) -> str:
         "As the morning sun casts golden rays over Seoul..."
     
     Dependencies:
-        - Local installation of Llama model
-        - genie-t2t-run executable in the current directory
-        - genie_bundle_llama model bundle
+        - Your pre-configured qwen_bundle
+        - genie-t2t-run executable
+        - genie_config.json configuration file
     """
-    # Write the prompt to a temporary text file
-    # This allows the Llama executable to read the prompt input
-    # The file is created with UTF-8 encoding to handle Korean text properly
-    with open("llama_prompt.txt", "w", encoding="utf-8") as f:
-        f.write(prompt)
-
-    # Execute the local Llama runner using subprocess
-    # This runs the genie-t2t-run executable with the appropriate parameters
-    result = subprocess.run(
-        [
-            "./genie-t2t-run.exe",  # Windows executable (use "./genie-t2t-run" on Linux/Mac)
-            "--model-bundle",        # Specify the model bundle to use
-            "genie_bundle_llama",    # Llama model bundle name
-            "--input-text",          # Specify input method
-            "llama_prompt.txt",      # Input file containing the prompt
-        ],
-        capture_output=True,         # Capture both stdout and stderr
-        text=True,                   # Return output as text (not bytes)
-    )
-
-    # Return the generated text, stripping any leading/trailing whitespace
-    # The stdout contains the AI-generated itinerary text
-    return result.stdout.strip()
+    return _genie_runner.run_qwen(prompt)
