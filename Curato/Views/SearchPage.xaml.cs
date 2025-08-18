@@ -603,26 +603,38 @@ namespace Curato.Views
                 PreferredPlaceTypes = vm.SelectedCategories.ToList(),
             };
 
+            // Log the request being sent
+            Logger.LogInfo($"GenerateButton_Click - Request: Location={request.Location}, Companion={request.Companion}, Budget={request.Budget}, StartTime={request.StartTime}, Categories={string.Join(",", request.PreferredPlaceTypes)}");
+
             // Show loading state
             var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
             {
+                Logger.LogInfo("GenerateButton_Click - Creating LoadingPage");
                 mainWindow.MainFrame.Content = new LoadingPage(async () =>
                 {
                     try
                     {
+                        Logger.LogInfo("LoadingPage callback - Starting PlannerEngine.GenerateTripPlan");
+                        
                         // Generate the trip plan
                         var tripPlan = await PlannerEngine.GenerateTripPlan(request);
+                        
+                        Logger.LogInfo($"LoadingPage callback - PlannerEngine result: {tripPlan?.EmotionalNarrative}");
                         
                         // Update the shared state
                         AppState.SharedTripPlan = tripPlan;
                         
-                        // Debug: Log the result
-                        System.Diagnostics.Debug.WriteLine($"Generated trip plan: {tripPlan?.EmotionalNarrative}");
+                        Logger.LogInfo($"LoadingPage callback - Updated AppState.SharedTripPlan: {AppState.SharedTripPlan?.EmotionalNarrative}");
+                        
+                        // Log the result
+                        Logger.LogInfo($"Generated trip plan: {tripPlan?.EmotionalNarrative}");
                         
                         // Save coordinates from ViewModel
                         double lat = vm.SelectedLocationCoordinates?.Latitude ?? 37.5665;
                         double lng = vm.SelectedLocationCoordinates?.Longitude ?? 126.9780;
+
+                        Logger.LogInfo($"LoadingPage callback - Creating OutputPage with coordinates: lat={lat}, lng={lng}");
 
                         // Create and return OutputPage
                         return new OutputPage
@@ -633,7 +645,7 @@ namespace Curato.Views
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Failed to generate trip plan: {ex.Message}");
+                        Logger.LogError("Failed to generate trip plan", ex);
                         // Return to search page on error
                         return new SearchPage();
                     }

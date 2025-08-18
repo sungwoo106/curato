@@ -61,30 +61,38 @@ namespace Curato.Views
             }
         }
 
-        private async void LoadingPage_LoadedAsync(object sender, RoutedEventArgs e)
+        private async void LoadingPage_LoadedAsync(object sender, EventArgs e)
         {
+            Logger.LogInfo("LoadingPage_LoadedAsync - Starting");
             dotTimer.Start();
             progressTimer.Start();
 
             try
             {
+                Logger.LogInfo("LoadingPage_LoadedAsync - Waiting for async operation");
+                
                 // Wait for the async operation to complete
                 var result = await _onFinishedAsync?.Invoke();
+                
+                Logger.LogInfo($"LoadingPage_LoadedAsync - Async operation completed, result type: {result?.GetType().Name}");
                 
                 // Stop the timers
                 dotTimer.Stop();
                 progressTimer.Stop();
+
+                Logger.LogInfo("LoadingPage_LoadedAsync - Navigating to result page");
 
                 // Navigate to the result page
                 var parentWindow = Window.GetWindow(this) as MainWindow;
                 if (parentWindow != null)
                 {
                     parentWindow.MainFrame.Content = result ?? new OutputPage();
+                    Logger.LogInfo("LoadingPage_LoadedAsync - Navigation completed");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"LoadingPage failed: {ex.Message}");
+                Logger.LogError("LoadingPage failed", ex);
                 
                 // Stop the timers
                 dotTimer.Stop();

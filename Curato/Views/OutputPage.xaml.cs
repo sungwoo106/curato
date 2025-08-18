@@ -21,20 +21,26 @@ namespace Curato.Views
             this.DataContext = AppState.SharedTripPlan;
             this.Loaded += OutputPage_Loaded;
 
+            // Set the preferences summary
+            PreferencesSummaryLabel.Text = AppState.SharedInputViewModel.PreferencesSummary;
+        }
+
+        private async void OutputPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Wait a moment for the AppState to be properly populated
+            await Task.Delay(100);
+            
             // Load the emotional narrative into the TextBlock
             var plan = AppState.SharedTripPlan;
             
-            // Debug: Log the plan data
-            System.Diagnostics.Debug.WriteLine($"OutputPage constructor - Plan: {plan?.EmotionalNarrative}");
-            System.Diagnostics.Debug.WriteLine($"OutputPage constructor - Plan is null: {plan == null}");
-            System.Diagnostics.Debug.WriteLine($"OutputPage constructor - EmotionalNarrative is null/empty: {string.IsNullOrWhiteSpace(plan?.EmotionalNarrative)}");
-
-            // Set the preferences summary
-            PreferencesSummaryLabel.Text = AppState.SharedInputViewModel.PreferencesSummary;
+            // Log the plan data
+            Logger.LogInfo($"OutputPage_Loaded - Plan: {plan?.EmotionalNarrative}");
+            Logger.LogInfo($"OutputPage_Loaded - Plan is null: {plan == null}");
+            Logger.LogInfo($"OutputPage_Loaded - EmotionalNarrative is null/empty: {string.IsNullOrWhiteSpace(plan?.EmotionalNarrative)}");
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
-                System.Diagnostics.Debug.WriteLine($"Setting EmotionalItineraryTextBlock with text: {plan.EmotionalNarrative}");
+                Logger.LogInfo($"Setting EmotionalItineraryTextBlock with text: {plan.EmotionalNarrative}");
                 EmotionalItineraryTextBlock.Inlines.Clear();
                 foreach (var para in plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
@@ -45,13 +51,24 @@ namespace Curato.Views
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Plan or EmotionalNarrative is null/empty, not setting text");
+                Logger.LogInfo("Plan or EmotionalNarrative is null/empty, not setting text");
                 EmotionalItineraryTextBlock.Text = "No story generated. Please try again.";
+                
+                // Try to reload from AppState after a longer delay
+                await Task.Delay(1000);
+                var retryPlan = AppState.SharedTripPlan;
+                if (retryPlan != null && !string.IsNullOrWhiteSpace(retryPlan.EmotionalNarrative))
+                {
+                    Logger.LogInfo($"Retry successful - setting text: {retryPlan.EmotionalNarrative}");
+                    EmotionalItineraryTextBlock.Inlines.Clear();
+                    foreach (var para in retryPlan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
+                        EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
+                        EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
+                    }
+                }
             }
-        }
-
-        private async void OutputPage_Loaded(object sender, RoutedEventArgs e)
-        {
 
             double lat = 37.5665; // default to Seoul
             double lng = 126.9780;
@@ -136,6 +153,68 @@ namespace Curato.Views
             if (mainWindow != null)
             {
                 mainWindow.MainFrame.Content = new SearchPage();
+            }
+        }
+
+        private void ViewLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var logContents = Logger.GetLogContents();
+                var logWindow = new Window
+                {
+                    Title = "Curato Debug Log",
+                    Width = 800,
+                    Height = 600,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    ResizeMode = ResizeMode.CanResize
+                };
+
+                var textBox = new TextBox
+                {
+                    Text = logContents,
+                    IsReadOnly = true,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                    FontSize = 12
+                };
+
+                var clearButton = new Button
+                {
+                    Content = "Clear Log",
+                    Width = 100,
+                    Height = 30,
+                    Margin = new Thickness(10),
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+
+                clearButton.Click += (s, args) =>
+                {
+                    Logger.ClearLog();
+                    textBox.Text = "Log cleared.";
+                };
+
+                var buttonPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = new Thickness(10)
+                };
+                buttonPanel.Children.Add(clearButton);
+
+                var mainPanel = new DockPanel();
+                DockPanel.SetDock(buttonPanel, Dock.Top);
+                DockPanel.SetDock(textBox, Dock.Fill);
+                mainPanel.Children.Add(buttonPanel);
+                mainPanel.Children.Add(textBox);
+
+                logWindow.Content = mainPanel;
+                logWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to show log: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

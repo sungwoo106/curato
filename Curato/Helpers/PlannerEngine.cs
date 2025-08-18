@@ -34,15 +34,15 @@ public static class PlannerEngine
 
             string json = JsonSerializer.Serialize(payload);
             
-            // Debug: Log the payload being sent to Python
-            System.Diagnostics.Debug.WriteLine($"Sending payload to Python: {json}");
+            // Log the payload being sent to Python
+            Logger.LogInfo($"Sending payload to Python: {json}");
             
             var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
             
-            // Debug: Log the resolved script path for troubleshooting
-            System.Diagnostics.Debug.WriteLine($"Resolved script path: {scriptPath}");
-            System.Diagnostics.Debug.WriteLine($"Script file exists: {File.Exists(scriptPath)}");
-            System.Diagnostics.Debug.WriteLine($"Working directory: {AppContext.BaseDirectory}");
+            // Log the resolved script path for troubleshooting
+            Logger.LogInfo($"Resolved script path: {scriptPath}");
+            Logger.LogInfo($"Script file exists: {File.Exists(scriptPath)}");
+            Logger.LogInfo($"Working directory: {AppContext.BaseDirectory}");
             
             var psi = new ProcessStartInfo
             {
@@ -59,22 +59,22 @@ public static class PlannerEngine
             // Set the INPUT_JSON environment variable
             psi.Environment["INPUT_JSON"] = json;
             
-            // Debug: Log the environment variable
-            System.Diagnostics.Debug.WriteLine($"Set INPUT_JSON environment variable: {json}");
+            // Log the environment variable
+            Logger.LogInfo($"Set INPUT_JSON environment variable: {json}");
 
             using var process = Process.Start(psi)!;
             string result = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
-            // Debug: Log stderr output for troubleshooting
+            // Log stderr output for troubleshooting
             if (!string.IsNullOrEmpty(error))
             {
-                System.Diagnostics.Debug.WriteLine($"Python stderr output: {error}");
+                Logger.LogInfo($"Python stderr output: {error}");
             }
             
-            // Debug: Log the stdout output
-            System.Diagnostics.Debug.WriteLine($"Python stdout output: {result}");
+            // Log the stdout output
+            Logger.LogInfo($"Python stdout output: {result}");
 
             try
             {
@@ -82,22 +82,21 @@ public static class PlannerEngine
                 string? itinerary = doc.RootElement.GetProperty("itinerary").GetString();
                 var tripPlan = new TripPlan { EmotionalNarrative = itinerary ?? result };
                 
-                // Debug: Log the final result
-                System.Diagnostics.Debug.WriteLine($"Final TripPlan EmotionalNarrative: {tripPlan.EmotionalNarrative}");
+                // Log the final result
+                Logger.LogInfo($"Final TripPlan EmotionalNarrative: {tripPlan.EmotionalNarrative}");
                 
                 return tripPlan;
             }
             catch (Exception parseEx)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to parse Python output: {parseEx.Message}");
-                System.Diagnostics.Debug.WriteLine($"Raw output: {result}");
+                Logger.LogError($"Failed to parse Python output: {parseEx.Message}", parseEx);
+                Logger.LogInfo($"Raw output: {result}");
                 return new TripPlan { EmotionalNarrative = result };
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"PlannerEngine.GenerateTripPlan failed: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            Logger.LogError($"PlannerEngine.GenerateTripPlan failed: {ex.Message}", ex);
             return new TripPlan();
         }
     }
