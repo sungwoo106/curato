@@ -8,13 +8,14 @@ user input to final itinerary generation, including:
 - Selecting appropriate place types based on companion type
 - Collecting place recommendations from external APIs
 - Generating route plans and emotional storytelling content
+- Supporting real-time progress updates during LLM generation
 
 The class serves as the main interface between the UI layer and the backend
 AI models and external services.
 """
 
 from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
-from models.genie_runner import run_phi_runner, run_qwen_runner
+from models.genie_runner import GenieRunner
 from data.api_clients.kakao_api import get_closest_place, format_kakao_places_for_prompt
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
@@ -28,7 +29,7 @@ class Preferences:
     This class encapsulates all the logic needed to create a customized day plan
     based on user preferences including companion type, budget, timing, and location.
     It coordinates between different services (Kakao API, AI models) to generate
-    coherent and enjoyable itineraries.
+    coherent and enjoyable itineraries with real-time progress updates.
     """
     
     def __init__(self,
@@ -36,7 +37,8 @@ class Preferences:
                  budget=BUDGET[0],
                  starting_time=STARTING_TIME,
                  max_distance_km=MAX_DISTANCE_KM,
-                 start_location=LOCATION):
+                 start_location=LOCATION,
+                 progress_callback=None):
         """
         Initialize a new Preferences instance with user preferences.
         
@@ -46,6 +48,7 @@ class Preferences:
             starting_time (int): Starting time in 24-hour format (0-23)
             max_distance_km (int): Maximum search radius in kilometers
             start_location (tuple): Starting coordinates (latitude, longitude)
+            progress_callback (callable): Optional callback for progress updates
         """
         # Core user preferences
         self.companion_type = companion_type
@@ -53,6 +56,7 @@ class Preferences:
         self.starting_time = starting_time
         self.max_distance_km = max_distance_km
         self.start_location = start_location
+        self.progress_callback = progress_callback
         
         # Generated data and recommendations
         self.selected_types = []        # Place types selected for this itinerary
@@ -173,46 +177,56 @@ class Preferences:
     
     def run_route_planner(self):
         """
-        Generate an optimal one-day route using the Phi model.
+        Generate a route plan using the Phi model.
         
         This method:
-        1. Collects place recommendations
+        1. Collects place recommendations from Kakao API
         2. Builds a prompt for the Phi model
-        3. Generates a route plan with 4 optimal locations
+        3. Generates a route plan with 4-5 locations
+        4. Returns the result as JSON
         
         Returns:
-            str: JSON string containing the route plan
+            str: JSON string with route plan or None if failed
         """
-        # Collect and format place recommendations
-        self.collect_best_place()
-        recommendations = self.format_recommendations()
-        
-        # Build the prompt for the Phi model to generate a 4-5 location route
-        prompt = build_phi_location_prompt(
-            self.start_location,                    # Starting coordinates
-            self.companion_type,                    # Companion type for context
-            self.starting_time,                     # Starting time for timing
-            self.budget,                            # Budget level for cost considerations
-            json.dumps(recommendations, ensure_ascii=False),  # Place recommendations
-        )
-        
         try:
-            # Run the Phi model
-            raw_output = run_phi_runner(prompt)
+            # Collect place recommendations
+            if self.progress_callback:
+                self.progress_callback(60, "Collecting place recommendations...")
             
-            # Clean the output to extract just the JSON content
-            # The model might output debug info before/after the actual JSON
-            cleaned_output = self._extract_json_from_output(raw_output)
+            self.collect_best_place()
             
-            if cleaned_output:
-                return cleaned_output
-            else:
-                print(f"Could not extract valid JSON from Phi model output: {raw_output[:200]}...")
-                print("Using fallback route plan for testing...", file=sys.stderr)
-                return self._create_fallback_route_plan()
-                
+            if self.progress_callback:
+                self.progress_callback(65, "Building route planning prompt...")
+            
+            # Format the recommendations for the prompt
+            recommendations = self.format_recommendations()
+            
+            # Build the prompt for the Phi model
+            prompt = build_phi_location_prompt(
+                self.start_location,                    # Starting coordinates
+                self.companion_type,                    # Companion type for context
+                self.starting_time,                     # Starting time for timing
+                self.budget,                            # Budget level for cost considerations
+                recommendations                         # Place recommendations
+            )
+            
+            if self.progress_callback:
+                self.progress_callback(70, "Running Phi model for route planning...")
+            
+            # Run the Phi model with progress callback
+            runner = GenieRunner(progress_callback=self.progress_callback)
+            raw_output = runner.run_phi(prompt)
+            
+            if self.progress_callback:
+                self.progress_callback(75, "Processing route planning results...")
+            
+            # Extract the JSON result from the model output
+            return self._extract_json_from_output(raw_output)
+            
         except Exception as e:
-            print(f"Phi model execution failed: {e}")
+            print(f"Route planner failed: {e}", file=sys.stderr)
+            if self.progress_callback:
+                self.progress_callback(75, "Route planning failed")
             return None
     
     def _create_fallback_route_plan(self) -> str:
@@ -404,8 +418,14 @@ class Preferences:
         
         # Run the Qwen model to generate emotional storytelling
         try:
-            return run_qwen_runner(prompt)
+            if self.progress_callback:
+                self.progress_callback(80, "Running Qwen model for emotional storytelling...")
+            
+            runner = GenieRunner(progress_callback=self.progress_callback)
+            return runner.run_qwen(prompt)
         except Exception as e:
             print(f"Qwen model failed: {e}", file=sys.stderr)
+            if self.progress_callback:
+                self.progress_callback(95, "Qwen model failed")
             return f"Failed to generate emotional story: {e}"
     

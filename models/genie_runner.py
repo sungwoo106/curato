@@ -9,6 +9,7 @@ The module works by:
 1. Writing the generated prompt to a temporary text file
 2. Calling the local genie-t2t-run executable with the correct command syntax
 3. Capturing and returning the generated output
+4. Supporting streaming progress updates for real-time UI feedback
 
 This replaces the separate phi_runner.py and llama_runner.py modules with a
 single, more maintainable solution.
@@ -17,8 +18,10 @@ single, more maintainable solution.
 import subprocess
 import tempfile
 import os
+import json
+import sys
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional, Callable
 
 # Model types supported by this runner
 ModelType = Literal["phi", "qwen"]
@@ -36,7 +39,8 @@ class GenieRunner:
                  qwen_genie_executable: str = None,
                  phi_bundle_path: str = None,
                  qwen_bundle_path: str = None,
-                 working_dir: str = None):
+                 working_dir: str = None,
+                 progress_callback: Optional[Callable[[int, str], None]] = None):
         """
         Initialize the Genie runner with model bundle paths.
         
@@ -46,6 +50,7 @@ class GenieRunner:
             phi_bundle_path (str): Path to the Phi model bundle directory (auto-detected if None)
             qwen_bundle_path (str): Path to the Qwen model bundle directory (auto-detected if None)
             working_dir (str): Working directory for temporary files (optional)
+            progress_callback (Callable): Optional callback function for progress updates (progress, message)
         
         Configuration Priority (highest to lowest):
         1. Explicit paths passed to constructor
@@ -83,6 +88,7 @@ class GenieRunner:
         runner = GenieRunner()  # Will auto-detect all paths
         """
         self.working_dir = Path(working_dir) if working_dir else Path.cwd()
+        self.progress_callback = progress_callback
         
         # Auto-detect paths if not provided
         if phi_bundle_path is None:
@@ -433,16 +439,20 @@ class GenieRunner:
             else:
                 raise ValueError(f"Unsupported model type: {model_type}")
             
-            print(f"📝 Running {model_type} model...")
-            print(f"📁 Bundle path: {bundle_path}")
-            print(f"📁 Working directory: {self.working_dir}")
-            print(f"🔧 Executable: {executable}")
+            print(f"📝 Running {model_type} model...", file=sys.stderr)
+            print(f"📁 Bundle path: {bundle_path}", file=sys.stderr)
+            print(f"📁 Working directory: {self.working_dir}", file=sys.stderr)
+            print(f"🔧 Executable: {executable}", file=sys.stderr)
             
             # Show NPU processing information
-            print("🚀 Starting NPU inference...")
-            print("⏳ Model is now processing on your NPU...")
-            print("💡 Monitor NPU usage in Task Manager > Performance tab")
-            print("🔍 You can also check GPU-Z or similar tools for detailed NPU stats")
+            print("🚀 Starting NPU inference...", file=sys.stderr)
+            print("⏳ Model is now processing on your NPU...", file=sys.stderr)
+            print("💡 Monitor NPU usage in Task Manager > Performance tab", file=sys.stderr)
+            print("🔍 You can also check GPU-Z or similar tools for detailed NPU stats", file=sys.stderr)
+            
+            # Send progress update if callback is available
+            if self.progress_callback:
+                self.progress_callback(85, f"Running {model_type} model on NPU...")
             
             # Execute the genie-t2t-run executable with the correct parameters
             # Format: genie-t2t-run.exe -c genie_config.json --prompt_file prompt.txt
@@ -453,8 +463,8 @@ class GenieRunner:
                 "--prompt_file", str(prompt_path)
             ]
             
-            print(f"🚀 Running command: {' '.join(cmd)}")
-            print(f"🚀 From directory: {bundle_path}")
+            print(f"🚀 Running command: {' '.join(cmd)}", file=sys.stderr)
+            print(f"🚀 From directory: {bundle_path}", file=sys.stderr)
             
             # Add progress indicator
             import time
@@ -471,13 +481,17 @@ class GenieRunner:
             end_time = time.time()
             processing_time = end_time - start_time
             
-            print(f"✅ NPU inference completed in {processing_time:.2f} seconds!")
+            print(f"✅ NPU inference completed in {processing_time:.2f} seconds!", file=sys.stderr)
+            
+            # Send progress update if callback is available
+            if self.progress_callback:
+                self.progress_callback(90, f"{model_type} model completed successfully")
             
             # Print command output for debugging
             if result.stdout:
-                print(f"✅ Model output: {result.stdout[:200]}...")
+                print(f"✅ Model output: {result.stdout[:200]}...", file=sys.stderr)
             if result.stderr:
-                print(f"⚠️ Model stderr: {result.stderr}")
+                print(f"⚠️ Model stderr: {result.stderr}", file=sys.stderr)
             
             # Check if the command was successful
             result.check_returncode()
@@ -487,11 +501,11 @@ class GenieRunner:
             
         except subprocess.CalledProcessError as e:
             error_msg = f"Model {model_type} failed to run (exit code {e.returncode}): {e.stderr}"
-            print(f"❌ Error: {error_msg}")
+            print(f"❌ Error: {error_msg}", file=sys.stderr)
             raise RuntimeError(error_msg) from e
         except Exception as e:
             error_msg = f"Unexpected error running {model_type} model: {e}"
-            print(f"❌ Error: {error_msg}")
+            print(f"❌ Error: {error_msg}", file=sys.stderr)
             raise RuntimeError(error_msg) from e
         finally:
             # Clean up the temporary prompt file

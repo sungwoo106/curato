@@ -3,10 +3,11 @@ using System.Text.Json;
 using System.IO;
 using Curato.Models;
 using Curato.Helpers;
+using System.Text;
 
 public static class PlannerEngine
 {
-    public static async Task<TripPlan> GenerateTripPlan(TripRequest request)
+    public static async Task<TripPlan> GenerateTripPlan(TripRequest request, IProgress<(int progress, string message)>? progress = null)
     {
         try
         {
@@ -55,7 +56,7 @@ public static class PlannerEngine
                 CreateNoWindow = true,
                 WorkingDirectory = AppContext.BaseDirectory
             };
-            psi.StandardOutputEncoding = System.Text.Encoding.UTF8;
+            psi.StandardOutputEncoding = Encoding.UTF8;
 
             // Set the INPUT_JSON environment variable
             psi.Environment["INPUT_JSON"] = json;
@@ -64,41 +65,116 @@ public static class PlannerEngine
             Logger.LogInfo($"Set INPUT_JSON environment variable: {json}");
 
             using var process = Process.Start(psi)!;
-            string result = await process.StandardOutput.ReadToEndAsync();
+            
+            // Variables to store the final result
+            string? finalItinerary = null;
+            bool hasCompleted = false;
+            
+            // Handle streaming output for progress updates
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (string.IsNullOrEmpty(e.Data)) return;
+                
+                try
+                {
+                    // Try to parse as JSON progress update
+                    var progressData = JsonSerializer.Deserialize<JsonElement>(e.Data);
+                    
+                    if (progressData.TryGetProperty("type", out var typeElement))
+                    {
+                        string type = typeElement.GetString() ?? "";
+                        
+                        if (type == "progress" && progressData.TryGetProperty("progress", out var progressElement))
+                        {
+                            int progressValue = progressElement.GetInt32();
+                            string message = progressData.TryGetProperty("message", out var messageElement) 
+                                ? messageElement.GetString() ?? "" 
+                                : "";
+                            
+                            // Report progress
+                            progress?.Report((progressValue, message));
+                            Logger.LogInfo($"Progress: {progressValue}% - {message}");
+                        }
+                        else if (type == "completion" && progressData.TryGetProperty("itinerary", out var itineraryElement))
+                        {
+                            finalItinerary = itineraryElement.GetString();
+                            hasCompleted = true;
+                            Logger.LogInfo($"Received completion with itinerary: {finalItinerary?.Substring(0, Math.Min(100, finalItinerary?.Length ?? 0))}...");
+                        }
+                    }
+                }
+                catch (JsonException)
+                {
+                    // If it's not valid JSON, it might be regular output (for backward compatibility)
+                    if (!hasCompleted)
+                    {
+                        finalItinerary = e.Data;
+                        hasCompleted = true;
+                        Logger.LogInfo($"Received non-JSON output: {e.Data}");
+                    }
+                }
+            };
+            
+            // Start reading output asynchronously
+            process.BeginOutputReadLine();
+            
+            // Read error output (for debugging)
             string error = await process.StandardError.ReadToEndAsync();
+            
+            // Wait for the process to complete
             await process.WaitForExitAsync();
-
+            
             // Log stderr output for troubleshooting
             if (!string.IsNullOrEmpty(error))
             {
                 Logger.LogInfo($"Python stderr output: {error}");
             }
             
-            // Log the stdout output
-            Logger.LogInfo($"Python stdout output: {result}");
-
-            try
+            // Wait a bit for any pending output processing
+            await Task.Delay(100);
+            
+            // If we didn't get a completion message, try to parse the final output
+            if (string.IsNullOrEmpty(finalItinerary))
             {
-                using var doc = JsonDocument.Parse(result);
-                string? itinerary = doc.RootElement.GetProperty("itinerary").GetString();
-                var tripPlan = new TripPlan { EmotionalNarrative = itinerary ?? result };
-                
-                // Log the final result
-                Logger.LogInfo($"Final TripPlan EmotionalNarrative: {tripPlan.EmotionalNarrative}");
-                
+                Logger.LogInfo("No completion message received, checking for fallback output");
+                // For backward compatibility, try to parse the entire output as a simple JSON
+                try
+                {
+                    // This handles the old format where the script just outputs {"itinerary": "..."}
+                    var fallbackOutput = await process.StandardOutput.ReadToEndAsync();
+                    if (!string.IsNullOrEmpty(fallbackOutput))
+                    {
+                        using var doc = JsonDocument.Parse(fallbackOutput);
+                        if (doc.RootElement.TryGetProperty("itinerary", out var itineraryElement))
+                        {
+                            finalItinerary = itineraryElement.GetString();
+                            Logger.LogInfo($"Parsed fallback output: {finalItinerary?.Substring(0, Math.Min(100, finalItinerary?.Length ?? 0))}...");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Failed to parse fallback output: {ex.Message}");
+                }
+            }
+            
+            // Create the final result
+            if (!string.IsNullOrEmpty(finalItinerary))
+            {
+                var tripPlan = new TripPlan { EmotionalNarrative = finalItinerary };
+                Logger.LogInfo($"Final TripPlan EmotionalNarrative: {tripPlan.EmotionalNarrative?.Substring(0, Math.Min(100, tripPlan.EmotionalNarrative?.Length ?? 0))}...");
                 return tripPlan;
             }
-            catch (Exception parseEx)
+            else
             {
-                Logger.LogError($"Failed to parse Python output: {parseEx.Message}", parseEx);
-                Logger.LogInfo($"Raw output: {result}");
-                return new TripPlan { EmotionalNarrative = result };
+                Logger.LogError("No itinerary received from Python script");
+                return new TripPlan { EmotionalNarrative = "Failed to generate itinerary - no output received" };
             }
         }
         catch (Exception ex)
         {
             Logger.LogError($"PlannerEngine.GenerateTripPlan failed: {ex.Message}", ex);
-            return new TripPlan();
+            return new TripPlan { EmotionalNarrative = $"Error generating trip plan: {ex.Message}" };
         }
     }
 }

@@ -12,6 +12,7 @@ Key Features:
 - Generates personalized itineraries based on companion type, budget, and preferences
 - Uses real AI models (Phi for route planning, Qwen for emotional storytelling)
 - Outputs results in JSON format for easy parsing by the C# frontend
+- Supports streaming progress updates for real-time UI feedback
 """
 
 import json
@@ -78,6 +79,38 @@ from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
 _genie_runner = GenieRunner()
 
 # =============================================================================
+# PROGRESS STREAMING FUNCTIONS
+# =============================================================================
+
+def send_progress_update(progress: int, message: str):
+    """
+    Send a progress update to the C# frontend.
+    
+    Args:
+        progress (int): Progress percentage (0-100)
+        message (str): Status message
+    """
+    progress_data = {
+        "type": "progress",
+        "progress": progress,
+        "message": message
+    }
+    print(json.dumps(progress_data, ensure_ascii=False), flush=True)
+
+def send_completion_update(result: str):
+    """
+    Send the final completion result to the C# frontend.
+    
+    Args:
+        result (str): The generated itinerary text
+    """
+    completion_data = {
+        "type": "completion",
+        "itinerary": result
+    }
+    print(json.dumps(completion_data, ensure_ascii=False), flush=True)
+
+# =============================================================================
 # UTILITY FUNCTIONS
 # =============================================================================
 
@@ -111,72 +144,109 @@ def main() -> None:
     2. Resolves location coordinates using Kakao Map API
     3. Generates personalized itineraries using AI models (Phi + Qwen)
     4. Outputs results in JSON format for the frontend
+    5. Provides real-time progress updates during generation
     """
-    # Parse input JSON from the environment. Missing fields fall back to the
-    # same defaults used throughout the Python CLI.
-    data = json.loads(os.getenv("INPUT_JSON", "{}"))
-
-    # Extract user preferences with sensible defaults
-    companion_type = data.get("companion_type", COMPANION_TYPES[0])  # Default: Solo
-    budget = data.get("budget", BUDGET[0])                          # Default: low
-    starting_time = data.get("starting_time", STARTING_TIME)         # Default: 12 (noon)
-    location_query = data.get("location_query")                     # Optional location search
-    categories = data.get("categories", [])                         # Optional place type categories
-
-    # =============================================================================
-    # LOCATION COORDINATE RESOLUTION
-    # =============================================================================
-    # Determine the coordinates for the starting location using the Kakao Map
-    # API. If the lookup fails or no query is provided, fall back to the default
-    # location from "constants.py".
-    start_location = LOCATION  # Default location (Hongdae area)
-    if location_query:
-        try:
-            loc = get_location_coordinates(location_query)
-            if loc:
-                start_location = loc
-                print(f"Resolved location '{location_query}' to coordinates: {loc}", file=sys.stderr)
-        except Exception as e:
-            print(f"Location lookup failed for '{location_query}': {e}", file=sys.stderr)
-            # If location lookup fails, continue with default location
-            pass
-
-    # =============================================================================
-    # AI-POWERED ITINERARY GENERATION
-    # =============================================================================
     try:
-        # Build the Preferences instance and invoke the main workflow.
-        # This creates a personalized planner based on user preferences
-        planner = Preferences(
-            companion_type=companion_type,
-            budget=budget,
-            starting_time=starting_time,
-            start_location=start_location,
-        )
+        # Send initial progress
+        send_progress_update(5, "Initializing trip planner...")
         
-        # Select appropriate place types based on companion type and user preferences
-        planner.select_place_types(categories)
+        # Parse input JSON from the environment. Missing fields fall back to the
+        # same defaults used throughout the Python CLI.
+        data = json.loads(os.getenv("INPUT_JSON", "{}"))
 
-        # Generate the emotional itinerary text using the Qwen model
-        print("Generating AI-powered itinerary...", file=sys.stderr)
-        itinerary = planner.run_qwen_story()
-        
-        if itinerary:
-            print("✅ Itinerary generated successfully", file=sys.stderr)
-            # Format the AI-generated text for better readability
-            itinerary = _format_sentences(itinerary)
+        # Extract user preferences with sensible defaults
+        companion_type = data.get("companion_type", COMPANION_TYPES[0])  # Default: Solo
+        budget = data.get("budget", BUDGET[0])                          # Default: low
+        starting_time = data.get("starting_time", STARTING_TIME)         # Default: 12 (noon)
+        location_query = data.get("location_query")                     # Optional location search
+        categories = data.get("categories", [])                         # Optional place type categories
+
+        send_progress_update(15, "Processing user preferences...")
+
+        # =============================================================================
+        # LOCATION COORDINATE RESOLUTION
+        # =============================================================================
+        # Determine the coordinates for the starting location using the Kakao Map
+        # API. If the lookup fails or no query is provided, fall back to the default
+        # location from "constants.py".
+        start_location = LOCATION  # Default location (Hongdae area)
+        if location_query:
+            try:
+                send_progress_update(25, f"Resolving location: {location_query}...")
+                loc = get_location_coordinates(location_query)
+                if loc:
+                    start_location = loc
+                    print(f"Resolved location '{location_query}' to coordinates: {loc}", file=sys.stderr)
+                    send_progress_update(35, f"Location resolved: {location_query}")
+                else:
+                    send_progress_update(35, "Using default location")
+            except Exception as e:
+                print(f"Location lookup failed for '{location_query}': {e}", file=sys.stderr)
+                # If location lookup fails, continue with default location
+                send_progress_update(35, "Using default location")
+                pass
         else:
-            itinerary = "Failed to generate itinerary - no route plan available"
-            print("❌ Failed to generate itinerary", file=sys.stderr)
+            send_progress_update(35, "Using default location")
 
-    except Exception as exc:
-        # If the AI model workflow fails, provide a helpful error message
-        error_msg = f"AI model generation failed: {exc}"
+        # =============================================================================
+        # AI-POWERED ITINERARY GENERATION
+        # =============================================================================
+        try:
+            # Build the Preferences instance and invoke the main workflow.
+            # This creates a personalized planner based on user preferences
+            send_progress_update(45, "Building personalized planner...")
+            planner = Preferences(
+                companion_type=companion_type,
+                budget=budget,
+                starting_time=starting_time,
+                start_location=start_location,
+            )
+            
+            # Select appropriate place types based on companion type and user preferences
+            planner.select_place_types(categories)
+            send_progress_update(55, "Selecting place types...")
+
+            # Generate the route plan using Phi model
+            send_progress_update(65, "Generating route plan with Phi model...")
+            route_plan_json = planner.run_route_planner()
+            
+            if route_plan_json:
+                send_progress_update(75, "Route plan generated successfully")
+            else:
+                send_progress_update(75, "Route plan generation failed")
+
+            # Generate the emotional itinerary text using the Qwen model
+            send_progress_update(80, "Generating emotional story with Qwen model...")
+            print("Generating AI-powered itinerary...", file=sys.stderr)
+            itinerary = planner.run_qwen_story()
+            
+            if itinerary:
+                send_progress_update(95, "Itinerary generated successfully")
+                print("✅ Itinerary generated successfully", file=sys.stderr)
+                # Format the AI-generated text for better readability
+                itinerary = _format_sentences(itinerary)
+            else:
+                itinerary = "Failed to generate itinerary - no route plan available"
+                print("❌ Failed to generate itinerary", file=sys.stderr)
+                send_progress_update(95, "Itinerary generation failed")
+
+        except Exception as exc:
+            # If the AI model workflow fails, provide a helpful error message
+            error_msg = f"AI model generation failed: {exc}"
+            print(f"❌ {error_msg}", file=sys.stderr)
+            itinerary = error_msg
+            send_progress_update(95, "AI model generation failed")
+
+        # Send final completion
+        send_progress_update(100, "Trip planning completed!")
+        send_completion_update(itinerary)
+
+    except Exception as e:
+        # Handle any unexpected errors
+        error_msg = f"Unexpected error: {e}"
         print(f"❌ {error_msg}", file=sys.stderr)
-        itinerary = error_msg
-
-    # Output the result in JSON format for easy parsing by the C# frontend
-    print(json.dumps({"itinerary": itinerary}, ensure_ascii=False))
+        send_progress_update(100, "Error occurred during planning")
+        send_completion_update(error_msg)
 
 
 # =============================================================================

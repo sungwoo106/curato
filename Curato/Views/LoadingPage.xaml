@@ -35,22 +35,44 @@
                        FontSize="46"
                        FontFamily="{StaticResource SatoshiMedium}"
                        Foreground="#FFB31A"
-                       HorizontalAlignment="Center"/>
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       MaxWidth="800"
+                       TextAlignment="Center"/>
 
-            <!-- Progress Bar (static look) -->
-            <Border Width="800" Height="24"
-                    Background="#FFF5F5F5"
-                    CornerRadius="20"
-                    SnapsToDevicePixels="True"
-                    Margin="0,70,0,0"
-                    Effect="{StaticResource ShadowEffect}">
-                <Border x:Name="ProgressBarFill"
-                        Width="0"
-                        Height="24"
-                        Background="#FFB31A"
+            <!-- Progress Bar Container -->
+            <StackPanel Margin="0,70,0,0" HorizontalAlignment="Center">
+                <!-- Progress Bar (smooth animation) -->
+                <Border Width="800" Height="24"
+                        Background="#FFF5F5F5"
                         CornerRadius="20"
-                        HorizontalAlignment="Left"/>
-            </Border>
+                        SnapsToDevicePixels="True"
+                        Effect="{StaticResource ShadowEffect}">
+                    <Border x:Name="ProgressBarFill"
+                            Width="0"
+                            Height="24"
+                            Background="#FFB31A"
+                            CornerRadius="20"
+                            HorizontalAlignment="Left">
+                        <!-- Add a subtle gradient for better visual appeal -->
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#FFB31A" Offset="0"/>
+                                <GradientStop Color="#FFD700" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                </Border>
+                
+                <!-- Progress Percentage -->
+                <TextBlock x:Name="ProgressPercentageText"
+                           Text="0%"
+                           FontSize="24"
+                           FontFamily="{StaticResource SatoshiMedium}"
+                           Foreground="#FFB31A"
+                           HorizontalAlignment="Center"
+                           Margin="0,20,0,0"/>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </UserControl>

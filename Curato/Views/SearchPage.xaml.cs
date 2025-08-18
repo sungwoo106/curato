@@ -612,14 +612,21 @@ namespace Curato.Views
             if (mainWindow != null)
             {
                 Logger.LogInfo("GenerateButton_Click - Creating LoadingPage");
-                mainWindow.MainFrame.Content = new LoadingPage(async () =>
+                
+                // Create progress tracker for real-time updates
+                var progress = new Progress<(int progress, string message)>(update =>
+                {
+                    Logger.LogInfo($"Progress update: {update.progress}% - {update.message}");
+                });
+                
+                var loadingPage = new LoadingPage(async () =>
                 {
                     try
                     {
                         Logger.LogInfo("LoadingPage callback - Starting PlannerEngine.GenerateTripPlan");
                         
-                        // Generate the trip plan
-                        var tripPlan = await PlannerEngine.GenerateTripPlan(request);
+                        // Generate the trip plan with progress tracking
+                        var tripPlan = await PlannerEngine.GenerateTripPlan(request, progress);
                         
                         Logger.LogInfo($"LoadingPage callback - PlannerEngine result: {tripPlan?.EmotionalNarrative}");
                         
@@ -651,6 +658,11 @@ namespace Curato.Views
                         return new SearchPage();
                     }
                 });
+                
+                // Connect the progress tracker to the loading page
+                loadingPage.SetProgressTracker(progress);
+                
+                mainWindow.MainFrame.Content = loadingPage;
             }
         }
     }

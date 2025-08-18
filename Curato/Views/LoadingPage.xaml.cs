@@ -4,20 +4,24 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Windows;
 using Curato.Helpers;
+using System.ComponentModel;
 
 namespace Curato.Views
 {
     public partial class LoadingPage : UserControl
     {
         private readonly DispatcherTimer dotTimer;
-        private readonly DispatcherTimer progressTimer;
+        private readonly DispatcherTimer smoothProgressTimer;
         private int dotCount = 0;
         private readonly string baseText = "Planning your trip";
         private double MaxBarWidth = 800;
-        private double progress = 0;
+        private double currentProgress = 0;
+        private double targetProgress = 0;
+        private double smoothProgress = 0;
 
         private readonly Func<Task<UserControl>>? _onFinishedAsync;
         private readonly Func<UserControl>? _onFinished;
+        private Progress<(int progress, string message)>? _progressTracker;
 
         public LoadingPage(Func<Task<UserControl>> onFinishedAsync)
         {
@@ -32,16 +36,22 @@ namespace Curato.Views
             };
             dotTimer.Tick += DotTimer_Tick;
 
-            progressTimer = new DispatcherTimer
+            smoothProgressTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(30)
+                Interval = TimeSpan.FromMilliseconds(16) // 60 FPS for smooth animation
             };
-            progressTimer.Tick += ProgressTimer_Tick;
+            smoothProgressTimer.Tick += SmoothProgressTimer_Tick;
         }
 
         public LoadingPage(Func<UserControl> onFinished) : this(() => Task.FromResult(onFinished()))
         {
             _onFinished = onFinished;
+        }
+
+        public void SetProgressTracker(Progress<(int progress, string message)> progressTracker)
+        {
+            _progressTracker = progressTracker;
+            _progressTracker.ProgressChanged += OnProgressUpdate;
         }
 
         private void DotTimer_Tick(object sender, EventArgs e)
@@ -50,36 +60,76 @@ namespace Curato.Views
             LoadingTextBlock.Text = baseText + new string('.', dotCount);
         }
 
-        private void ProgressTimer_Tick(object sender, EventArgs e)
+        private void SmoothProgressTimer_Tick(object sender, EventArgs e)
         {
-            progress += 1;
-            ProgressBarFill.Width = progress / 100 * MaxBarWidth;
-
-            if (progress >= 100)
+            // Smooth interpolation between current and target progress
+            if (Math.Abs(smoothProgress - targetProgress) > 0.5)
             {
-                dotTimer.Stop();
-                progressTimer.Stop();
+                smoothProgress += (targetProgress - smoothProgress) * 0.1; // Smooth easing
+                currentProgress = smoothProgress;
+                ProgressBarFill.Width = (currentProgress / 100) * MaxBarWidth;
+                
+                // Update progress percentage text
+                ProgressPercentageText.Text = $"{Math.Round(currentProgress)}%";
             }
+            else if (targetProgress >= 100)
+            {
+                // Animation complete
+                smoothProgressTimer.Stop();
+                dotTimer.Stop();
+                
+                // Ensure final values are set
+                currentProgress = 100;
+                ProgressBarFill.Width = MaxBarWidth;
+                ProgressPercentageText.Text = "100%";
+            }
+        }
+
+        private void OnProgressUpdate(object? sender, (int progress, string message) update)
+        {
+            // Update progress on UI thread
+            Dispatcher.Invoke(() =>
+            {
+                targetProgress = update.progress;
+                
+                // Update status message if provided
+                if (!string.IsNullOrEmpty(update.message))
+                {
+                    LoadingTextBlock.Text = update.message;
+                }
+                
+                // Start smooth progress animation if not already running
+                if (!smoothProgressTimer.IsEnabled)
+                {
+                    smoothProgressTimer.Start();
+                }
+            });
         }
 
         private async void LoadingPage_LoadedAsync(object sender, EventArgs e)
         {
             Logger.LogInfo("LoadingPage_LoadedAsync - Starting");
             dotTimer.Start();
-            progressTimer.Start();
+            smoothProgressTimer.Start();
 
             try
             {
                 Logger.LogInfo("LoadingPage_LoadedAsync - Waiting for async operation");
                 
-                // Wait for the async operation to complete
+                // Wait for the async operation to complete with progress tracking
                 var result = await _onFinishedAsync?.Invoke();
                 
                 Logger.LogInfo($"LoadingPage_LoadedAsync - Async operation completed, result type: {result?.GetType().Name}");
                 
+                // Ensure progress reaches 100%
+                targetProgress = 100;
+                
+                // Wait for smooth animation to complete
+                await Task.Delay(500);
+                
                 // Stop the timers
                 dotTimer.Stop();
-                progressTimer.Stop();
+                smoothProgressTimer.Stop();
 
                 Logger.LogInfo("LoadingPage_LoadedAsync - Navigating to result page");
 
@@ -97,7 +147,7 @@ namespace Curato.Views
                 
                 // Stop the timers
                 dotTimer.Stop();
-                progressTimer.Stop();
+                smoothProgressTimer.Stop();
                 
                 // Navigate to search page on error
                 var parentWindow = Window.GetWindow(this) as MainWindow;
