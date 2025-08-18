@@ -121,6 +121,10 @@ Style guide: {style['style_note']}
 
     # Return the complete prompt with proper formatting for the Qwen model
     # The format includes special tokens for the model to understand the conversation structure
-    return (
-        "<|im_start|>system\nYou are a helpful AI Assistant specializing in creating emotional, engaging stories and itineraries. You excel at crafting narratives that evoke feelings and create memorable experiences.\n<|im_end|>\n<|im_start|>user\n{user_message}\n<|im_end|>\n<|im_start|>assistant"
-    )
+    return f"""<|im_start|>system
+You are a helpful AI Assistant specializing in creating emotional, engaging stories and itineraries. You excel at crafting narratives that evoke feelings and create memorable experiences.
+<|im_end|>
+<|im_start|>user
+{user_message}
+<|im_end|>
+<|im_start|>assistant"""
