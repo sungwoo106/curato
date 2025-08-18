@@ -5,7 +5,7 @@ namespace Curato.Models
     public class PlaceSuggestion
     {
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("latitude")]
     public double Latitude { get; set; }

@@ -206,7 +206,6 @@ namespace Curato.Views
 
                 var mainPanel = new DockPanel();
                 DockPanel.SetDock(buttonPanel, Dock.Top);
-                DockPanel.SetDock(textBox, Dock.Fill);
                 mainPanel.Children.Add(buttonPanel);
                 mainPanel.Children.Add(textBox);
 

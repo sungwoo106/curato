@@ -97,7 +97,7 @@ namespace Curato.ViewModels
         public bool BudgetSelected => !string.IsNullOrEmpty(SelectedBudget);
 
         // Selected time for the trip
-        public string SelectedTime { get; set; }
+        public string SelectedTime { get; set; } = string.Empty;
 
         // The list of time options
         // Main options: Midnight, Morning, Afternoon, Evening

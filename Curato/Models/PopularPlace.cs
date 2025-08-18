@@ -2,10 +2,10 @@ namespace Curato.Models
 {
     public class PopularPlace
     {
-        public string ImagePath { get; set; }
-        public string Title { get; set; }
-        public string Subtitle { get; set; }
-        public string Label { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Subtitle { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
 
     }
 }
