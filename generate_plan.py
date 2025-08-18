@@ -1,5 +1,5 @@
 """
-Edge Day Planner - CLI Entry Point for WPF Frontend
+CLI Entry Point for WPF Frontend
 
 This script serves as the command-line interface entry point for the WPF frontend.
 It reads a JSON payload from the INPUT_JSON environment variable and uses the

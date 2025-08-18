@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Location Autocomplete Suggestion Engine
+Location Autocomplete Suggestion Engine
 
 This module provides location autocomplete functionality using the Kakao Map API.
 It takes partial location queries and returns a list of suggested locations

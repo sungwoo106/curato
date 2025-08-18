@@ -1,7 +1,7 @@
 """
-Edge Day Planner - Interactive Command Line Interface
+Interactive Command Line Interface
 
-This module provides an interactive command-line interface for the Edge Day Planner
+This module provides an interactive command-line interface for the Curato
 application. It allows users to input their preferences through a series of prompts
 and then generates personalized itineraries based on those preferences.
 

@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Application Constants and Configuration
+Application Constants and Configuration
 
 This module contains all the constant values, configuration options, and data structures
 used throughout the Edge Day Planner application. It centralizes configuration to make

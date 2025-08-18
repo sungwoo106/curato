@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Llama Language Model Runner
+Llama Language Model Runner
 
 This module provides an interface to run the Llama language model locally for
 generating emotional, storytelling itineraries. It handles the communication

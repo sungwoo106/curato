@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Preferences and Itinerary Generation Engine
+Preferences and Itinerary Generation Engine
 
 This module contains the core Preferences class that manages user preferences and
 generates personalized itineraries. It orchestrates the entire workflow from

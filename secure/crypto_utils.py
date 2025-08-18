@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Cryptographic Utilities for API Key Security
+Cryptographic Utilities for API Key Security
 
 This module provides secure handling of sensitive API keys using asymmetric
 cryptography. It encrypts and decrypts the Kakao Map API key to prevent

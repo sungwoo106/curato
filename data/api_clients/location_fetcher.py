@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Location Coordinate Fetcher
+Location Coordinate Fetcher
 
 This module provides functionality to convert location names into geographic coordinates
 using the Kakao Map API. It serves as the bridge between user-friendly location names

@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Kakao Map API Client Utilities
+Kakao Map API Client Utilities
 
 This module provides comprehensive utilities for interacting with the Kakao Map API.
 It includes functions for searching places, getting location autocomplete suggestions,

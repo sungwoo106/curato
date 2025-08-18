@@ -1,5 +1,5 @@
 """
-Edge Day Planner - AI Prompt Templates and Generation
+AI Prompt Templates and Generation
 
 This module contains the prompt templates used to generate AI-powered itineraries.
 It provides structured prompts for both the Phi model (route planning) and the

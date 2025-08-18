@@ -1,5 +1,5 @@
 """
-Edge Day Planner - Phi Language Model Runner
+Phi Language Model Runner
 
 This module provides an interface to run the Phi language model locally for
 generating optimal route plans. It handles the communication between the
