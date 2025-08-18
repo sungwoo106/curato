@@ -87,10 +87,11 @@
     <div id="map"></div>
     
     <div class="route-info">
-        <h4>🚶 Walking Route</h4>
-        <p>Click the green buttons to see walking directions between locations</p>
-        <p>Green line shows the walking path</p>
-        <p id="route-status" style="color: #4CAF50; font-weight: bold;">🔄 Loading walking routes...</p>
+        <h4>🚶 Walking Routes</h4>
+        <p><strong>Green lines</strong> show the general path between locations</p>
+        <p><strong>Click the green buttons</strong> to open detailed walking routes in Kakao Maps app</p>
+        <p><strong>Real walking paths</strong> with sidewalks, crosswalks, and pedestrian routes</p>
+        <p id="route-status" style="color: #4CAF50; font-weight: bold;">✅ Ready! Click buttons for walking routes</p>
     </div>
 
     <script>
@@ -135,31 +136,23 @@
 
                 path.push(marker.getPosition());
 
-                // Add walking route button if there's a next location
+                // Add walking route button for each segment
                 if (index < locations.length - 1) {
                     var nextPlace = locations[index + 1];
-                    
-                    // Create walking route button
-                    var routeButton = document.createElement('a');
-                    routeButton.href = `https://map.kakao.com/link/by/walk/${encodeURIComponent(place.name)},${place.lat},${place.lng}/${encodeURIComponent(nextPlace.name)},${nextPlace.lat},${nextPlace.lng}`;
-                    routeButton.target = '_blank';
-                    routeButton.textContent = `🚶 ${nextPlace.name}`;
+                    var routeButton = document.createElement('div');
                     routeButton.className = 'walking-route-btn';
-                    routeButton.title = `Walking route to ${nextPlace.name}`;
+                    routeButton.innerHTML = `🚶 ${place.name} → ${nextPlace.name}`;
+                    routeButton.style.position = 'absolute';
+                    routeButton.style.left = (marker.getPosition().x + 30) + 'px';
+                    routeButton.style.top = (marker.getPosition().y - 10) + 'px';
+                    routeButton.style.zIndex = '1000';
                     
-                    // Position the button near the marker
-                    var buttonPosition = new kakao.maps.LatLng(
-                        place.lat + 0.0005, 
-                        place.lng + 0.0005
-                    );
-                    
-                    var buttonOverlay = new kakao.maps.CustomOverlay({
-                        position: buttonPosition,
-                        content: routeButton,
-                        yAnchor: 0
+                    routeButton.addEventListener('click', function() {
+                        openWalkingRouteInKakaoMaps(place, nextPlace);
                     });
-                    buttonOverlay.setMap(map);
-                    walkingRouteButtons.push(buttonOverlay);
+                    
+                    document.body.appendChild(routeButton);
+                    walkingRouteButtons.push(routeButton);
                 }
             });
 
@@ -167,95 +160,58 @@
                 sharedInfoWindow.close();
             });
 
-            // Function to get actual walking routes between locations
-            function getWalkingRoutes() {
-                if (locations.length < 2) return;
-                
-                var routeStatus = document.getElementById('route-status');
-                var routesLoaded = 0;
-                var totalRoutes = locations.length - 1;
-                
-                // Clear any existing walking routes
-                walkingRoutes.forEach(route => route.setMap(null));
-                walkingRoutes = [];
-                
-                // Get walking directions for each segment
-                for (var i = 0; i < locations.length - 1; i++) {
-                    var currentPlace = locations[i];
-                    var nextPlace = locations[i + 1];
-                    
-                    // Use Kakao Directions API to get walking route
-                    var directions = new kakao.maps.Directions();
-                    
-                    directions.route({
-                        origin: new kakao.maps.LatLng(currentPlace.lat, currentPlace.lng),
-                        destination: new kakao.maps.LatLng(nextPlace.lat, nextPlace.lng),
-                        travelMode: kakao.maps.TravelMode.WALKING
-                    }, function(result, status) {
-                        routesLoaded++;
+                    // Function to open walking route in Kakao Maps app
+                    function openWalkingRouteInKakaoMaps(origin, destination) {
+                        // Construct Kakao Maps URL scheme for walking route
+                        var originStr = origin.lat + ',' + origin.lng;
+                        var destStr = destination.lat + ',' + destination.lng;
                         
-                        if (status === kakao.maps.DirectionsStatus.OK) {
-                            // Extract the walking route path
-                            var route = result.routes[0];
-                            if (route && route.legs && route.legs[0]) {
-                                var leg = route.legs[0];
-                                var routePath = [];
-                                
-                                // Convert the route coordinates to LatLng objects
-                                if (leg.path) {
-                                    leg.path.forEach(function(point) {
-                                        routePath.push(new kakao.maps.LatLng(point.lat, point.lng));
-                                    });
-                                }
-                                
-                                // If we have a valid path, draw it
-                                if (routePath.length > 0) {
-                                    var walkingPolyline = new kakao.maps.Polyline({
-                                        path: routePath,
-                                        strokeWeight: 4,
-                                        strokeColor: '#4CAF50',
-                                        strokeOpacity: 0.8,
-                                        strokeStyle: 'solid'
-                                    });
-                                    walkingPolyline.setMap(map);
-                                    walkingRoutes.push(walkingPolyline);
-                                    
-                                    console.log(`Walking route ${routesLoaded}: ${currentPlace.name} → ${nextPlace.name}`);
-                                }
-                            }
-                        } else {
-                            console.warn(`Failed to get walking route ${routesLoaded}: ${status}`);
-                            // Fallback to straight line if directions fail
-                            var fallbackPath = [
+                        // Kakao Maps web URL for walking route
+                        var kakaoMapUrl = `https://map.kakao.com/route/walk/${originStr}/${destStr}`;
+                        
+                        // Try to open in new tab/window
+                        try {
+                            window.open(kakaoMapUrl, '_blank');
+                        } catch (error) {
+                            console.warn('Failed to open Kakao Maps URL:', error);
+                            // Fallback: show coordinates for manual input
+                            alert(`Walking route from ${origin.name} to ${destination.name}\n\nOrigin: ${origin.lat}, ${origin.lng}\nDestination: ${destination.lat}, ${destination.lng}\n\nPlease open Kakao Maps app and enter these coordinates manually.`);
+                        }
+                    }
+                    
+                    // Function to get walking routes between locations
+                    function getWalkingRoutes() {
+                        if (locations.length < 2) return;
+                        
+                        var routeStatus = document.getElementById('route-status');
+                        routeStatus.innerHTML = '✅ Click the green buttons to see walking routes in Kakao Maps app!';
+                        routeStatus.style.color = '#4CAF50';
+                        
+                        // Clear any existing walking routes
+                        walkingRoutes.forEach(route => route.setMap(null));
+                        walkingRoutes = [];
+                        
+                        // Draw straight lines between locations (for visual reference)
+                        for (var i = 0; i < locations.length - 1; i++) {
+                            var currentPlace = locations[i];
+                            var nextPlace = locations[i + 1];
+                            
+                            var path = [
                                 new kakao.maps.LatLng(currentPlace.lat, currentPlace.lng),
                                 new kakao.maps.LatLng(nextPlace.lat, nextPlace.lng)
                             ];
-                            var fallbackPolyline = new kakao.maps.Polyline({
-                                path: fallbackPath,
-                                strokeWeight: 2,
-                                strokeColor: '#FF9800',
-                                strokeOpacity: 0.6,
-                                strokeStyle: 'dashed'
+                            
+                            var polyline = new kakao.maps.Polyline({
+                                path: path,
+                                strokeWeight: 3,
+                                strokeColor: '#4CAF50',
+                                strokeOpacity: 0.7,
+                                strokeStyle: 'solid'
                             });
-                            fallbackPolyline.setMap(map);
-                            walkingRoutes.push(fallbackPolyline);
+                            polyline.setMap(map);
+                            walkingRoutes.push(polyline);
                         }
-                        
-                        // Update status
-                        if (routesLoaded === totalRoutes) {
-                            if (walkingRoutes.length === totalRoutes) {
-                                routeStatus.innerHTML = '✅ Real walking routes loaded successfully!';
-                                routeStatus.style.color = '#4CAF50';
-                            } else {
-                                routeStatus.innerHTML = '⚠️ Some routes failed, showing fallback lines';
-                                routeStatus.style.color = '#FF9800';
-                            }
-                        } else {
-                            routeStatus.innerHTML = `🔄 Loading walking routes... (${routesLoaded}/${totalRoutes})`;
-                        }
-                    });
-                }
-            }
+                    }
 
             // Try to get actual walking routes
             try {
