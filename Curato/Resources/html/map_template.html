@@ -21,11 +21,64 @@
             line-height: 20px;
             transform: translate(-50%, -100%);
         }
+
+        .walking-route-btn {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            margin: 3px;
+            z-index: 1000;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .walking-route-btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .route-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 1000;
+        }
+
+        .route-info h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .route-info p {
+            margin: 5px 0;
+            color: #666;
+        }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={API_KEY}&autoload=false"></script>
 </head>
 <body>
     <div id="map"></div>
+    
+    <div class="route-info">
+        <h4>🚶 Walking Route</h4>
+        <p>Click the green buttons to see walking directions between locations</p>
+        <p>Green line shows the walking path</p>
+    </div>
+
     <script>
         kakao.maps.load(function () {
             var container = document.getElementById('map');
@@ -37,9 +90,11 @@
 
             var locations = {COORD_ARRAY};  // Injected array
             var path = [];
+            var walkingRouteButtons = [];
 
             var sharedInfoWindow = new kakao.maps.InfoWindow();
 
+            // Create markers and walking route buttons
             locations.forEach(function(place, index) {
                 var marker = new kakao.maps.Marker({
                     position: new kakao.maps.LatLng(place.lat, place.lng),
@@ -64,23 +119,91 @@
                 });
 
                 path.push(marker.getPosition());
+
+                // Add walking route button if there's a next location
+                if (index < locations.length - 1) {
+                    var nextPlace = locations[index + 1];
+                    
+                    // Create walking route button
+                    var routeButton = document.createElement('a');
+                    routeButton.href = `https://map.kakao.com/link/by/walk/${encodeURIComponent(place.name)},${place.lat},${place.lng}/${encodeURIComponent(nextPlace.name)},${nextPlace.lat},${nextPlace.lng}`;
+                    routeButton.target = '_blank';
+                    routeButton.textContent = `🚶 ${nextPlace.name}`;
+                    routeButton.className = 'walking-route-btn';
+                    routeButton.title = `Walking route to ${nextPlace.name}`;
+                    
+                    // Position the button near the marker
+                    var buttonPosition = new kakao.maps.LatLng(
+                        place.lat + 0.0005, 
+                        place.lng + 0.0005
+                    );
+                    
+                    var buttonOverlay = new kakao.maps.CustomOverlay({
+                        position: buttonPosition,
+                        content: routeButton,
+                        yAnchor: 0
+                    });
+                    buttonOverlay.setMap(map);
+                    walkingRouteButtons.push(buttonOverlay);
+                }
             });
 
             kakao.maps.event.addListener(map, 'click', function () {
                 sharedInfoWindow.close();
             });
 
-
-            // Draw line connecting the places
+            // Draw walking route path connecting the places
             var polyline = new kakao.maps.Polyline({
                 path: path,
-                strokeWeight: 5,
-                strokeColor: '#FF6F61',
-                strokeOpacity: 0.7,
+                strokeWeight: 4,
+                strokeColor: '#4CAF50',
+                strokeOpacity: 0.8,
                 strokeStyle: 'solid'
             });
             polyline.setMap(map);
+
+            // Add walking route info to the map
+            if (locations.length > 1) {
+                var totalDistance = calculateTotalDistance(path);
+                var estimatedTime = Math.ceil(totalDistance / 80); // Assuming 80 meters per minute walking speed
+                
+                var routeStats = document.createElement('div');
+                routeStats.className = 'route-info';
+                routeStats.style.bottom = '10px';
+                routeStats.style.right = '10px';
+                routeStats.innerHTML = `
+                    <h4>📊 Route Summary</h4>
+                    <p>📍 ${locations.length} locations</p>
+                    <p>📏 ~${Math.round(totalDistance)}m total</p>
+                    <p>⏱️ ~${estimatedTime} min walking</p>
+                `;
+                document.body.appendChild(routeStats);
+            }
         });
+
+        // Function to calculate total distance between points
+        function calculateTotalDistance(path) {
+            var totalDistance = 0;
+            for (var i = 0; i < path.length - 1; i++) {
+                var lat1 = path[i].getLat();
+                var lng1 = path[i].getLng();
+                var lat2 = path[i + 1].getLat();
+                var lng2 = path[i + 1].getLng();
+                
+                // Haversine formula for distance calculation
+                var R = 6371000; // Earth's radius in meters
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLng = (lng2 - lng1) * Math.PI / 180;
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                var distance = R * c;
+                
+                totalDistance += distance;
+            }
+            return totalDistance;
+        }
     </script>
 </body>
 </html>
