@@ -221,67 +221,118 @@ class Preferences:
                 self.progress_callback(75, "Processing route planning results...")
             
             # Extract the JSON result from the model output
-            return self._extract_json_from_output(raw_output)
+            route_plan_json = self._extract_json_from_output(raw_output)
+            
+            if route_plan_json:
+                return route_plan_json
+            else:
+                # JSON extraction failed, try to create a fallback route plan
+                if self.progress_callback:
+                    self.progress_callback(75, "Creating fallback route plan...")
+                
+                print("⚠️ JSON extraction failed, creating fallback route plan", file=sys.stderr)
+                fallback_plan = self._create_fallback_route_plan()
+                return fallback_plan
             
         except Exception as e:
             print(f"Route planner failed: {e}", file=sys.stderr)
             if self.progress_callback:
                 self.progress_callback(75, "Route planning failed")
-            return None
+            
+            # Try fallback as last resort
+            try:
+                if self.progress_callback:
+                    self.progress_callback(75, "Attempting fallback route plan...")
+                fallback_plan = self._create_fallback_route_plan()
+                return fallback_plan
+            except Exception as fallback_error:
+                print(f"Fallback route plan also failed: {fallback_error}", file=sys.stderr)
+                return None
     
     def _create_fallback_route_plan(self) -> str:
         """
-        Create a fallback route plan for testing when the Phi model fails.
+        Create a fallback route plan when the Phi model fails.
         
-        This method generates a sample route plan with 4 locations so that
-        the Qwen model can still generate an emotional itinerary for testing.
+        This method creates a basic route plan using the collected place recommendations
+        to ensure the user gets a usable itinerary even when AI generation fails.
         
         Returns:
-            str: JSON string containing a sample route plan
+            str: JSON string with fallback route plan
         """
-        print("Creating fallback route plan for testing...", file=sys.stderr)
-        
-        # Sample route plan for Hongdae area
-        fallback_plan = [
-            {
-                "place_name": "스타벅스 홍대역점",
-                "road_address_name": "서울 마포구 양화로 160",
-                "place_type": "Cafe",
-                "distance": "0.1km",
-                "place_url": "https://map.kakao.com/...",
-                "latitude": 37.5563,
-                "longitude": 126.9237
-            },
-            {
-                "place_name": "몰레꼴레 와이즈파크홍대점",
-                "road_address_name": "서울 마포구 양화로 188",
-                "place_type": "Restaurant",
-                "distance": "0.3km",
-                "place_url": "https://map.kakao.com/...",
-                "latitude": 37.5570,
-                "longitude": 126.9240
-            },
-            {
-                "place_name": "공미학 마포홍대점",
-                "road_address_name": "서울 마포구 양화로 200",
-                "place_type": "Cafe",
-                "distance": "0.5km",
-                "place_url": "https://map.kakao.com/...",
-                "latitude": 37.5575,
-                "longitude": 126.9245
-            },
-            {
-                "place_name": "트릭아이뮤지엄",
-                "road_address_name": "서울 마포구 양화로 220",
-                "place_type": "Museum",
-                "distance": "0.7km",
-                "place_url": "https://map.kakao.com/...",
-                "latitude": 37.5580,
-                "longitude": 126.9250
-            }
-        ]
-        
-        return json.dumps(fallback_plan, ensure_ascii=False)
+        try:
+            # Use the actual collected place recommendations if available
+            if hasattr(self, 'best_places') and self.best_places:
+                fallback_plan = []
+                
+                # Select up to 5 places from different categories
+                selected_categories = list(self.best_places.keys())[:5]
+                
+                for category in selected_categories:
+                    if category in self.best_places and self.best_places[category]:
+                        # Take the first place from each category
+                        place = self.best_places[category][0]
+                        
+                        fallback_place = {
+                            "place_name": place.get('place_name', f"{category} Location"),
+                            "road_address_name": place.get('road_address_name', 'Address not available'),
+                            "place_type": category,
+                            "distance": place.get('distance', 'Distance not available'),
+                            "place_url": place.get('place_url', ''),
+                            "latitude": place.get('latitude', 37.5665),
+                            "longitude": place.get('longitude', 126.9780)
+                        }
+                        fallback_plan.append(fallback_place)
+                
+                if fallback_plan:
+                    print(f"✅ Created fallback route plan with {len(fallback_plan)} locations", file=sys.stderr)
+                    return json.dumps(fallback_plan, ensure_ascii=False)
+            
+            # If no collected places available, use the original hardcoded fallback
+            print("⚠️ No collected places available, using hardcoded fallback", file=sys.stderr)
+            fallback_plan = [
+                {
+                    "place_name": "홍대입구역",
+                    "road_address_name": "서울 마포구 양화로 160",
+                    "place_type": "Transportation",
+                    "distance": "0km",
+                    "place_url": "https://map.kakao.com/...",
+                    "latitude": 37.5563,
+                    "longitude": 126.9237
+                },
+                {
+                    "place_name": "몰레꼴레 와이즈파크홍대점",
+                    "road_address_name": "서울 마포구 양화로 188",
+                    "place_type": "Restaurant",
+                    "distance": "0.3km",
+                    "place_url": "https://map.kakao.com/...",
+                    "latitude": 37.5570,
+                    "longitude": 126.9240
+                },
+                {
+                    "place_name": "공미학 마포홍대점",
+                    "road_address_name": "서울 마포구 양화로 200",
+                    "place_type": "Cafe",
+                    "distance": "0.5km",
+                    "place_url": "https://map.kakao.com/...",
+                    "latitude": 37.5575,
+                    "longitude": 126.9245
+                },
+                {
+                    "place_name": "트릭아이뮤지엄",
+                    "road_address_name": "서울 마포구 양화로 220",
+                    "place_type": "Museum",
+                    "distance": "0.7km",
+                    "place_url": "https://map.kakao.com/...",
+                    "latitude": 37.5580,
+                    "longitude": 126.9250
+                }
+            ]
+            
+            return json.dumps(fallback_plan, ensure_ascii=False)
+            
+        except Exception as e:
+            print(f"❌ Failed to create fallback route plan: {e}", file=sys.stderr)
+            return None
 
     def _extract_json_from_output(self, raw_output: str) -> str:
         """
@@ -311,6 +362,7 @@ class Preferences:
             r'\{.*\}',  # JSON object
         ]
         
+        # First, try to find JSON in the entire output
         for pattern in json_patterns:
             matches = re.findall(pattern, raw_output, re.DOTALL)
             for match in matches:
@@ -358,6 +410,24 @@ class Preferences:
                         except json.JSONDecodeError:
                             continue
         
+        # Try to find content after the last <|assistant|> tag
+        if '<|assistant|>' in raw_output:
+            parts = raw_output.split('<|assistant|>')
+            if len(parts) > 1:
+                content_after_assistant = parts[-1].strip()
+                print(f"Content after <|assistant|>: {content_after_assistant[:200]}...", file=sys.stderr)
+                
+                # Look for JSON in this content
+                for pattern in json_patterns:
+                    matches = re.findall(pattern, content_after_assistant, re.DOTALL)
+                    for match in matches:
+                        try:
+                            json.loads(match)
+                            print(f"✅ Found valid JSON after <|assistant|> tag: {match[:100]}...", file=sys.stderr)
+                            return match
+                        except json.JSONDecodeError:
+                            continue
+        
         # If still no JSON, try to find any content that looks like a response
         # Look for lines that might contain location information
         lines = raw_output.split('\n')
@@ -371,7 +441,9 @@ class Preferences:
                 not line.startswith('<|system|>') and
                 not line.startswith('<|user|>') and
                 not line.startswith('<|assistant|>') and
-                not line.startswith('<|end|>')):
+                not line.startswith('<|end|>') and
+                not line.startswith('Starting from') and
+                not line.startswith('Available places:')):
                 
                 # Check if this line might contain JSON-like content
                 if ('[' in line and ']' in line) or ('{' in line and '}' in line):
@@ -381,6 +453,24 @@ class Preferences:
                         return line
                     except json.JSONDecodeError:
                         continue
+        
+        # Last resort: try to find any text that looks like it might be a response
+        # Look for lines that contain location-related keywords
+        location_keywords = ['place_name', 'road_address_name', 'place_type', 'distance', 'latitude', 'longitude']
+        for line in lines:
+            line = line.strip()
+            if any(keyword in line for keyword in location_keywords):
+                print(f"🔍 Found potential location data line: {line[:100]}...", file=sys.stderr)
+                # Try to extract JSON from this line
+                for pattern in json_patterns:
+                    matches = re.findall(pattern, line, re.DOTALL)
+                    for match in matches:
+                        try:
+                            json.loads(match)
+                            print(f"✅ Found valid JSON in location line: {match[:100]}...", file=sys.stderr)
+                            return match
+                        except json.JSONDecodeError:
+                            continue
         
         print(f"❌ No valid JSON found in Phi model output", file=sys.stderr)
         return None

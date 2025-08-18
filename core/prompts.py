@@ -64,6 +64,7 @@ def build_phi_location_prompt(
     
     return f"""<|system|>
 You are a travel planner. Select 4-5 locations for a {companion_type.lower()} outing.
+IMPORTANT: Respond ONLY with valid JSON. Do not include the prompt, system messages, or any other text.
 <|end|>
 
 <|user|>
@@ -74,10 +75,23 @@ Starting from {start_location} at {start_time}:00, choose 4-5 locations that are
 - Different place types for variety
 - Near each other for easy flow
 
-Return JSON list with: place_name, road_address_name, place_type, distance, place_url, latitude, longitude, reasoning.
+Return ONLY a JSON array with this exact structure:
+[
+  {{
+    "place_name": "Location Name",
+    "road_address_name": "Full Address",
+    "place_type": "Category",
+    "distance": "Distance from start",
+    "place_url": "Kakao Map URL",
+    "latitude": 37.123456,
+    "longitude": 126.123456
+  }}
+]
 
 Available places:
 {recommendations_json}
+
+Remember: Output ONLY the JSON array, nothing else.
 <|end|>
 
 <|assistant|>"""
