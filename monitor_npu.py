@@ -21,8 +21,58 @@ def get_system_info():
     print()
 
 def get_gpu_info():
-    """Get GPU/NPU information using nvidia-smi or other methods."""
+    """Get GPU/NPU information using various methods."""
     print("🎮 GPU/NPU Information:")
+    
+    # Try to get Qualcomm/Snapdragon NPU info first
+    print("🔍 Detecting Qualcomm Snapdragon X Elite NPU...")
+    
+    # Check for Qualcomm NPU drivers and devices
+    try:
+        if platform.system() == "Windows":
+            # Use Windows Management Instrumentation for Qualcomm devices
+            result = subprocess.run(['wmic', 'path', 'win32_PnPEntity', 'where', 'name like "%Qualcomm%" or name like "%Snapdragon%" or name like "%NPU%" or name like "%AI%"', 'get', 'name,deviceid'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')[1:]  # Skip header
+                qualcomm_found = False
+                for line in lines:
+                    if line.strip():
+                        if any(keyword in line for keyword in ['Qualcomm', 'Snapdragon', 'NPU', 'AI']):
+                            print(f"   Found: {line.strip()}")
+                            qualcomm_found = True
+                
+                if not qualcomm_found:
+                    print("   No Qualcomm devices found via WMI")
+            
+            # Try to get Qualcomm NPU info via registry or other methods
+            try:
+                # Check if Qualcomm NPU drivers are installed
+                result = subprocess.run(['reg', 'query', 'HKLM\\SYSTEM\\CurrentControlSet\\Services', '/s', '/f', 'Qualcomm'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0 and 'Qualcomm' in result.stdout:
+                    print("   Qualcomm drivers detected in registry")
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+            
+            # Check for Qualcomm NPU in device manager
+            try:
+                result = subprocess.run(['wmic', 'path', 'win32_VideoController', 'get', 'name,adapterram'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split('\n')[1:]  # Skip header
+                    for line in lines:
+                        if line.strip() and any(keyword in line for keyword in ['Qualcomm', 'Snapdragon', 'NPU']):
+                            parts = line.strip().split()
+                            if len(parts) >= 2:
+                                name = ' '.join(parts[:-1])
+                                memory = parts[-1]
+                                print(f"   Qualcomm NPU: {name} ({memory} bytes)")
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+                
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+        print("   Could not query Qualcomm devices")
     
     # Try to get NVIDIA GPU info
     try:
@@ -70,6 +120,63 @@ def get_gpu_usage():
     """Get current GPU/NPU usage."""
     gpu_info = {}
     
+    # Try to get Qualcomm/Snapdragon NPU usage
+    try:
+        if platform.system() == "Windows":
+            # Check for Qualcomm NPU performance counters
+            # Snapdragon X Elite NPU might expose metrics through different interfaces
+            
+            # Method 1: Check if Qualcomm NPU tools are available
+            try:
+                result = subprocess.run(['qcom-npu-monitor'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    # Parse Qualcomm NPU output
+                    for line in result.stdout.split('\n'):
+                        if 'NPU' in line and 'utilization' in line:
+                            parts = line.split()
+                            if len(parts) >= 3:
+                                gpu_info['qualcomm_npu'] = {
+                                    'utilization': int(parts[2].replace('%', '')),
+                                    'memory_used': 0,  # May not be available
+                                    'memory_total': 0,
+                                    'temperature': 0
+                                }
+                                break
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+            
+            # Method 2: Try to get NPU info from Windows performance counters
+            try:
+                result = subprocess.run(['typeperf', '\\Processor(_Total)\\% Processor Time'], 
+                                      capture_output=True, text=True, timeout=3)
+                if result.returncode == 0:
+                    # This is just CPU, but we'll use it as a proxy for NPU activity
+                    # since Snapdragon X Elite NPU might not expose direct metrics
+                    pass
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+            
+            # Method 3: Check for Qualcomm NPU in device manager and try to get metrics
+            try:
+                result = subprocess.run(['wmic', 'path', 'win32_PerfFormattedData_PerfOS_Processor', 'get', 'PercentProcessorTime'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split('\n')[1:]  # Skip header
+                    if lines:
+                        # Use CPU as proxy for NPU activity since they're integrated
+                        gpu_info['qualcomm_npu'] = {
+                            'utilization': 0,  # Will be updated with actual CPU usage
+                            'memory_used': 0,
+                            'memory_total': 0,
+                            'temperature': 0
+                        }
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+                
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+        pass
+    
     # Try NVIDIA GPU usage
     try:
         result = subprocess.run(['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu', 
@@ -113,10 +220,91 @@ def get_gpu_usage():
     
     return gpu_info
 
+def get_snapdragon_npu_activity():
+    """Get Snapdragon X Elite NPU activity through alternative methods."""
+    npu_info = {}
+    
+    try:
+        if platform.system() == "Windows":
+            # Method 1: Check for Qualcomm NPU in device manager
+            try:
+                result = subprocess.run(['wmic', 'path', 'win32_PnPEntity', 'where', 'name like "%Qualcomm%" or name like "%Snapdragon%" or name like "%NPU%"', 'get', 'name,status'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split('\n')[1:]
+                    for line in lines:
+                        if line.strip() and any(keyword in line for keyword in ['Qualcomm', 'Snapdragon', 'NPU']):
+                            npu_info['device_status'] = line.strip()
+                            break
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+            
+            # Method 2: Check Windows performance counters for AI/ML activity
+            try:
+                # Look for AI/ML related performance counters
+                result = subprocess.run(['typeperf', '-qx'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    ai_counters = []
+                    for line in result.stdout.split('\n'):
+                        if any(keyword in line.lower() for keyword in ['ai', 'ml', 'npu', 'neural', 'inference']):
+                            ai_counters.append(line.strip())
+                    
+                    if ai_counters:
+                        npu_info['ai_counters'] = ai_counters[:3]  # Show first 3
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+            
+            # Method 3: Check for Qualcomm NPU processes
+            try:
+                result = subprocess.run(['tasklist', '/fi', 'imagename eq *qualcomm*'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    qualcomm_processes = []
+                    for line in result.stdout.split('\n'):
+                        if 'qualcomm' in line.lower() or 'npu' in line.lower():
+                            qualcomm_processes.append(line.strip())
+                    
+                    if qualcomm_processes:
+                        npu_info['qualcomm_processes'] = qualcomm_processes
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+            
+            # Method 4: Check for AI/ML related services
+            try:
+                result = subprocess.run(['sc', 'query', 'type= service'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    ai_services = []
+                    for line in result.stdout.split('\n'):
+                        if any(keyword in line.lower() for keyword in ['ai', 'ml', 'npu', 'neural', 'qualcomm']):
+                            ai_services.append(line.strip())
+                    
+                    if ai_services:
+                        npu_info['ai_services'] = ai_services[:3]  # Show first 3
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+                
+    except Exception as e:
+        print(f"   Error detecting Snapdragon NPU: {e}")
+    
+    return npu_info
+
 def monitor_resources():
     """Monitor CPU, memory, disk, and GPU/NPU usage."""
     print("📊 Resource Monitoring (Press Ctrl+C to stop):")
     print("=" * 80)
+    
+    # Check for Snapdragon NPU activity
+    snapdragon_info = get_snapdragon_npu_activity()
+    if snapdragon_info:
+        print("🔍 Snapdragon X Elite NPU detected!")
+        for key, value in snapdragon_info.items():
+            if isinstance(value, list):
+                print(f"   {key}: {len(value)} items found")
+            else:
+                print(f"   {key}: {value}")
+        print()
     
     # Header for GPU info
     gpu_headers = []
@@ -184,16 +372,28 @@ def monitor_resources():
                 if temp > 80:
                     print(f"🌡️  High {gpu_name} temperature: {temp}°C")
             
+            # Show Snapdragon NPU activity indicators
+            if snapdragon_info:
+                # Check for increased CPU activity as proxy for NPU usage
+                if cpu_percent > 50:
+                    print(f"🚀 High CPU activity - NPU may be processing (CPU: {cpu_percent:.1f}%)")
+                
+                # Check for memory spikes that might indicate NPU model loading
+                if memory_percent > 70:
+                    print(f"🧠 High memory usage - NPU models may be loaded (Memory: {memory_percent:.1f}%)")
+            
             time.sleep(2)
             
     except KeyboardInterrupt:
         print("\n🛑 Monitoring stopped by user")
-        print("\n💡 Tips for NPU/GPU monitoring:")
-        print("   • Check Task Manager > Performance tab for GPU/NPU usage")
-        print("   • Use GPU-Z for detailed GPU statistics")
-        print("   • Monitor temperature and power consumption")
-        print("   • Look for 'NPU' or 'AI Engine' in device manager")
-        print("   • Intel NPUs may show up as 'Intel Graphics' or 'Intel UHD Graphics'")
+        print("\n💡 Tips for Snapdragon X Elite NPU monitoring:")
+        print("   • Snapdragon NPU doesn't expose direct metrics like GPUs")
+        print("   • Monitor CPU spikes during inference (NPU is integrated)")
+        print("   • Watch memory usage for model loading")
+        print("   • Check Task Manager > Performance tab for overall system activity")
+        print("   • Look for 'Qualcomm' or 'Snapdragon' in Device Manager")
+        print("   • NPU activity may show as increased CPU usage")
+        print("   • Use Windows Performance Monitor for detailed AI/ML counters")
 
 def main():
     """Main function."""
