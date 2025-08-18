@@ -535,6 +535,121 @@ class Preferences:
                             print(f"❌ Incomplete JSON array: {potential_json[:100]}...", file=sys.stderr)
                             continue
         
+        # New approach: Look for JSON content that spans multiple lines
+        # This handles cases where the model outputs JSON across several lines
+        print("🔍 Trying multi-line JSON extraction...", file=sys.stderr)
+        
+        # Look for the start of a JSON array
+        start_markers = ['[', '[{', '[{"', '[{"place_name"']
+        for marker in start_markers:
+            if marker in raw_output:
+                start_idx = raw_output.find(marker)
+                if start_idx != -1:
+                    print(f"🔍 Found JSON start marker '{marker}' at position {start_idx}", file=sys.stderr)
+                    
+                    # Look for the complete JSON by counting brackets
+                    remaining_text = raw_output[start_idx:]
+                    bracket_count = 0
+                    end_idx = -1
+                    
+                    for i, char in enumerate(remaining_text):
+                        if char == '[':
+                            bracket_count += 1
+                        elif char == ']':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                end_idx = i + 1
+                                break
+                    
+                    if end_idx != -1:
+                        potential_json = remaining_text[:end_idx]
+                        print(f"🔍 Extracted potential JSON (length: {len(potential_json)}): {potential_json[:200]}...", file=sys.stderr)
+                        
+                        try:
+                            # Validate JSON
+                            parsed = json.loads(potential_json)
+                            print(f"✅ Successfully parsed JSON with {len(parsed)} locations", file=sys.stderr)
+                            return potential_json
+                        except json.JSONDecodeError as e:
+                            print(f"❌ JSON parsing failed: {e}", file=sys.stderr)
+                            print(f"❌ Failed JSON content: {potential_json[:300]}...", file=sys.stderr)
+                            continue
+        
+        # Last resort: Try to reconstruct JSON from individual location lines
+        print("🔍 Trying to reconstruct JSON from location lines...", file=sys.stderr)
+        location_entries = []
+        current_entry = {}
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith('"place_name"'):
+                # Start of a new location entry
+                if current_entry:
+                    location_entries.append(current_entry)
+                current_entry = {}
+                
+                # Extract place_name
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['place_name'] = value
+                except:
+                    continue
+                    
+            elif line.startswith('"road_address_name"'):
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['road_address_name'] = value
+                except:
+                    continue
+                    
+            elif line.startswith('"place_type"'):
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['place_type'] = value
+                except:
+                    continue
+                    
+            elif line.startswith('"distance"'):
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['distance'] = value
+                except:
+                    continue
+                    
+            elif line.startswith('"place_url"'):
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['place_url'] = value
+                except:
+                    continue
+                    
+            elif line.startswith('"latitude"'):
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['latitude'] = float(value)
+                except:
+                    continue
+                    
+            elif line.startswith('"longitude"'):
+                try:
+                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
+                    current_entry['longitude'] = float(value)
+                except:
+                    continue
+        
+        # Add the last entry
+        if current_entry:
+            location_entries.append(current_entry)
+        
+        if location_entries:
+            print(f"🔍 Reconstructed {len(location_entries)} location entries from individual lines", file=sys.stderr)
+            try:
+                reconstructed_json = json.dumps(location_entries, ensure_ascii=False)
+                print(f"✅ Successfully reconstructed JSON: {reconstructed_json[:200]}...", file=sys.stderr)
+                return reconstructed_json
+            except Exception as e:
+                print(f"❌ Failed to reconstruct JSON: {e}", file=sys.stderr)
+        
         print(f"❌ No valid JSON found in Phi model output", file=sys.stderr)
         return None
 
