@@ -82,6 +82,9 @@ namespace Curato.Views
                 currentProgress = 100;
                 ProgressBarFill.Width = MaxBarWidth;
                 ProgressPercentageText.Text = "100%";
+                
+                // Show completion message in subtext
+                ProgressSubtext.Text = "Trip planning completed!";
             }
         }
 
@@ -92,10 +95,10 @@ namespace Curato.Views
             {
                 targetProgress = update.progress;
                 
-                // Update status message if provided
+                // Update status message in subtext if provided
                 if (!string.IsNullOrEmpty(update.message))
                 {
-                    LoadingTextBlock.Text = update.message;
+                    ProgressSubtext.Text = update.message;
                 }
                 
                 // Start smooth progress animation if not already running
@@ -111,6 +114,9 @@ namespace Curato.Views
             Logger.LogInfo("LoadingPage_LoadedAsync - Starting");
             dotTimer.Start();
             smoothProgressTimer.Start();
+
+            // Set initial subtext message
+            ProgressSubtext.Text = "Preparing your personalized trip...";
 
             try
             {

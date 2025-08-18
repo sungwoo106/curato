@@ -40,6 +40,18 @@
                        MaxWidth="800"
                        TextAlignment="Center"/>
 
+            <!-- Progress Update Subtext -->
+            <TextBlock x:Name="ProgressSubtext"
+                       Text="Initializing..."
+                       FontSize="20"
+                       FontFamily="{StaticResource SatoshiMedium}"
+                       Foreground="#666666"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       MaxWidth="800"
+                       TextAlignment="Center"
+                       Margin="0,20,0,0"/>
+
             <!-- Progress Bar Container -->
             <StackPanel Margin="0,70,0,0" HorizontalAlignment="Center">
                 <!-- Progress Bar (smooth animation) -->
