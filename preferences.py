@@ -13,7 +13,7 @@ The class serves as the main interface between the UI layer and the backend
 AI models and external services.
 """
 
-from core.prompts import build_phi_four_loc, build_qwen_emotional_prompt
+from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
 from models.genie_runner import run_phi_runner, run_qwen_runner
 from data.api_clients.kakao_api import get_closest_place, format_kakao_places_for_prompt
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
@@ -187,8 +187,8 @@ class Preferences:
         self.collect_best_place()
         recommendations = self.format_recommendations()
         
-        # Build the prompt for the Phi model to generate a 4-location route
-        prompt = build_phi_four_loc(
+        # Build the prompt for the Phi model to generate a 4-5 location route
+        prompt = build_phi_location_prompt(
             self.start_location,                    # Starting coordinates
             self.companion_type,                    # Companion type for context
             self.starting_time,                     # Starting time for timing
@@ -390,14 +390,14 @@ class Preferences:
         
         try:
             # Parse the JSON route plan
-            four_locations = json.loads(route_plan_json)
+            selected_locations = json.loads(route_plan_json)
         except Exception as e:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
             return f"Failed to parse route plan: {e}"
         
         # Build the prompt for the Qwen model to generate emotional storytelling
-        prompt = build_qwen_emotional_prompt(
-            four_locations,                         # The 4 locations from route planner
+        prompt = build_qwen_story_prompt(
+            selected_locations,                         # The 4-5 locations from route planner
             self.companion_type,                    # Companion type for tone/style
             self.budget,                            # Budget level for activity suggestions
         )

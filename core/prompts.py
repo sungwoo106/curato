@@ -62,9 +62,12 @@ def build_phi_location_prompt(
     else:
         time_guide = "evening atmosphere places"
     
-    return f"""Select 4-5 locations for a {companion_type.lower()} outing starting at {start_time}:00 from {start_location}.
+    return f"""<|system|>
+You are a travel planner. Select 4-5 locations for a {companion_type.lower()} outing.
+<|end|>
 
-Choose locations that are:
+<|user|>
+Starting from {start_location} at {start_time}:00, choose 4-5 locations that are:
 - {companion_guide.get(companion_type.lower(), "suitable for the outing")}
 - {time_guide}
 - Within {budget_level} budget
@@ -74,7 +77,10 @@ Choose locations that are:
 Return JSON list with: place_name, road_address_name, place_type, distance, place_url, latitude, longitude, reasoning.
 
 Available places:
-{recommendations_json}"""
+{recommendations_json}
+<|end|>
+
+<|assistant|>"""
 
 # =============================================================================
 # ENHANCED QWEN PROMPT FOR DESCRIPTIVE STORYTELLING

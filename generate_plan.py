@@ -69,7 +69,7 @@ from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 from models.genie_runner import GenieRunner
-from core.prompts import build_phi_four_loc, build_qwen_emotional_prompt
+from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
 
 # =============================================================================
 # AI MODEL SETUP
