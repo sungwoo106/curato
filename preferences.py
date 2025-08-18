@@ -263,25 +263,55 @@ class Preferences:
             # Use the actual collected place recommendations if available
             if hasattr(self, 'best_places') and self.best_places:
                 fallback_plan = []
+                target_locations = 5  # Aim for 5 locations
                 
-                # Select up to 5 places from different categories
-                selected_categories = list(self.best_places.keys())[:5]
+                # Get all available categories
+                available_categories = list(self.best_places.keys())
                 
-                for category in selected_categories:
+                # Distribute locations across categories to reach target
+                locations_per_category = max(1, target_locations // len(available_categories))
+                remaining_locations = target_locations % len(available_categories)
+                
+                for i, category in enumerate(available_categories):
                     if category in self.best_places and self.best_places[category]:
-                        # Take the first place from each category
-                        place = self.best_places[category][0]
+                        # Take multiple places from each category if available
+                        places_to_take = locations_per_category + (1 if i < remaining_locations else 0)
+                        places_taken = 0
                         
-                        fallback_place = {
-                            "place_name": place.get('place_name', f"{category} Location"),
-                            "road_address_name": place.get('road_address_name', 'Address not available'),
-                            "place_type": category,
-                            "distance": place.get('distance', 'Distance not available'),
-                            "place_url": place.get('place_url', ''),
-                            "latitude": place.get('latitude', 37.5665),
-                            "longitude": place.get('longitude', 126.9780)
-                        }
-                        fallback_plan.append(fallback_place)
+                        for place in self.best_places[category]:
+                            if places_taken >= places_to_take or len(fallback_plan) >= target_locations:
+                                break
+                                
+                            fallback_place = {
+                                "place_name": place.get('place_name', f"{category} Location"),
+                                "road_address_name": place.get('road_address_name', 'Address not available'),
+                                "place_type": category,
+                                "distance": place.get('distance', 'Distance not available'),
+                                "place_url": place.get('place_url', ''),
+                                "latitude": place.get('latitude', 37.5665),
+                                "longitude": place.get('longitude', 126.9780)
+                            }
+                            fallback_plan.append(fallback_place)
+                            places_taken += 1
+                
+                # If we still don't have enough locations, add more from the first few categories
+                if len(fallback_plan) < target_locations:
+                    for category in available_categories[:3]:  # Focus on first 3 categories
+                        if category in self.best_places and self.best_places[category]:
+                            for place in self.best_places[category][1:]:  # Skip first place (already added)
+                                if len(fallback_plan) >= target_locations:
+                                    break
+                                    
+                                fallback_place = {
+                                    "place_name": place.get('place_name', f"{category} Location"),
+                                    "road_address_name": place.get('road_address_name', 'Address not available'),
+                                    "place_type": category,
+                                    "distance": place.get('distance', 'Distance not available'),
+                                    "place_url": place.get('place_url', ''),
+                                    "latitude": place.get('latitude', 37.5665),
+                                    "longitude": place.get('longitude', 126.9780)
+                                }
+                                fallback_plan.append(fallback_place)
                 
                 if fallback_plan:
                     print(f"✅ Created fallback route plan with {len(fallback_plan)} locations", file=sys.stderr)
@@ -472,6 +502,39 @@ class Preferences:
                         except json.JSONDecodeError:
                             continue
         
+        # Special case: Look for lines that start with [ and contain location data
+        # This handles cases where the model outputs partial JSON or malformed JSON
+        for line in lines:
+            line = line.strip()
+            if line.startswith('[') and any(keyword in line for keyword in location_keywords):
+                print(f"🔍 Found potential JSON array start: {line[:100]}...", file=sys.stderr)
+                # Try to find the complete JSON array by looking for the closing ]
+                start_idx = raw_output.find(line)
+                if start_idx != -1:
+                    # Look for the next closing bracket
+                    remaining_text = raw_output[start_idx:]
+                    bracket_count = 0
+                    end_idx = -1
+                    
+                    for i, char in enumerate(remaining_text):
+                        if char == '[':
+                            bracket_count += 1
+                        elif char == ']':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                end_idx = i + 1
+                                break
+                    
+                    if end_idx != -1:
+                        potential_json = remaining_text[:end_idx]
+                        try:
+                            json.loads(potential_json)
+                            print(f"✅ Found complete JSON array: {potential_json[:100]}...", file=sys.stderr)
+                            return potential_json
+                        except json.JSONDecodeError:
+                            print(f"❌ Incomplete JSON array: {potential_json[:100]}...", file=sys.stderr)
+                            continue
+        
         print(f"❌ No valid JSON found in Phi model output", file=sys.stderr)
         return None
 
@@ -512,10 +575,123 @@ class Preferences:
                 self.progress_callback(80, "Running Qwen model for emotional storytelling...")
             
             runner = GenieRunner(progress_callback=self.progress_callback)
-            return runner.run_qwen(prompt)
+            raw_output = runner.run_qwen(prompt)
+            
+            # Extract clean story text from the model output
+            clean_story = self._extract_story_from_output(raw_output)
+            return clean_story if clean_story else raw_output
+            
         except Exception as e:
             print(f"Qwen model failed: {e}", file=sys.stderr)
             if self.progress_callback:
                 self.progress_callback(95, "Qwen model failed")
             return f"Failed to generate emotional story: {e}"
+    
+    def _extract_story_from_output(self, raw_output: str) -> str:
+        """
+        Extract clean story text from the Qwen model output.
+        
+        The model might output debug information, so we need to find
+        the actual story content within the output.
+        
+        Args:
+            raw_output (str): Raw output from the Qwen model
+            
+        Returns:
+            str: Cleaned story text, or None if no story found
+        """
+        if not raw_output:
+            return None
+            
+        print(f"Raw Qwen model output: {raw_output[:500]}...", file=sys.stderr)
+        
+        # Look for content after <|assistant|> tag
+        if '<|assistant|>' in raw_output:
+            parts = raw_output.split('<|assistant|>')
+            if len(parts) > 1:
+                content_after_assistant = parts[-1].strip()
+                print(f"Content after <|assistant|>: {content_after_assistant[:200]}...", file=sys.stderr)
+                
+                # Clean up the content by removing technical markers
+                cleaned_content = self._clean_story_content(content_after_assistant)
+                if cleaned_content:
+                    return cleaned_content
+        
+        # Look for content after </assistant> tag
+        if '</assistant>' in raw_output:
+            parts = raw_output.split('</assistant>')
+            if len(parts) > 1:
+                content_after_assistant = parts[-1].strip()
+                print(f"Content after </assistant>: {content_after_assistant[:200]}...", file=sys.stderr)
+                
+                cleaned_content = self._clean_story_content(content_after_assistant)
+                if cleaned_content:
+                    return cleaned_content
+        
+        # Look for content after [BEGIN]: marker
+        if '[BEGIN]:' in raw_output:
+            parts = raw_output.split('[BEGIN]:')
+            if len(parts) > 1:
+                content_after_begin = parts[-1].strip()
+                print(f"Content after [BEGIN]: {content_after_begin[:200]}...", file=sys.stderr)
+                
+                cleaned_content = self._clean_story_content(content_after_begin)
+                if cleaned_content:
+                    return cleaned_content
+        
+        # If no markers found, try to clean the entire output
+        cleaned_content = self._clean_story_content(raw_output)
+        if cleaned_content:
+            return cleaned_content
+        
+        print(f"❌ No clean story content found in Qwen model output", file=sys.stderr)
+        return None
+    
+    def _clean_story_content(self, content: str) -> str:
+        """
+        Clean story content by removing technical markers and debug information.
+        
+        Args:
+            content (str): Raw content to clean
+            
+        Returns:
+            str: Cleaned story content
+        """
+        if not content:
+            return None
+        
+        # Remove technical markers and debug info
+        lines = content.split('\n')
+        cleaned_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            # Skip technical markers and debug info
+            if (line and 
+                not line.startswith('Using libGenie.so') and
+                not line.startswith('[INFO]') and
+                not line.startswith('[PROMPT]:') and
+                not line.startswith('<|system|>') and
+                not line.startswith('<|user|>') and
+                not line.startswith('<|assistant|>') and
+                not line.startswith('<|end|>') and
+                not line.startswith('<|im_start|>') and
+                not line.startswith('<|im_end|>') and
+                not line.startswith('Note:') and
+                not line.startswith('[KPIS]:') and
+                not line.startswith('Init Time:') and
+                not line.startswith('Prompt Processing Time:') and
+                not line.startswith('Token Generation Time:') and
+                not line.startswith('Prompt Processing Rate:') and
+                not line.startswith('Token Generation Rate:')):
+                
+                cleaned_lines.append(line)
+        
+        cleaned_content = '\n'.join(cleaned_lines).strip()
+        
+        if cleaned_content:
+            print(f"✅ Cleaned story content: {cleaned_content[:100]}...", file=sys.stderr)
+            return cleaned_content
+        
+        return None
     
