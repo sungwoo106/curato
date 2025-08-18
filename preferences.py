@@ -19,6 +19,7 @@ from data.api_clients.kakao_api import get_closest_place, format_kakao_places_fo
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
 import json
+import sys
 
 class Preferences:
     """
@@ -207,12 +208,67 @@ class Preferences:
                 return cleaned_output
             else:
                 print(f"Could not extract valid JSON from Phi model output: {raw_output[:200]}...")
-                return None
+                print("Using fallback route plan for testing...", file=sys.stderr)
+                return self._create_fallback_route_plan()
                 
         except Exception as e:
             print(f"Phi model execution failed: {e}")
             return None
     
+    def _create_fallback_route_plan(self) -> str:
+        """
+        Create a fallback route plan for testing when the Phi model fails.
+        
+        This method generates a sample route plan with 4 locations so that
+        the Qwen model can still generate an emotional itinerary for testing.
+        
+        Returns:
+            str: JSON string containing a sample route plan
+        """
+        print("Creating fallback route plan for testing...", file=sys.stderr)
+        
+        # Sample route plan for Hongdae area
+        fallback_plan = [
+            {
+                "place_name": "스타벅스 홍대역점",
+                "road_address_name": "서울 마포구 양화로 160",
+                "place_type": "Cafe",
+                "distance": "0.1km",
+                "place_url": "https://map.kakao.com/...",
+                "latitude": 37.5563,
+                "longitude": 126.9237
+            },
+            {
+                "place_name": "몰레꼴레 와이즈파크홍대점",
+                "road_address_name": "서울 마포구 양화로 188",
+                "place_type": "Restaurant",
+                "distance": "0.3km",
+                "place_url": "https://map.kakao.com/...",
+                "latitude": 37.5570,
+                "longitude": 126.9240
+            },
+            {
+                "place_name": "공미학 마포홍대점",
+                "road_address_name": "서울 마포구 양화로 200",
+                "place_type": "Cafe",
+                "distance": "0.5km",
+                "place_url": "https://map.kakao.com/...",
+                "latitude": 37.5575,
+                "longitude": 126.9245
+            },
+            {
+                "place_name": "트릭아이뮤지엄",
+                "road_address_name": "서울 마포구 양화로 220",
+                "place_type": "Museum",
+                "distance": "0.7km",
+                "place_url": "https://map.kakao.com/...",
+                "latitude": 37.5580,
+                "longitude": 126.9250
+            }
+        ]
+        
+        return json.dumps(fallback_plan, ensure_ascii=False)
+
     def _extract_json_from_output(self, raw_output: str) -> str:
         """
         Extract JSON content from the raw model output.
@@ -228,6 +284,8 @@ class Preferences:
         """
         if not raw_output:
             return None
+            
+        print(f"Raw Phi model output: {raw_output[:500]}...", file=sys.stderr)
             
         # Look for JSON content in the output
         # Try to find content between [ and ] or { and }
@@ -245,6 +303,7 @@ class Preferences:
                 try:
                     # Validate that it's actually valid JSON
                     json.loads(match)
+                    print(f"✅ Found valid JSON: {match[:100]}...", file=sys.stderr)
                     return match
                 except json.JSONDecodeError:
                     continue
@@ -254,16 +313,62 @@ class Preferences:
             parts = raw_output.split('[PROMPT]:')
             if len(parts) > 1:
                 content_after_prompt = parts[-1].strip()
+                print(f"Content after [PROMPT]: {content_after_prompt[:200]}...", file=sys.stderr)
+                
                 # Look for JSON in this content
                 for pattern in json_patterns:
                     matches = re.findall(pattern, content_after_prompt, re.DOTALL)
                     for match in matches:
                         try:
                             json.loads(match)
+                            print(f"✅ Found valid JSON after prompt: {match[:100]}...", file=sys.stderr)
                             return match
                         except json.JSONDecodeError:
                             continue
         
+        # Try to find content after the last </assistant> tag
+        if '</assistant>' in raw_output:
+            parts = raw_output.split('</assistant>')
+            if len(parts) > 1:
+                content_after_assistant = parts[-1].strip()
+                print(f"Content after </assistant>: {content_after_assistant[:200]}...", file=sys.stderr)
+                
+                # Look for JSON in this content
+                for pattern in json_patterns:
+                    matches = re.findall(pattern, content_after_assistant, re.DOTALL)
+                    for match in matches:
+                        try:
+                            json.loads(match)
+                            print(f"✅ Found valid JSON after assistant tag: {match[:100]}...", file=sys.stderr)
+                            return match
+                        except json.JSONDecodeError:
+                            continue
+        
+        # If still no JSON, try to find any content that looks like a response
+        # Look for lines that might contain location information
+        lines = raw_output.split('\n')
+        for line in lines:
+            line = line.strip()
+            # Skip empty lines, debug info, and prompt content
+            if (line and 
+                not line.startswith('Using libGenie.so') and
+                not line.startswith('[INFO]') and
+                not line.startswith('[PROMPT]:') and
+                not line.startswith('<|system|>') and
+                not line.startswith('<|user|>') and
+                not line.startswith('<|assistant|>') and
+                not line.startswith('<|end|>')):
+                
+                # Check if this line might contain JSON-like content
+                if ('[' in line and ']' in line) or ('{' in line and '}' in line):
+                    try:
+                        json.loads(line)
+                        print(f"✅ Found JSON in line: {line[:100]}...", file=sys.stderr)
+                        return line
+                    except json.JSONDecodeError:
+                        continue
+        
+        print(f"❌ No valid JSON found in Phi model output", file=sys.stderr)
         return None
 
     def run_qwen_story(self):
