@@ -49,7 +49,25 @@ from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 
 # Mock directory for testing purposes - use pathlib for cross-platform compatibility
-_MOCK_DIR = Path(__file__).parent / "mock"
+# Try to find mock directory in project root first, then fall back to script directory
+_MOCK_DIR = None
+
+# Look for the first path in sys.path that contains a 'data' folder (project root)
+for path_str in sys.path:
+    path = Path(path_str)
+    if (path / "data").exists():
+        project_mock_dir = path / "mock"
+        if project_mock_dir.exists():
+            _MOCK_DIR = project_mock_dir
+            print(f"Using project root mock directory: {_MOCK_DIR}", file=sys.stderr)
+            break
+        else:
+            print(f"Found project root {path} but no mock directory", file=sys.stderr)
+
+# Fall back to script directory if no project mock directory found
+if _MOCK_DIR is None:
+    _MOCK_DIR = Path(__file__).parent / "mock"
+    print(f"Using script directory mock: {_MOCK_DIR}", file=sys.stderr)
 
 # Debug: Print resolved mock directory path for troubleshooting
 print(f"Resolved mock directory: {_MOCK_DIR}", file=sys.stderr)
