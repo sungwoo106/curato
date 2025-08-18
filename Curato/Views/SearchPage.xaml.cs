@@ -603,30 +603,40 @@ namespace Curato.Views
                 PreferredPlaceTypes = vm.SelectedCategories.ToList(),
             };
 
-            var tripPlan = await PlannerEngine.GenerateTripPlan(request);
-            AppState.SharedTripPlan = tripPlan;
-
+            // Show loading state
             var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
             {
-                // Save coordinates from ViewModel
-                double lat = vm.SelectedLocationCoordinates?.Latitude ?? 37.5665;
-                double lng = vm.SelectedLocationCoordinates?.Longitude ?? 126.9780;
-
-                // Create and configure OutputPage
-                var outputPage = new OutputPage
+                mainWindow.MainFrame.Content = new LoadingPage(async () =>
                 {
-                    Latitude = lat,
-                    Longitude = lng
-                };
-
-                mainWindow.MainFrame.Content = new LoadingPage(() =>
-                {
-                    return new OutputPage
+                    try
                     {
-                        Latitude = lat,
-                        Longitude = lng
-                    };
+                        // Generate the trip plan
+                        var tripPlan = await PlannerEngine.GenerateTripPlan(request);
+                        
+                        // Update the shared state
+                        AppState.SharedTripPlan = tripPlan;
+                        
+                        // Debug: Log the result
+                        System.Diagnostics.Debug.WriteLine($"Generated trip plan: {tripPlan?.EmotionalNarrative}");
+                        
+                        // Save coordinates from ViewModel
+                        double lat = vm.SelectedLocationCoordinates?.Latitude ?? 37.5665;
+                        double lng = vm.SelectedLocationCoordinates?.Longitude ?? 126.9780;
+
+                        // Create and return OutputPage
+                        return new OutputPage
+                        {
+                            Latitude = lat,
+                            Longitude = lng
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to generate trip plan: {ex.Message}");
+                        // Return to search page on error
+                        return new SearchPage();
+                    }
                 });
             }
         }

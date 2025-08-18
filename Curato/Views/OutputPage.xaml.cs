@@ -23,12 +23,18 @@ namespace Curato.Views
 
             // Load the emotional narrative into the TextBlock
             var plan = AppState.SharedTripPlan;
+            
+            // Debug: Log the plan data
+            System.Diagnostics.Debug.WriteLine($"OutputPage constructor - Plan: {plan?.EmotionalNarrative}");
+            System.Diagnostics.Debug.WriteLine($"OutputPage constructor - Plan is null: {plan == null}");
+            System.Diagnostics.Debug.WriteLine($"OutputPage constructor - EmotionalNarrative is null/empty: {string.IsNullOrWhiteSpace(plan?.EmotionalNarrative)}");
 
             // Set the preferences summary
             PreferencesSummaryLabel.Text = AppState.SharedInputViewModel.PreferencesSummary;
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
+                System.Diagnostics.Debug.WriteLine($"Setting EmotionalItineraryTextBlock with text: {plan.EmotionalNarrative}");
                 EmotionalItineraryTextBlock.Inlines.Clear();
                 foreach (var para in plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
@@ -36,6 +42,11 @@ namespace Curato.Views
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
                 }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Plan or EmotionalNarrative is null/empty, not setting text");
+                EmotionalItineraryTextBlock.Text = "No story generated. Please try again.";
             }
         }
 
