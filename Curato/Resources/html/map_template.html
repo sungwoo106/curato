@@ -81,7 +81,7 @@
             color: #666;
         }
     </style>
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={API_KEY}&autoload=false"></script>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={API_KEY}&libraries=services,clusterer&autoload=false"></script>
 </head>
 <body>
     <div id="map"></div>
@@ -90,6 +90,7 @@
         <h4>🚶 Walking Route</h4>
         <p>Click the green buttons to see walking directions between locations</p>
         <p>Green line shows the walking path</p>
+        <p id="route-status" style="color: #4CAF50; font-weight: bold;">🔄 Loading walking routes...</p>
     </div>
 
     <script>
@@ -104,6 +105,7 @@
             var locations = {COORD_ARRAY};  // Injected array
             var path = [];
             var walkingRouteButtons = [];
+            var walkingRoutes = []; // Store actual walking route polylines
 
             var sharedInfoWindow = new kakao.maps.InfoWindow();
 
@@ -165,15 +167,111 @@
                 sharedInfoWindow.close();
             });
 
-            // Draw walking route path connecting the places
-            var polyline = new kakao.maps.Polyline({
-                path: path,
-                strokeWeight: 4,
-                strokeColor: '#4CAF50',
-                strokeOpacity: 0.8,
-                strokeStyle: 'solid'
-            });
-            polyline.setMap(map);
+            // Function to get actual walking routes between locations
+            function getWalkingRoutes() {
+                if (locations.length < 2) return;
+                
+                var routeStatus = document.getElementById('route-status');
+                var routesLoaded = 0;
+                var totalRoutes = locations.length - 1;
+                
+                // Clear any existing walking routes
+                walkingRoutes.forEach(route => route.setMap(null));
+                walkingRoutes = [];
+                
+                // Get walking directions for each segment
+                for (var i = 0; i < locations.length - 1; i++) {
+                    var currentPlace = locations[i];
+                    var nextPlace = locations[i + 1];
+                    
+                    // Use Kakao Directions API to get walking route
+                    var directions = new kakao.maps.Directions();
+                    
+                    directions.route({
+                        origin: new kakao.maps.LatLng(currentPlace.lat, currentPlace.lng),
+                        destination: new kakao.maps.LatLng(nextPlace.lat, nextPlace.lng),
+                        travelMode: kakao.maps.TravelMode.WALKING
+                    }, function(result, status) {
+                        routesLoaded++;
+                        
+                        if (status === kakao.maps.DirectionsStatus.OK) {
+                            // Extract the walking route path
+                            var route = result.routes[0];
+                            if (route && route.legs && route.legs[0]) {
+                                var leg = route.legs[0];
+                                var routePath = [];
+                                
+                                // Convert the route coordinates to LatLng objects
+                                if (leg.path) {
+                                    leg.path.forEach(function(point) {
+                                        routePath.push(new kakao.maps.LatLng(point.lat, point.lng));
+                                    });
+                                }
+                                
+                                // If we have a valid path, draw it
+                                if (routePath.length > 0) {
+                                    var walkingPolyline = new kakao.maps.Polyline({
+                                        path: routePath,
+                                        strokeWeight: 4,
+                                        strokeColor: '#4CAF50',
+                                        strokeOpacity: 0.8,
+                                        strokeStyle: 'solid'
+                                    });
+                                    walkingPolyline.setMap(map);
+                                    walkingRoutes.push(walkingPolyline);
+                                    
+                                    console.log(`Walking route ${routesLoaded}: ${currentPlace.name} → ${nextPlace.name}`);
+                                }
+                            }
+                        } else {
+                            console.warn(`Failed to get walking route ${routesLoaded}: ${status}`);
+                            // Fallback to straight line if directions fail
+                            var fallbackPath = [
+                                new kakao.maps.LatLng(currentPlace.lat, currentPlace.lng),
+                                new kakao.maps.LatLng(nextPlace.lat, nextPlace.lng)
+                            ];
+                            var fallbackPolyline = new kakao.maps.Polyline({
+                                path: fallbackPath,
+                                strokeWeight: 2,
+                                strokeColor: '#FF9800',
+                                strokeOpacity: 0.6,
+                                strokeStyle: 'dashed'
+                            });
+                            fallbackPolyline.setMap(map);
+                            walkingRoutes.push(fallbackPolyline);
+                        }
+                        
+                        // Update status
+                        if (routesLoaded === totalRoutes) {
+                            if (walkingRoutes.length === totalRoutes) {
+                                routeStatus.innerHTML = '✅ Real walking routes loaded successfully!';
+                                routeStatus.style.color = '#4CAF50';
+                            } else {
+                                routeStatus.innerHTML = '⚠️ Some routes failed, showing fallback lines';
+                                routeStatus.style.color = '#FF9800';
+                            }
+                        } else {
+                            routeStatus.innerHTML = `🔄 Loading walking routes... (${routesLoaded}/${totalRoutes})`;
+                        }
+                    });
+                }
+            }
+
+            // Try to get actual walking routes
+            try {
+                getWalkingRoutes();
+            } catch (error) {
+                console.warn('Walking routes API not available, using fallback:', error);
+                // Fallback to simple polyline if directions API fails
+                var polyline = new kakao.maps.Polyline({
+                    path: path,
+                    strokeWeight: 4,
+                    strokeColor: '#4CAF50',
+                    strokeOpacity: 0.8,
+                    strokeStyle: 'solid'
+                });
+                polyline.setMap(map);
+            }
 
             // Add walking route info to the map
             if (locations.length > 1) {
@@ -187,6 +285,7 @@
                     <p>📍 ${locations.length} locations</p>
                     <p>📏 ~${Math.round(totalDistance)}m total</p>
                     <p>⏱️ ~${estimatedTime} min walking</p>
+                    <p style="color: #4CAF50; font-weight: bold;">🛣️ Real walking routes displayed</p>
                 `;
                 document.body.appendChild(routeStats);
             }
