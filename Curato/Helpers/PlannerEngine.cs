@@ -68,6 +68,7 @@ public static class PlannerEngine
             
             // Variables to store the final result
             string? finalItinerary = null;
+            string? finalRoutePlan = null;
             bool hasCompleted = false;
             
             // Handle streaming output for progress updates
@@ -95,11 +96,22 @@ public static class PlannerEngine
                             progress?.Report((progressValue, message));
                             Logger.LogInfo($"Progress: {progressValue}% - {message}");
                         }
-                        else if (type == "completion" && progressData.TryGetProperty("itinerary", out var itineraryElement))
+                        else if (type == "completion")
                         {
-                            finalItinerary = itineraryElement.GetString();
+                            // Extract both route plan and itinerary
+                            if (progressData.TryGetProperty("route_plan", out var routePlanElement))
+                            {
+                                finalRoutePlan = routePlanElement.GetString();
+                                Logger.LogInfo($"Received route plan: {finalRoutePlan?.Substring(0, Math.Min(100, finalRoutePlan?.Length ?? 0))}...");
+                            }
+                            
+                            if (progressData.TryGetProperty("itinerary", out var itineraryElement))
+                            {
+                                finalItinerary = itineraryElement.GetString();
+                                Logger.LogInfo($"Received itinerary: {finalItinerary?.Substring(0, Math.Min(100, finalItinerary?.Length ?? 0))}...");
+                            }
+                            
                             hasCompleted = true;
-                            Logger.LogInfo($"Received completion with itinerary: {finalItinerary?.Substring(0, Math.Min(100, finalItinerary?.Length ?? 0))}...");
                         }
                     }
                 }
@@ -162,7 +174,27 @@ public static class PlannerEngine
             if (!string.IsNullOrEmpty(finalItinerary))
             {
                 var tripPlan = new TripPlan { EmotionalNarrative = finalItinerary };
+                
+                // Parse the route plan JSON to populate SuggestedPlaces
+                if (!string.IsNullOrEmpty(finalRoutePlan))
+                {
+                    try
+                    {
+                        var routePlanData = JsonSerializer.Deserialize<List<PhiPlace>>(finalRoutePlan);
+                        if (routePlanData != null)
+                        {
+                            tripPlan.SuggestedPlaces = routePlanData;
+                            Logger.LogInfo($"Successfully parsed route plan with {routePlanData.Count} places");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError($"Failed to parse route plan JSON: {ex.Message}");
+                    }
+                }
+                
                 Logger.LogInfo($"Final TripPlan EmotionalNarrative: {tripPlan.EmotionalNarrative?.Substring(0, Math.Min(100, tripPlan.EmotionalNarrative?.Length ?? 0))}...");
+                Logger.LogInfo($"Final TripPlan SuggestedPlaces count: {tripPlan.SuggestedPlaces?.Count ?? 0}");
                 return tripPlan;
             }
             else

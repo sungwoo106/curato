@@ -38,6 +38,12 @@ namespace Curato.Views
             Logger.LogInfo($"OutputPage_Loaded - Plan: {plan?.EmotionalNarrative}");
             Logger.LogInfo($"OutputPage_Loaded - Plan is null: {plan == null}");
             Logger.LogInfo($"OutputPage_Loaded - EmotionalNarrative is null/empty: {string.IsNullOrWhiteSpace(plan?.EmotionalNarrative)}");
+            Logger.LogInfo($"OutputPage_Loaded - SuggestedPlaces count: {plan?.SuggestedPlaces?.Count ?? 0}");
+            
+            if (plan?.SuggestedPlaces != null && plan.SuggestedPlaces.Any())
+            {
+                Logger.LogInfo($"OutputPage_Loaded - First place: {plan.SuggestedPlaces[0].Name} at ({plan.SuggestedPlaces[0].Latitude}, {plan.SuggestedPlaces[0].Longitude})");
+            }
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
@@ -87,56 +93,51 @@ namespace Curato.Views
                 var htmlTemplate = File.ReadAllText(htmlPath);
                 var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
-                // Build JavaScript array from AppState
+                // Get the plan from AppState
                 var JSplan = AppState.SharedTripPlan ?? new TripPlan();
-                AppState.SharedTripPlan = JSplan;
-
-                // TEMP: Load mock LLM output from file
-                string? location = AppState.SharedInputViewModel?.LocationQuery?.ToLowerInvariant();
-
-                string selectedMockFile = location switch
+                
+                // Use the actual suggested places from the generated plan
+                if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Any())
                 {
-                    string s when s.Contains("hongdae") || s.Contains("홍대") => "mock_phi_hd_output.json",
-                    string s when s.Contains("gangnam") || s.Contains("강남") => "mock_phi_gn_output.json",
-                    string s when s.Contains("itaewon") || s.Contains("이태원") => "mock_phi_it_output.json",
-                    string s when s.Contains("seongsu") || s.Contains("성수") => "mock_phi_ss_output.json",
-                    string s when s.Contains("bukchon") || s.Contains("북촌") => "mock_phi_bc_output.json",
-                    _ => "mock_phi_hd_output.json" // fallback
-                };
-
-                var mockJsonPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MockData", selectedMockFile);
-
-                if (File.Exists(mockJsonPath))
-                {
-                    var phiJson = File.ReadAllText(mockJsonPath);
-                    var phiPlaces = JsonSerializer.Deserialize<List<PhiPlace>>(phiJson);
-
-                    if (phiPlaces != null && phiPlaces.Any())
+                    Logger.LogInfo($"Using {JSplan.SuggestedPlaces.Count} suggested places from generated plan");
+                    
+                    // Update coordinates if we have places
+                    if (!coords.HasValue && JSplan.SuggestedPlaces.Count > 0)
                     {
-                        JSplan.SuggestedPlaces = phiPlaces
-                            .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                            .ToList();
-
-                        if (!coords.HasValue && JSplan.SuggestedPlaces.Count > 0)
-                        {
-                            lat = JSplan.SuggestedPlaces[0].Latitude;
-                            lng = JSplan.SuggestedPlaces[0].Longitude;
-                        }
+                        lat = JSplan.SuggestedPlaces[0].Latitude;
+                        lng = JSplan.SuggestedPlaces[0].Longitude;
                     }
                 }
+                else
+                {
+                    Logger.LogInfo("No suggested places in plan, using default coordinates");
+                }
 
+                string coordArray = "[]"; // Default empty array
+                
+                if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Any())
+                {
+                    coordArray = "["
+                        + string.Join(",", JSplan.SuggestedPlaces
+                            .Where(p => p.Latitude != 0 && p.Longitude != 0)
+                            .Select((p, i) =>
+                                $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
+                        + "]";
+                    
+                    Logger.LogInfo($"Generated coordinate array with {JSplan.SuggestedPlaces.Count(p => p.Latitude != 0 && p.Longitude != 0)} valid coordinates");
+                }
+                else
+                {
+                    Logger.LogInfo("No valid coordinates found, using empty coordinate array");
+                }
 
-                string coordArray = "["
-                    + string.Join(",", JSplan.SuggestedPlaces
-                        .Where(p => p.Latitude != 0 && p.Longitude != 0)
-                        .Select((p, i) =>
-                            $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
-                    + "]";
+                Logger.LogInfo($"Map center coordinates: lat={lat}, lng={lng}");
+                Logger.LogInfo($"Coordinate array length: {coordArray.Length}");
 
                 var finalHtml = htmlTemplate
                     .Replace("{API_KEY}", kakaoMapKey)
-                    .Replace("{LAT}", JSplan.SuggestedPlaces.FirstOrDefault()?.Latitude.ToString(CultureInfo.InvariantCulture) ?? "37.5665")
-                    .Replace("{LNG}", JSplan.SuggestedPlaces.FirstOrDefault()?.Longitude.ToString(CultureInfo.InvariantCulture) ?? "126.9780")
+                    .Replace("{LAT}", lat.ToString(CultureInfo.InvariantCulture))
+                    .Replace("{LNG}", lng.ToString(CultureInfo.InvariantCulture))
                     .Replace("{COORD_ARRAY}", coordArray);
 
                 await MapWebView.EnsureCoreWebView2Async();
@@ -144,7 +145,7 @@ namespace Curato.Views
             }
             catch (Exception ex)
             {
-
+                Logger.LogError($"Failed to load map: {ex.Message}", ex);
             }
         }
 

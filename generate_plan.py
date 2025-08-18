@@ -97,16 +97,18 @@ def send_progress_update(progress: int, message: str):
     }
     print(json.dumps(progress_data, ensure_ascii=False), flush=True)
 
-def send_completion_update(result: str):
+def send_completion_update(route_plan_json: str, emotional_itinerary: str):
     """
     Send the final completion result to the C# frontend.
     
     Args:
-        result (str): The generated itinerary text
+        route_plan_json (str): The generated route plan JSON with location data
+        emotional_itinerary (str): The generated emotional itinerary text
     """
     completion_data = {
         "type": "completion",
-        "itinerary": result
+        "route_plan": route_plan_json,
+        "itinerary": emotional_itinerary
     }
     print(json.dumps(completion_data, ensure_ascii=False), flush=True)
 
@@ -235,18 +237,19 @@ def main() -> None:
             error_msg = f"AI model generation failed: {exc}"
             print(f"❌ {error_msg}", file=sys.stderr)
             itinerary = error_msg
+            route_plan_json = None
             send_progress_update(95, "AI model generation failed")
 
         # Send final completion
         send_progress_update(100, "Trip planning completed!")
-        send_completion_update(itinerary)
+        send_completion_update(route_plan_json, itinerary)
 
     except Exception as e:
         # Handle any unexpected errors
         error_msg = f"Unexpected error: {e}"
         print(f"❌ {error_msg}", file=sys.stderr)
         send_progress_update(100, "Error occurred during planning")
-        send_completion_update(error_msg)
+        send_completion_update(None, error_msg) # Pass None for route_plan_json
 
 
 # =============================================================================
