@@ -32,43 +32,177 @@ class GenieRunner:
     """
     
     def __init__(self, 
-                 genie_executable: str = "genie-t2t-run.exe",
-                 phi_bundle_path: str = "./phi_bundle",
-                 qwen_bundle_path: str = "./qwen_bundle",
+                 genie_executable: str = None,
+                 phi_bundle_path: str = None,
+                 qwen_bundle_path: str = None,
                  working_dir: str = None):
         """
         Initialize the Genie runner with model bundle paths.
         
         Args:
-            genie_executable (str): Path to the genie-t2t-run executable
-            phi_bundle_path (str): Path to the Phi model bundle directory
-            qwen_bundle_path (str): Path to the Qwen model bundle directory
+            genie_executable (str): Path to the genie-t2t-run executable (auto-detected if None)
+            phi_bundle_path (str): Path to the Phi model bundle directory (auto-detected if None)
+            qwen_bundle_path (str): Path to the Qwen model bundle directory (auto-detected if None)
             working_dir (str): Working directory for temporary files (optional)
         """
+        self.working_dir = Path(working_dir) if working_dir else Path.cwd()
+        
+        # Auto-detect paths if not provided
+        if phi_bundle_path is None:
+            phi_bundle_path = self._auto_detect_phi_bundle()
+        if qwen_bundle_path is None:
+            qwen_bundle_path = self._auto_detect_qwen_bundle()
+        if genie_executable is None:
+            genie_executable = self._auto_detect_genie_executable(phi_bundle_path)
+        
         self.genie_executable = genie_executable
         self.phi_bundle_path = Path(phi_bundle_path)
         self.qwen_bundle_path = Path(qwen_bundle_path)
-        self.working_dir = Path(working_dir) if working_dir else Path.cwd()
         
-        # For Windows, try to find the executable in common locations
+        # Validate the setup
+        self._validate_paths()
+    
+    def _auto_detect_phi_bundle(self) -> str:
+        """Auto-detect the Phi bundle path."""
+        # Check environment variable first
+        env_path = os.environ.get('PHI_BUNDLE_PATH')
+        if env_path and os.path.exists(env_path):
+            print(f"✅ Found Phi bundle from environment: {env_path}")
+            return env_path
+        
+        # Try to import from config file
+        try:
+            from config import get_phi_bundle_path
+            config_path = get_phi_bundle_path()
+            if os.path.exists(config_path):
+                print(f"✅ Found Phi bundle from config: {config_path}")
+                return config_path
+        except ImportError:
+            pass
+        
+        # Common locations to check
+        possible_paths = [
+            "./phi_bundle",
+            "../phi_bundle",
+            "phi_bundle",
+            r"C:\curato\phi_bundle",  # Windows default
+            r"C:\phi_bundle",
+            os.path.expanduser("~/phi_bundle"),  # User home
+            os.path.expanduser("~/curato/phi_bundle"),
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                print(f"✅ Auto-detected Phi bundle at: {path}")
+                return path
+        
+        # Default fallback
+        default_path = "./phi_bundle"
+        print(f"⚠️ Could not auto-detect Phi bundle, using default: {default_path}")
+        return default_path
+    
+    def _auto_detect_qwen_bundle(self) -> str:
+        """Auto-detect the Qwen bundle path."""
+        # Check environment variable first
+        env_path = os.environ.get('QWEN_BUNDLE_PATH')
+        if env_path and os.path.exists(env_path):
+            print(f"✅ Found Qwen bundle from environment: {env_path}")
+            return env_path
+        
+        # Try to import from config file
+        try:
+            from config import get_qwen_bundle_path
+            config_path = get_qwen_bundle_path()
+            if os.path.exists(config_path):
+                print(f"✅ Found Qwen bundle from config: {config_path}")
+                return config_path
+        except ImportError:
+            pass
+        
+        # Common locations to check
+        possible_paths = [
+            "./qwen_bundle",
+            "../qwen_bundle",
+            "qwen_bundle",
+            r"C:\curato\qwen_bundle",  # Windows default
+            r"C:\qwen_bundle",
+            os.path.expanduser("~/qwen_bundle"),  # User home
+            os.path.expanduser("~/curato/qwen_bundle"),
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                print(f"✅ Auto-detected Qwen bundle at: {path}")
+                return path
+        
+        # Default fallback
+        default_path = "./qwen_bundle"
+        print(f"⚠️ Could not auto-detect Qwen bundle, using default: {default_path}")
+        return default_path
+    
+    def _auto_detect_genie_executable(self, phi_bundle_path: str) -> str:
+        """Auto-detect the genie-t2t-run executable."""
+        # Check environment variable first
+        env_path = os.environ.get('GENIE_EXECUTABLE_PATH')
+        if env_path and os.path.exists(env_path):
+            print(f"✅ Found genie executable from environment: {env_path}")
+            return env_path
+        
+        # Try to import from config file
+        try:
+            from config import get_genie_executable_path
+            config_path = get_genie_executable_path()
+            if os.path.exists(config_path):
+                print(f"✅ Found genie executable from config: {config_path}")
+                return config_path
+        except ImportError:
+            pass
+        
+        # Check inside the phi_bundle directory first (most likely location)
+        bundle_executable = os.path.join(phi_bundle_path, "genie-t2t-run.exe")
+        if os.path.exists(bundle_executable):
+            print(f"✅ Found genie executable in Phi bundle: {bundle_executable}")
+            return bundle_executable
+        
+        # Common locations to check
+        possible_paths = [
+            "genie-t2t-run.exe",
+            "./genie-t2t-run.exe",
+            "../genie-t2t-run.exe",
+            r"C:\curato\genie-t2t-run.exe",
+            r"C:\genie-t2t-run.exe",
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                print(f"✅ Auto-detected genie executable at: {path}")
+                return path
+        
+        # Default fallback
+        default_path = "genie-t2t-run.exe"
+        print(f"⚠️ Could not auto-detect genie executable, using default: {default_path}")
+        return default_path
+    
+    def _validate_paths(self):
+        """Validate that all required paths exist and are accessible."""
+        print(f"🔍 Validating GenieRunner configuration:")
+        print(f"   Executable: {self.genie_executable}")
+        print(f"   Phi bundle: {self.phi_bundle_path}")
+        print(f"   Qwen bundle: {self.qwen_bundle_path}")
+        print(f"   Working dir: {self.working_dir}")
+        
+        # Check if paths exist
         if not os.path.exists(self.genie_executable):
-            # Try to find it in the current directory or PATH
-            possible_paths = [
-                self.genie_executable,  # Current directory
-                f"./{self.genie_executable}",  # Current directory with ./
-                f"{self.working_dir}/{self.genie_executable}",  # Working directory
-                "genie-t2t-run.exe",  # Just the filename
-                "./genie-t2t-run.exe"  # Current directory
-            ]
-            
-            for path in possible_paths:
-                if os.path.exists(path):
-                    self.genie_executable = path
-                    print(f"✅ Found genie executable at: {path}")
-                    break
-            else:
-                print(f"⚠️ Warning: Genie executable not found at: {self.genie_executable}")
-                print("   Make sure genie-t2t-run.exe is in your current directory or PATH")
+            print(f"⚠️ Warning: Genie executable not found at: {self.genie_executable}")
+            print("   Make sure genie-t2t-run.exe is accessible or set GENIE_EXECUTABLE_PATH environment variable")
+        
+        if not self.phi_bundle_path.exists():
+            print(f"⚠️ Warning: Phi bundle not found at: {self.phi_bundle_path}")
+            print("   Make sure phi_bundle directory exists or set PHI_BUNDLE_PATH environment variable")
+        
+        if not self.qwen_bundle_path.exists():
+            print(f"⚠️ Warning: Qwen bundle not found at: {self.qwen_bundle_path}")
+            print("   Make sure qwen_bundle directory exists or set QWEN_BUNDLE_PATH environment variable")
     
     def run_phi(self, prompt: str) -> str:
         """
@@ -235,6 +369,7 @@ def run_phi_runner(prompt: str) -> str:
     Returns:
         str: The generated output from the Phi model
     """
+    # Try to auto-detect paths or use environment variables
     runner = GenieRunner()
     return runner.run_phi(prompt)
 
@@ -252,5 +387,6 @@ def run_llama_runner(prompt: str) -> str:
     Returns:
         str: The generated output from the Qwen model
     """
+    # Try to auto-detect paths or use environment variables
     runner = GenieRunner()
     return runner.run_qwen(prompt)

@@ -20,6 +20,7 @@ executable to function properly.
 from .genie_runner import GenieRunner
 
 # Create a global GenieRunner instance for efficiency
+# The GenieRunner will auto-detect paths or use environment variables
 _genie_runner = GenieRunner()
 
 def run_llama_runner(prompt: str) -> str:

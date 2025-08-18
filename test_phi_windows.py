@@ -71,13 +71,15 @@ Format your response as valid JSON only."""
         return False
 
 def test_genie_setup():
-    """Test the Genie setup validation."""
+    """Test the Genie setup validation with auto-detection."""
     print("🔍 Testing Genie setup validation...")
     
     try:
         from models.genie_runner import GenieRunner
         
-        # Create a runner instance
+        print("🔧 Creating GenieRunner with auto-detection...")
+        
+        # Create a runner instance - it will auto-detect paths
         runner = GenieRunner()
         
         # Validate setup
@@ -90,6 +92,8 @@ def test_genie_setup():
             
     except Exception as e:
         print(f"❌ Error during setup validation: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def main():
