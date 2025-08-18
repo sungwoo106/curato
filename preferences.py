@@ -13,9 +13,8 @@ The class serves as the main interface between the UI layer and the backend
 AI models and external services.
 """
 
-from core.prompts import build_phi_four_loc, build_llama_emotional_prompt
-from models.phi_runner import run_phi_runner
-from models.llama_runner import run_llama_runner
+from core.prompts import build_phi_four_loc, build_qwen_emotional_prompt
+from models.genie_runner import run_phi_runner, run_qwen_runner
 from data.api_clients.kakao_api import get_closest_place, format_kakao_places_for_prompt
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
@@ -201,9 +200,9 @@ class Preferences:
         # TODO: Uncomment when Phi model integration is complete
         return run_phi_runner(prompt)
 
-    def run_llama_story(self):
+    def run_qwen_story(self):
         """
-        Generate an emotional, storytelling itinerary using the Llama model.
+        Generate an emotional, storytelling itinerary using the Qwen model.
         
         This method takes the route plan from run_route_planner and generates
         a narrative, emotional description of the day that matches the companion
@@ -222,14 +221,14 @@ class Preferences:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
             return None
         
-        # Build the prompt for the Llama model to generate emotional storytelling
-        prompt = build_llama_emotional_prompt(
+        # Build the prompt for the Qwen model to generate emotional storytelling
+        prompt = build_qwen_emotional_prompt(
             four_locations,                         # The 4 locations from route planner
             self.companion_type,                    # Companion type for tone/style
             self.budget,                            # Budget level for activity suggestions
         )
         
-        # TODO: Uncomment when Llama model integration is complete
-        # return run_llama_runner(prompt)
+        # TODO: Uncomment when Qwen model integration is complete
+        # return run_qwen_runner(prompt)
         return "Generated itinerary would appear here (Qwen model disabled for now)"
     

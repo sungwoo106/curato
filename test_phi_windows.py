@@ -19,7 +19,7 @@ def test_phi_only():
     print("🧠 Testing Phi model integration on Windows...")
     
     try:
-        from models.phi_runner import run_phi_runner
+        from models.genie_runner import run_phi_runner
         
         # Use the correct Phi prompt format
         test_prompt = """<|system|>
@@ -89,31 +89,7 @@ Generate a day trip plan for Seoul with 4 locations.
         traceback.print_exc()
         return False
 
-def test_genie_setup():
-    """Test the Genie setup validation with auto-detection."""
-    print("🔍 Testing Genie setup validation...")
-    
-    try:
-        from models.genie_runner import GenieRunner
-        
-        print("🔧 Creating GenieRunner with auto-detection...")
-        
-        # Create a runner instance - it will auto-detect paths
-        runner = GenieRunner()
-        
-        # Validate setup
-        if runner.validate_setup():
-            print("✅ Genie setup validation successful!")
-            return True
-        else:
-            print("❌ Genie setup validation failed!")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Error during setup validation: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+from models.test_utils import test_genie_setup
 
 def main():
     """Run the Phi test."""

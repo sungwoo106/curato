@@ -569,6 +569,21 @@ def run_phi_runner(prompt: str) -> str:
     return runner.run_phi(prompt)
 
 
+def run_qwen_runner(prompt: str) -> str:
+    """
+    Convenience function to run Qwen model.
+    
+    Args:
+        prompt (str): The prompt to send to the Qwen model
+        
+    Returns:
+        str: The generated output from the Qwen model
+    """
+    # Try to auto-detect paths or use environment variables
+    runner = GenieRunner()
+    return runner.run_qwen(prompt)
+
+
 def run_llama_runner(prompt: str) -> str:
     """
     Convenience function to run Qwen model (maintains backward compatibility).

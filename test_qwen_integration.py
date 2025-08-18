@@ -19,7 +19,7 @@ def test_qwen_only():
     print("🧠 Testing Qwen model integration for emotional story generation...")
     
     try:
-        from models.qwen_runner import run_qwen_runner
+        from models.genie_runner import run_qwen_runner
         
         # Use the correct Qwen prompt format for emotional story generation
         test_prompt = """<|im_start|>system
@@ -93,59 +93,7 @@ Make it a beautiful, romantic narrative that captures the magic of exploring a c
         traceback.print_exc()
         return False
 
-def test_genie_setup():
-    """Test the Genie setup validation with auto-detection."""
-    print("🔍 Testing Genie setup validation...")
-    
-    try:
-        from models.genie_runner import GenieRunner
-        
-        print("🔧 Creating GenieRunner with auto-detection...")
-        
-        # Create a runner instance - it will auto-detect paths
-        runner = GenieRunner()
-        
-        # Validate setup
-        if runner.validate_setup():
-            print("✅ Genie setup validation successful!")
-            print(f"   Phi executable: {runner.phi_genie_executable}")
-            print(f"   Qwen executable: {runner.qwen_genie_executable}")
-            print(f"   Phi bundle: {runner.phi_bundle_path}")
-            print(f"   Qwen bundle: {runner.qwen_bundle_path}")
-            return True
-        else:
-            print("❌ Genie setup validation failed!")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Error during setup validation: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-def test_qwen_runner_import():
-    """Test that the qwen_runner can be imported and accessed."""
-    print("🔍 Testing QwenRunner import and accessibility...")
-    
-    try:
-        from models.qwen_runner import run_qwen_runner
-        
-        print("✅ Successfully imported qwen_runner")
-        print("✅ run_qwen_runner function is accessible")
-        
-        # Test that the function exists and is callable
-        if callable(run_qwen_runner):
-            print("✅ run_qwen_runner is a callable function")
-            return True
-        else:
-            print("❌ run_qwen_runner is not callable")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Error importing qwen_runner: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+from models.test_utils import test_genie_setup, test_model_runner_import
 
 def main():
     """Run the Qwen test."""
@@ -162,10 +110,10 @@ def main():
     
     # Test QwenRunner import
     print("\n🔍 Step 2: Testing QwenRunner import...")
-    import_success = test_qwen_runner_import()
+    import_success = test_model_runner_import("QwenRunner", "run_qwen_runner")
     
     if not import_success:
-        print("❌ QwenRunner import failed. Please check the qwen_runner.py file.")
+        print("❌ QwenRunner import failed. Please check the genie_runner.py file.")
         return False
     
     # Then test Qwen model

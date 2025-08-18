@@ -3,7 +3,7 @@ AI Prompt Templates and Generation
 
 This module contains the prompt templates used to generate AI-powered itineraries.
 It provides structured prompts for both the Phi model (route planning) and the
-Llama model (emotional storytelling) to ensure consistent and high-quality output.
+Qwen model (emotional storytelling) to ensure consistent and high-quality output.
 
 The prompts are designed to:
 - Generate optimal 4-location routes based on user preferences
@@ -62,18 +62,18 @@ Return a JSON list (in order) with these fields: place_name, road_address_name, 
 """.strip()
 
 # =============================================================================
-# LLAMA MODEL PROMPT FOR EMOTIONAL STORYTELLING
+# QWEN MODEL PROMPT FOR EMOTIONAL STORYTELLING
 # =============================================================================
 
-def build_llama_emotional_prompt(
+def build_qwen_emotional_prompt(
     four_locations: list,
     companion_type: str,
     budget_level: str,
 ) -> str:
     """
-    Build a prompt for the Llama model to generate emotional, narrative itineraries.
+    Build a prompt for the Qwen model to generate emotional, narrative itineraries.
     
-    This prompt instructs the Llama model to:
+    This prompt instructs the Qwen model to:
     - Create a storytelling experience based on 4 locations
     - Match the emotional tone for the companion type
     - Include budget-appropriate activity suggestions
@@ -86,7 +86,7 @@ def build_llama_emotional_prompt(
         budget_level (str): Budget level (low, medium, high)
         
     Returns:
-        str: Complete prompt string for the Llama model
+        str: Complete prompt string for the Qwen model
     """
     # Get the tone and style guide for the companion type
     # This ensures the generated content matches the expected emotional experience
@@ -119,10 +119,8 @@ Use rich sensory language and finish with a poetic closing. No bullet points.
 Style guide: {style['style_note']}
 """.strip()
 
-    # Return the complete prompt with proper formatting for the Llama model
+    # Return the complete prompt with proper formatting for the Qwen model
     # The format includes special tokens for the model to understand the conversation structure
     return (
-        "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n"
-        + user_message
-        + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n"
+        "<|im_start|>system\nYou are a helpful AI Assistant specializing in creating emotional, engaging stories and itineraries. You excel at crafting narratives that evoke feelings and create memorable experiences.\n<|im_end|>\n<|im_start|>user\n{user_message}\n<|im_end|>\n<|im_start|>assistant"
     )
