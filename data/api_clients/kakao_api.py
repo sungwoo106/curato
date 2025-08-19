@@ -644,7 +644,7 @@ def get_progressive_place_selection_enhanced(place_types: List[str],
                                            start_location: Tuple[float, float],
                                            radius: int = 1000,
                                            places_per_type: int = 15,      # Increased from 8 to 15
-                                           max_cluster_distance: int = 700, # Increased from 500 to 700
+                                           max_cluster_distance: int = 300, # Reduced to 300m for walkable distances
                                            target_places: int = 20,        # Increased from 5 to 20
                                            prefer_category_search: bool = True) -> List[Dict]:
     """
@@ -662,7 +662,7 @@ def get_progressive_place_selection_enhanced(place_types: List[str],
         start_location (Tuple[float, float]): Starting coordinates (lat, lng)
         radius (int): Search radius in meters (default: 1000m)
         places_per_type (int): Number of places to collect per type (default: 15)
-        max_cluster_distance (int): Maximum distance for clustering (default: 700m)
+        max_cluster_distance (int): Maximum distance for clustering (default: 300m)
         target_places (int): Target number of places for the LLM to choose from (default: 20)
         prefer_category_search (bool): Whether to prefer category search over keyword search
     
@@ -748,7 +748,7 @@ def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> fl
     r = 6371000
     return c * r
 
-def cluster_places_by_distance(places: List[Dict], max_cluster_distance: int = 700) -> List[List[Dict]]:
+def cluster_places_by_distance(places: List[Dict], max_cluster_distance: int = 300) -> List[List[Dict]]:
     """
     Cluster places by geographic proximity to ensure route coherence.
     
@@ -758,7 +758,7 @@ def cluster_places_by_distance(places: List[Dict], max_cluster_distance: int = 7
     
     Args:
         places: List of place dictionaries with lat/lng coordinates
-        max_cluster_distance: Maximum distance in meters for clustering (default: 700m)
+        max_cluster_distance: Maximum distance in meters for clustering (default: 300m)
     
     Returns:
         List of place clusters, each containing nearby places

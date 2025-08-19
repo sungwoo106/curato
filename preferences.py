@@ -158,7 +158,7 @@ class Preferences:
             self.start_location,                       # Starting coordinates
             int(self.max_distance_km * 1000),          # Distance in meters
             places_per_type=15,                        # Increased to 15 per type for variety
-            max_cluster_distance=700,                  # 700m clustering for moderate coherence
+            max_cluster_distance=300,                  # 300m clustering for tight walkable coherence
             target_places=20                           # 20 places for Phi to choose from
         )
         
