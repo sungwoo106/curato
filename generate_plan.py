@@ -241,12 +241,18 @@ def main() -> None:
             error_msg = f"AI model generation failed: {exc}"
             print(f"❌ {error_msg}", file=sys.stderr)
             itinerary = error_msg
-            route_plan_json = None
+            # DO NOT set route_plan_json = None - the route plan is independent of story generation
+            # route_plan_json should remain intact even if Qwen fails
             send_progress_update(95, "AI model generation failed")
 
         # Send final completion
         send_progress_update(100, "Trip planning completed!")
         print(f"📤 Sending completion - Route plan: {route_plan_json is not None}, Itinerary: {itinerary is not None}", file=sys.stderr)
+        if route_plan_json:
+            print(f"📤 Route plan data length: {len(route_plan_json)}", file=sys.stderr)
+            print(f"📤 Route plan preview: {route_plan_json[:200]}...", file=sys.stderr)
+        else:
+            print("⚠️ WARNING: Route plan is None - this will cause no map markers!", file=sys.stderr)
         send_completion_update(route_plan_json, itinerary)
 
     except Exception as e:
