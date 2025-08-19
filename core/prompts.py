@@ -244,6 +244,7 @@ Respond with a simple list of selected places, not JSON.
 IMPORTANT: You must select REAL places from the candidates list below. 
 Do not use placeholder text or generic terms.
 CRITICAL: Generate EXACTLY 4-5 places, no more, no less.
+GEOGRAPHIC CONSTRAINT: Select places that are CLOSE TOGETHER and WALKABLE.
 <|end|>
 
 <|user|>
@@ -253,22 +254,24 @@ Companion: {companion_type}
 Time: {start_time}:00 ({time_period})
 Budget: {budget_level}
 
-CRITERIA:
-1. Companion fit: {', '.join(criteria['priority'])}
-2. Time appropriate: {', '.join(time_criteria['ideal'])}
-3. Budget: {budget_guidance[budget_level]}
-4. Geographic flow: logical, walkable route
+CRITERIA (in order of priority):
+1. GEOGRAPHIC PROXIMITY: Choose places that are CLOSE TOGETHER and WALKABLE
+2. Companion fit: {', '.join(criteria['priority'])}
+3. Time appropriate: {', '.join(time_criteria['ideal'])}
+4. Budget: {budget_guidance[budget_level]}
 5. Variety: different place types
+6. Logical flow: places that can be visited in sequence
 
 {get_companion_specific_prompt_enhancement(companion_type, start_time, budget_level)}
 
 PROCESS:
 1. Review 20 candidates below
-2. Select EXACTLY 4-5 places based on criteria
-3. List them in order (1, 2, 3, 4, 5)
-4. Include the place name and why you chose it
-5. CRITICAL: Copy the exact place names from the candidates below
-6. STOP after listing exactly 4-5 places
+2. FIRST: Identify clusters of places that are geographically close (within 500m-1km)
+3. SECOND: Select EXACTLY 4-5 places from the SAME CLUSTER
+4. List them in order (1, 2, 3, 4, 5)
+5. Include the place name and why you chose it
+6. CRITICAL: Copy the exact place names from the candidates below
+7. STOP after listing exactly 4-5 places
 
 OUTPUT FORMAT (EXACTLY 4-5 places):
 1. [Copy exact name from candidates] - Brief reason for selection
@@ -285,6 +288,7 @@ IMPORTANT:
 - Copy the exact names as they appear in the candidates list
 - Do NOT generate more than 5 places
 - Do NOT generate fewer than 4 places
+- PRIORITIZE GEOGRAPHIC PROXIMITY - choose places that are close together
 - STOP after listing exactly 4-5 places
 
 <|end|>
@@ -295,6 +299,38 @@ IMPORTANT:
 # =============================================================================
 # TOKEN-EFFICIENT QWEN PROMPT FOR COMPREHENSIVE STORYTELLING
 # =============================================================================
+
+def _get_location_description(position: int, total_locations: int) -> str:
+    """
+    Generate appropriate description for a location based on its position in the itinerary.
+    
+    Args:
+        position (int): 0-based position of the location
+        total_locations (int): Total number of locations in the itinerary
+        
+    Returns:
+        str: Description appropriate for the location's position
+    """
+    if total_locations == 4:
+        descriptions = [
+            "Opening experience, emotional tone",
+            "Development, building connection", 
+            "Climax, peak experience",
+            "Closing, satisfying resolution"
+        ]
+    elif total_locations == 5:
+        descriptions = [
+            "Opening experience, emotional tone",
+            "Development, building connection",
+            "Climax, peak experience", 
+            "Continuation, maintaining momentum",
+            "Closing, satisfying resolution"
+        ]
+    else:
+        # Fallback for unexpected counts
+        descriptions = ["Carefully selected location"] * total_locations
+    
+    return descriptions[position] if position < len(descriptions) else "Carefully selected location"
 
 def build_qwen_story_prompt(
     locations: list,
@@ -450,11 +486,7 @@ CRITICAL REQUIREMENTS:
 - Budget level: {budget_level}
 
 MANDATORY STRUCTURE (follow exactly):
-1. LOCATION 1: {locations[0]['place_name']} - Opening experience, emotional tone
-2. LOCATION 2: {locations[1]['place_name']} - Development, building connection
-3. LOCATION 3: {locations[2]['place_name']} - Climax, peak experience
-4. LOCATION 4: {locations[3]['place_name']} - Continuation, maintaining momentum
-5. LOCATION 5: {locations[4]['place_name']} - Closing, satisfying resolution
+{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
 
 IMPORTANT: Each location must be clearly labeled and described in detail.
 Do not skip any location. Make emotional connections between them.

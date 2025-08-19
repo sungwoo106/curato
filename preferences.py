@@ -389,6 +389,9 @@ class Preferences:
             # Validate Phi's output meets our 4-5 place requirement
             self._validate_phi_output(selected_places)
             
+            # Validate geographic proximity of selected places
+            self._validate_geographic_proximity(selected_places)
+            
             # Ensure we have minimum required locations for map functionality
             print(f"🔍 Before supplementation: {len(selected_places)} places", file=sys.stderr)
             print(f"🔍 Places before supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
@@ -485,6 +488,115 @@ class Preferences:
             print(f"🧹 Cleaned Phi output: {len(selected_places)} -> {len(cleaned_places)} unique places", file=sys.stderr)
         
         return cleaned_places
+    
+    def _validate_geographic_proximity(self, selected_places: List[Dict]) -> None:
+        """
+        Validate that Phi's selected places are geographically close and walkable.
+        
+        Args:
+            selected_places (List[Dict]): List of places from Phi output
+        """
+        if len(selected_places) < 2:
+            return  # Need at least 2 places to check proximity
+        
+        print(f"🌍 Validating geographic proximity for {len(selected_places)} places", file=sys.stderr)
+        
+        # Get the original candidate data to access coordinates
+        all_candidates = self._get_all_candidates()
+        if not all_candidates:
+            print("⚠️ Cannot validate proximity - no candidate data available", file=sys.stderr)
+            return
+        
+        # Find coordinates for selected places
+        place_coordinates = []
+        for selected in selected_places:
+            selected_name = selected['place_name']
+            
+            # Find matching candidate
+            matching_candidate = None
+            for candidate in all_candidates:
+                if selected_name.lower() == candidate.get('place_name', '').lower():
+                    matching_candidate = candidate
+                    break
+            
+            if matching_candidate:
+                lat = float(matching_candidate.get('y', 0))
+                lng = float(matching_candidate.get('x', 0))
+                place_coordinates.append({
+                    'name': selected_name,
+                    'lat': lat,
+                    'lng': lng
+                })
+        
+        if len(place_coordinates) < 2:
+            print("⚠️ Cannot validate proximity - insufficient coordinate data", file=sys.stderr)
+            return
+        
+        # Calculate distances between all pairs
+        max_distance = 0
+        total_distance = 0
+        pair_count = 0
+        
+        for i in range(len(place_coordinates)):
+            for j in range(i + 1, len(place_coordinates)):
+                place1 = place_coordinates[i]
+                place2 = place_coordinates[j]
+                
+                # Calculate distance using Haversine formula (approximate)
+                distance = self._calculate_distance(
+                    place1['lat'], place1['lng'],
+                    place2['lat'], place2['lng']
+                )
+                
+                max_distance = max(max_distance, distance)
+                total_distance += distance
+                pair_count += 1
+                
+                print(f"🌍 {place1['name']} ↔ {place2['name']}: {distance:.1f}m", file=sys.stderr)
+        
+        if pair_count > 0:
+            avg_distance = total_distance / pair_count
+            print(f"🌍 Geographic analysis: Max distance: {max_distance:.1f}m, Average: {avg_distance:.1f}m", file=sys.stderr)
+            
+            if max_distance > 1000:  # More than 1km
+                print(f"⚠️ WARNING: Places are too far apart ({max_distance:.1f}m) - not walkable!", file=sys.stderr)
+                print(f"⚠️ Phi should prioritize geographic proximity for better itineraries", file=sys.stderr)
+            elif max_distance > 500:  # More than 500m
+                print(f"⚠️ Places are moderately distant ({max_distance:.1f}m) - consider closer options", file=sys.stderr)
+            else:
+                print(f"✅ Places are well-clustered ({max_distance:.1f}m) - good for walking itinerary", file=sys.stderr)
+    
+    def _calculate_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+        """
+        Calculate approximate distance between two coordinates using Haversine formula.
+        
+        Args:
+            lat1, lng1: First coordinate
+            lat2, lng2: Second coordinate
+            
+        Returns:
+            float: Distance in meters
+        """
+        import math
+        
+        # Convert to radians
+        lat1_rad = math.radians(lat1)
+        lng1_rad = math.radians(lng1)
+        lat2_rad = math.radians(lat2)
+        lng2_rad = math.radians(lng2)
+        
+        # Haversine formula
+        dlat = lat2_rad - lat1_rad
+        dlng = lng2_rad - lng1_rad
+        
+        a = (math.sin(dlat/2)**2 + 
+             math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng/2)**2)
+        c = 2 * math.asin(math.sqrt(a))
+        
+        # Earth radius in meters
+        r = 6371000
+        
+        return r * c
     
     def _validate_phi_output(self, selected_places: List[Dict]) -> None:
         """
