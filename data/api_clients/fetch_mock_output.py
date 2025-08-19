@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, REPO_ROOT)
 
-from data.api_clients.kakao_api import get_closest_place
+from data.api_clients.kakao_api import get_progressive_place_selection_enhanced
 from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 from constants import LOCATION
@@ -83,19 +83,28 @@ def fetch_and_save(path: str = "mock_kakao_output.json") -> None:
     prefs.select_place_types(CATEGORIES)
 
     results: Dict[str, Any] = {}
-    for category in prefs.selected_types:
-        try:
-            place = get_closest_place(
-                category,
-                prefs.start_location[0],
-                prefs.start_location[1],
-                int(prefs.max_distance_km * 1000),
-                10,
-            )
-            results[category] = [place] if place else []
-        except Exception as exc:  # pragma: no cover - network/credential failure
-            print(f"API call for {category} failed: {exc}. Using mock data.")
-            results[category] = MOCK_DATA.get(category, [])
+    
+    # Use the new progressive place selection algorithm
+    try:
+        optimal_places = get_progressive_place_selection_enhanced(
+            prefs.selected_types,
+            prefs.start_location,
+            int(prefs.max_distance_km * 1000),
+            places_per_type=15,                        # Increased to 15 per type
+            max_cluster_distance=700,                  # Increased to 700m
+            target_places=20                           # Increased to 20 places
+        )
+        
+        # Group places by type for compatibility
+        for place in optimal_places:
+            place_type = place.get('place_type', 'Unknown')
+            if place_type not in results:
+                results[place_type] = []
+            results[place_type].append(place)
+            
+    except Exception as exc:  # pragma: no cover - network/credential failure
+        print(f"Progressive selection failed: {exc}. Using mock data.")
+        results = MOCK_DATA
 
     with open(path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)

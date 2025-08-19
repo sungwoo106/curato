@@ -13,6 +13,105 @@ Key Sections:
 """
 
 # =============================================================================
+# KAKAO API CATEGORY CODES
+# =============================================================================
+# Official Kakao Map API category group codes for precise place type searching
+# These codes provide more accurate and consistent results than text-based searches
+KAKAO_CATEGORY_CODES = {
+    # Shopping & Daily Life
+    "MT1": "대형마트",           # Supermarket
+    "CS2": "편의점",             # Convenience store
+    
+    # Education & Learning
+    "PS3": "어린이집, 유치원",    # Daycare center, kindergarten
+    "SC4": "학교",               # School
+    "AC5": "학원",               # Hagwon (cram school, private learning institute)
+    
+    # Transportation & Infrastructure
+    "PK6": "주차장",             # Parking lot
+    "OL7": "주유소, 충전소",      # Gas station, LPG station
+    "SW8": "지하철역",            # Subway station
+    
+    # Business & Services
+    "BK9": "은행",               # Bank
+    "AG2": "중개업소",            # Real estate agency
+    
+    # Culture & Entertainment
+    "CT1": "문화시설",            # Cultural facility
+    "AT4": "관광명소",            # Attractions
+    
+    # Government & Public
+    "PO3": "공공기관",            # Public institutions
+    
+    # Accommodation & Food
+    "AD5": "숙박",               # Accommodation
+    "FD6": "음식점",             # Restaurant
+    "CE7": "카페",               # Cafe
+    
+    # Health & Wellness
+    "HP8": "병원",               # Hospital
+    "PM9": "약국",               # Pharmacy
+}
+
+# Reverse mapping for category code lookup (category name to code)
+CATEGORY_CODE_TO_NAME = {v: k for k, v in KAKAO_CATEGORY_CODES.items()}
+
+# Place type to category code mappings for automatic detection
+PLACE_TYPE_CATEGORY_MAPPINGS = {
+    # Korean mappings
+    "카페": "CE7",
+    "음식점": "FD6",
+    "식당": "FD6",
+    "문화시설": "CT1",
+    "관광명소": "AT4",
+    "공원": "AT4",  # Parks are often tourist attractions
+    "대형마트": "MT1",
+    "편의점": "CS2",
+    "지하철역": "SW8",
+    "은행": "BK9",
+    "병원": "HP8",
+    "약국": "PM9",
+    "주차장": "PK6",
+    "주유소": "OL7",
+    "충전소": "OL7",
+    "학교": "SC4",
+    "학원": "AC5",
+    "어린이집": "PS3",
+    "유치원": "PS3",
+    "숙박": "AD5",
+    "중개업소": "AG2",
+    "공공기관": "PO3",
+    
+    # English mappings
+    "cafe": "CE7",
+    "restaurant": "FD6",
+    "cultural": "CT1",
+    "culture": "CT1",
+    "attraction": "AT4",
+    "tourist": "AT4",
+    "park": "AT4",
+    "supermarket": "MT1",
+    "convenience": "CS2",
+    "subway": "SW8",
+    "station": "SW8",
+    "bank": "BK9",
+    "hospital": "HP8",
+    "pharmacy": "PM9",
+    "parking": "PK6",
+    "gas": "OL7",
+    "charging": "OL7",
+    "school": "SC4",
+    "academy": "AC5",
+    "kindergarten": "PS3",
+    "daycare": "PS3",
+    "accommodation": "AD5",
+    "hotel": "AD5",
+    "real estate": "AG2",
+    "public": "PO3",
+    "government": "PO3",
+}
+
+# =============================================================================
 # USER SELECTABLE PLACE TYPES
 # =============================================================================
 # Basic place types that users can manually select from the UI

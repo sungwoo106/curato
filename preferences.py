@@ -16,7 +16,7 @@ AI models and external services.
 
 from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
 from models.genie_runner import GenieRunner
-from data.api_clients.kakao_api import get_closest_place, format_kakao_places_for_prompt
+from data.api_clients.kakao_api import format_kakao_places_for_prompt, get_progressive_place_selection_enhanced
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
 import json
@@ -134,29 +134,39 @@ class Preferences:
     
     def collect_best_place(self):
         """
-        Collect the best place recommendations for each selected place type.
+        Collect geographically coherent place recommendations using smart clustering.
         
-        This method queries the Kakao Map API to find the closest and most
-        relevant places for each selected place type within the specified
-        distance radius.
+        This method uses progressive place selection to ensure consecutive
+        locations are close to each other while minimizing API calls and
+        providing manageable options for the AI model.
+        
+        Key benefits:
+        - Reduces places from 60-75 to 15-25 (manageable for Phi)
+        - Ensures geographic proximity between consecutive locations
+        - Creates logical, walkable routes
+        - Minimizes token usage in AI prompts
         
         Returns:
             dict: Dictionary where keys are place types and values are lists of places
         """
-        self.best_places = {}
+        # Use progressive place selection with smart clustering
+        # This ensures geographically close locations while providing variety for Phi
+        optimal_places = get_progressive_place_selection_enhanced(
+            self.selected_types,                       # List of place types to search for
+            self.start_location,                       # Starting coordinates
+            int(self.max_distance_km * 1000),          # Distance in meters
+            places_per_type=15,                        # Increased to 15 per type for variety
+            max_cluster_distance=700,                  # 700m clustering for moderate coherence
+            target_places=20                           # 20 places for Phi to choose from
+        )
         
-        for pt in self.selected_types:
-            # Search for the closest place of this type within the distance limit
-            best_place = get_closest_place(
-                pt,                                    # Place type to search for
-                self.start_location[0],                # Latitude
-                self.start_location[1],                # Longitude
-                int(self.max_distance_km * 1000),      # Distance in meters
-                10,                                    # Number of results to return
-            )
-            
-            # Store the result (even if empty) for this place type
-            self.best_places[pt] = [best_place] if best_place else []
+        # Group the selected places by type for compatibility with existing code
+        self.best_places = {}
+        for place in optimal_places:
+            place_type = place.get('place_type', 'Unknown')
+            if place_type not in self.best_places:
+                self.best_places[place_type] = []
+            self.best_places[place_type].append(place)
 
     def format_recommendations(self):
         """
@@ -180,20 +190,28 @@ class Preferences:
         Generate a route plan using the Phi model.
         
         This method:
-        1. Collects place recommendations from Kakao API
-        2. Builds a prompt for the Phi model
-        3. Generates a route plan with 4-5 locations
-        4. Returns the result as JSON
+        1. Collects multiple place recommendations from Kakao API (10-15 per type)
+        2. Selects optimal places for the itinerary
+        3. Builds a prompt for the Phi model
+        4. Generates a route plan with 4-5 locations
+        5. Returns the result as JSON
         
         Returns:
             str: JSON string with route plan or None if failed
         """
         try:
-            # Collect place recommendations
+            # Collect multiple place recommendations for each type
             if self.progress_callback:
                 self.progress_callback(60, "Collecting place recommendations...")
             
             self.collect_best_place()
+            
+            # Places are already optimally selected and ordered by the progressive selection system
+            if self.progress_callback:
+                self.progress_callback(62, "Places optimally selected and ordered...")
+            
+            # The progressive selection already provides optimal, geographically close places
+            # No need for additional selection logic
             
             if self.progress_callback:
                 self.progress_callback(65, "Building route planning prompt...")

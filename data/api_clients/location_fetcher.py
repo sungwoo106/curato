@@ -10,12 +10,17 @@ The function handles:
 - API key management and security
 - Error handling and fallback behavior
 - Coordinate extraction from API responses
+- Batch processing for multiple locations
+- Smart caching integration
 
 Note: This module requires a valid Kakao Map API key to function properly.
 """
 
 import requests
+import time
+from typing import List, Tuple, Optional, Dict
 from secure.crypto_utils import get_kakao_map_api_key
+from .kakao_api import _smart_cache
 
 def get_location_coordinates(location_name: str):
     """
@@ -112,3 +117,95 @@ def get_location_coordinates(location_name: str):
         # This ensures the application continues to function even if the
         # location service is temporarily unavailable
         return None
+
+def get_multiple_location_coordinates(location_names: List[str], 
+                                    delay_between_requests: float = 0.1) -> Dict[str, Optional[Tuple[float, float]]]:
+    """
+    Get coordinates for multiple locations with batch processing and rate limiting.
+    
+    This function efficiently processes multiple location queries while respecting
+    API rate limits and providing comprehensive results. It's useful for bulk
+    location processing in itinerary planning.
+    
+    Args:
+        location_names (List[str]): List of location names to search for
+        delay_between_requests (float): Delay between API requests in seconds (default: 0.1)
+    
+    Returns:
+        Dict[str, Optional[Tuple[float, float]]]: Dictionary mapping location names to coordinates
+                                                 Failed lookups return None
+    
+    Example:
+        >>> locations = ["홍대입구", "강남역", "이태원"]
+        >>> results = get_multiple_location_coordinates(locations)
+        >>> print(f"Found coordinates for {len([v for v in results.values() if v])} locations")
+        Found coordinates for 3 locations
+    """
+    results = {}
+    
+    for location_name in location_names:
+        try:
+            # Get coordinates for this location
+            coords = get_location_coordinates(location_name)
+            results[location_name] = coords
+            
+            # Add delay between requests to respect API rate limits
+            if delay_between_requests > 0:
+                time.sleep(delay_between_requests)
+                
+        except Exception as e:
+            # If one location fails, continue with others
+            print(f"Warning: Failed to get coordinates for '{location_name}': {e}")
+            results[location_name] = None
+    
+    return results
+
+def validate_coordinates(lat: float, lng: float) -> bool:
+    """
+    Validate that coordinates are within reasonable bounds for Korea.
+    
+    Args:
+        lat (float): Latitude value
+        lng (float): Longitude value
+    
+    Returns:
+        bool: True if coordinates are valid for Korea, False otherwise
+    """
+    # Korea's approximate coordinate bounds
+    KOREA_BOUNDS = {
+        'lat_min': 33.0,   # Southernmost point
+        'lat_max': 38.6,   # Northernmost point
+        'lng_min': 124.5,  # Westernmost point
+        'lng_max': 132.0   # Easternmost point
+    }
+    
+    return (KOREA_BOUNDS['lat_min'] <= lat <= KOREA_BOUNDS['lat_max'] and
+            KOREA_BOUNDS['lng_min'] <= lng <= KOREA_BOUNDS['lng_max'])
+
+def get_location_with_fallback(location_name: str, fallback_coordinates: Tuple[float, float]) -> Tuple[float, float]:
+    """
+    Get location coordinates with fallback to default coordinates.
+    
+    This function attempts to resolve the given location name, but falls back
+    to the provided default coordinates if the lookup fails. This ensures
+    the application always has valid coordinates to work with.
+    
+    Args:
+        location_name (str): Name of the location to search for
+        fallback_coordinates (Tuple[float, float]): Default coordinates to use if lookup fails
+    
+    Returns:
+        Tuple[float, float]: Resolved coordinates or fallback coordinates
+    
+    Example:
+        >>> coords = get_location_with_fallback("홍대입구", (37.5563, 126.9237))
+        >>> print(f"Using coordinates: {coords}")
+        Using coordinates: (37.5563, 126.9237)
+    """
+    coords = get_location_coordinates(location_name)
+    
+    if coords and validate_coordinates(*coords):
+        return coords
+    else:
+        print(f"Location lookup failed for '{location_name}', using fallback coordinates")
+        return fallback_coordinates

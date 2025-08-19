@@ -16,6 +16,140 @@ import random
 from constants import TONE_STYLE_MAP, LOW_BUDGET, MEDIUM_BUDGET, HIGH_BUDGET
 
 # =============================================================================
+# HELPER FUNCTIONS FOR PHI PROMPT OPTIMIZATION
+# =============================================================================
+
+def format_recommendations_for_phi(recommendations_json: json) -> str:
+    """
+    Format place recommendations in a Phi-optimized structure for better choice selection.
+    
+    This function transforms the raw recommendations into a clear, structured format
+    that helps Phi-3-mini make better decisions by organizing information logically.
+    
+    Args:
+        recommendations_json (json): Raw place recommendations from Kakao API
+        
+    Returns:
+        str: Formatted recommendations string optimized for Phi choice selection
+    """
+    if not recommendations_json:
+        return "No places available for selection."
+    
+    # Group places by type for better organization
+    places_by_type = {}
+    for place in recommendations_json:
+        place_type = place.get('place_type', 'Unknown')
+        if place_type not in places_by_type:
+            places_by_type[place_type] = []
+        places_by_type[place_type].append(place)
+    
+    # Format each place type section
+    formatted_sections = []
+    for place_type, places in places_by_type.items():
+        section = f"\n{place_type.upper()} ({len(places)} options):\n"
+        
+        for i, place in enumerate(places, 1):
+            # Extract key information
+            name = place.get('place_name', 'Unknown')
+            address = place.get('road_address_name', place.get('address_name', 'No address'))
+            distance = place.get('distance', 'Unknown')
+            category = place.get('category_group_name', place_type)
+            
+            # Format the place entry - minimal tokens
+            place_entry = f"{i}. {name}\n"
+            place_entry += f"   Address: {address}\n"
+            place_entry += f"   Distance: {distance}m\n"
+            place_entry += f"   Category: {category}\n"
+            
+            # Add additional context if available
+            if place.get('phone'):
+                place_entry += f"   Phone: {place['phone']}\n"
+            if place.get('category_name') and place['category_name'] != category:
+                place_entry += f"   Type: {place['category_name']}\n"
+            
+            section += place_entry + "\n"
+        
+        formatted_sections.append(section)
+    
+    # Combine all sections
+    formatted_output = "".join(formatted_sections)
+    
+    # Add summary at the end
+    total_places = len(recommendations_json)
+    formatted_output += f"\nSUMMARY: {total_places} total places across {len(places_by_type)} categories\n"
+    formatted_output += "Choose 4-5 places for best experience.\n"
+    
+    return formatted_output
+
+def get_companion_specific_prompt_enhancement(companion_type: str, start_time: int, budget_level: str) -> str:
+    """
+    Get companion-specific prompt enhancements for Phi to improve selection quality.
+    
+    This function provides tailored guidance based on companion type, timing, and budget
+    to help Phi-3-mini make more contextually appropriate choices.
+    
+    Args:
+        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
+        start_time (int): Starting time in 24-hour format
+        budget_level (str): Budget level (low, medium, high)
+        
+    Returns:
+        str: Companion-specific prompt enhancement
+    """
+    
+    # Concise companion-specific guidance
+    companion_enhancements = {
+        "solo": {
+            "morning": "Focus on quiet spots: reflection cafes, morning markets, parks, early cultural venues.",
+            "afternoon": "Choose personal exploration: museums, unique shops, quiet dining, scenic spots.",
+            "evening": "Select intimate venues: reading cafes, cultural performances, rooftop views, quiet bars."
+        },
+        "couple": {
+            "morning": "Prioritize romantic experiences: atmospheric cafes, scenic paths, morning culture, intimate brunch.",
+            "afternoon": "Choose romantic activities: cultural experiences, scenic dining, unique shopping, outdoor activities.",
+            "evening": "Focus on romantic atmosphere: intimate restaurants, evening entertainment, romantic views, cozy venues."
+        },
+        "friends": {
+            "morning": "Select group activities: social cafes, group markets, outdoor activities, group cultural venues.",
+            "afternoon": "Choose fun activities: interactive experiences, social dining, entertainment, outdoor group activities.",
+            "evening": "Focus on social activities: group dining, entertainment venues, nightlife, social gathering places."
+        },
+        "family": {
+            "morning": "Prioritize family activities: all-ages cafes, parks, educational activities, family cultural venues.",
+            "afternoon": "Choose family activities: interactive museums, family restaurants, outdoor activities, educational experiences.",
+            "evening": "Select family activities: family dining, all-ages entertainment, safe activities, family bonding."
+        }
+    }
+    
+    # Determine time period
+    if start_time < 12:
+        time_period = "morning"
+    elif start_time < 17:
+        time_period = "afternoon"
+    else:
+        time_period = "evening"
+    
+    # Get the specific enhancement
+    enhancement = companion_enhancements.get(companion_type.lower(), companion_enhancements["solo"])
+    time_specific_guidance = enhancement.get(time_period, enhancement["afternoon"])
+    
+    # Concise budget considerations
+    budget_considerations = {
+        "low": "Keep costs minimal while maintaining quality.",
+        "medium": "Balance cost and experience quality.",
+        "high": "Focus on premium experiences and quality."
+    }
+    
+    return f"""
+{companion_type.upper()} GUIDANCE:
+{time_specific_guidance}
+
+BUDGET: {budget_considerations[budget_level]}
+
+Use this guidance to score and rank your 20 candidate places.
+"""
+
+# =============================================================================
 # LIGHTWEIGHT PHI-3.5 MINI PROMPT FOR LOCATION SELECTION (4-5 PLACES)
 # =============================================================================
 
@@ -27,71 +161,115 @@ def build_phi_location_prompt(
     recommendations_json: json,
 ) -> str:
     """
-    Build a lightweight prompt for Phi-3.5 Mini to select 4-5 optimal locations.
+    Build an optimized prompt for Phi-3.5 Mini to select 4-5 optimal locations from 20 candidates.
     
-    This prompt is designed to be simple and efficient for the lightweight model:
-    - Choose 4-5 locations from different place types
-    - Ensure logical flow and variety
-    - Match companion type and budget preferences
-    - Return structured JSON with reasoning
+    This prompt is specifically designed for Phi-3-mini's choice selection capabilities:
+    - Clear selection criteria and ranking system
+    - Structured decision-making process
+    - Companion type and context awareness
+    - Geographic flow optimization
+    - Budget and timing considerations
     
     Args:
         start_location (tuple): Starting coordinates (latitude, longitude)
         companion_type (str): Type of outing (Solo, Couple, Friends, Family)
         start_time (int): Starting time in 24-hour format
         budget_level (str): Budget level (low, medium, high)
-        recommendations_json (json): Formatted place recommendations from Kakao API
+        recommendations_json (json): 20 candidate places from enhanced algorithm
         
     Returns:
-        str: Lightweight prompt string for Phi-3.5 Mini
+        str: Optimized prompt string for Phi-3.5 Mini choice selection
     """
     
-    # Simple companion guidance
-    companion_guide = {
-        "solo": "quiet, reflective places",
-        "couple": "romantic, intimate spots",
-        "friends": "fun, social locations",
-        "family": "safe, educational places"
+    # Enhanced companion-specific selection criteria
+    companion_criteria = {
+        "solo": {
+            "priority": ["quiet atmosphere", "personal reflection", "cultural depth", "unique experiences"],
+            "avoid": ["overly crowded", "group-focused", "romantic couples"]
+        },
+        "couple": {
+            "priority": ["romantic atmosphere", "intimate settings", "shared experiences", "memorable moments"],
+            "avoid": ["family-oriented", "solo activities", "business-focused"]
+        },
+        "friends": {
+            "priority": ["social atmosphere", "fun activities", "group experiences", "entertainment value"],
+            "avoid": ["quiet/isolated", "romantic", "educational only"]
+        },
+        "family": {
+            "priority": ["child-friendly", "educational value", "safe environment", "entertainment for all ages"],
+            "avoid": ["adult-only", "dangerous", "expensive", "quiet/reflective"]
+        }
     }
     
-    # Time-based guidance
+    # Time-based selection guidance
+    time_guidance = {
+        "morning": {
+            "ideal": ["breakfast spots", "morning activities", "fresh starts", "daytime exploration"],
+            "avoid": ["evening venues", "nightlife", "late dining"]
+        },
+        "afternoon": {
+            "ideal": ["lunch spots", "daytime activities", "outdoor exploration", "cultural visits"],
+            "avoid": ["breakfast-only", "late night venues"]
+        },
+        "evening": {
+            "ideal": ["dinner spots", "evening atmosphere", "nightlife", "romantic settings"],
+            "avoid": ["breakfast spots", "daytime activities", "early closing"]
+        }
+    }
+    
+    # Budget considerations
+    budget_guidance = {
+        "low": "Focus on free or low-cost activities, public spaces, and budget-friendly dining",
+        "medium": "Mix of free and paid activities, moderate dining options, and varied experiences",
+        "high": "Premium experiences, fine dining, exclusive venues, and luxury activities"
+    }
+    
+    # Determine time period
     if start_time < 12:
-        time_guide = "morning-friendly locations"
+        time_period = "morning"
     elif start_time < 17:
-        time_guide = "afternoon-appropriate spots"
+        time_period = "afternoon"
     else:
-        time_guide = "evening atmosphere places"
+        time_period = "evening"
+    
+    # Get companion-specific criteria
+    criteria = companion_criteria.get(companion_type.lower(), companion_criteria["solo"])
+    time_criteria = time_guidance.get(time_period, time_guidance["afternoon"])
     
     return f"""<|system|>
-You are a travel planner. Select 4-5 locations for a {companion_type.lower()} outing.
-IMPORTANT: Respond ONLY with valid JSON. Do not include the prompt, system messages, or any other text.
+You are a travel planner. Select 4-5 locations from 20 candidates.
+Respond ONLY with valid JSON.
 <|end|>
 
 <|user|>
-Starting from {start_location} at {start_time}:00, choose 4-5 locations that are:
-- {companion_guide.get(companion_type.lower(), "suitable for the outing")}
-- {time_guide}
-- Within {budget_level} budget
-- Different place types for variety
-- Near each other for easy flow
+TASK: Select 4-5 locations from 20 candidates.
+Location: {start_location}
+Companion: {companion_type}
+Time: {start_time}:00 ({time_period})
+Budget: {budget_level}
 
-Return ONLY a JSON array with this exact structure:
-[
-  {{
-    "place_name": "Location Name",
-    "road_address_name": "Full Address",
-    "place_type": "Category",
-    "distance": "Distance from start",
-    "place_url": "Kakao Map URL",
-    "latitude": 37.123456,
-    "longitude": 126.123456
-  }}
-]
+CRITERIA:
+1. Companion fit: {', '.join(criteria['priority'])}
+2. Time appropriate: {', '.join(time_criteria['ideal'])}
+3. Budget: {budget_guidance[budget_level]}
+4. Geographic flow: logical, walkable route
+5. Variety: different place types
 
-Available places:
-{recommendations_json}
+{get_companion_specific_prompt_enhancement(companion_type, start_time, budget_level)}
 
-Remember: Output ONLY the JSON array, nothing else.
+PROCESS:
+1. Review 20 candidates
+2. Score on companion fit, time, budget
+3. Consider geographic proximity
+4. Select top 4-5 places
+5. Order for optimal route
+
+OUTPUT: JSON array with place_name, road_address_name, place_type, distance, place_url, latitude, longitude, selection_reason
+
+CANDIDATES:
+{format_recommendations_for_phi(recommendations_json)}
+
+Return ONLY the JSON array.
 <|end|>
 
 <|assistant|>"""
