@@ -276,10 +276,12 @@ REQUIREMENTS:
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
-Return ONLY the JSON array.
+IMPORTANT: Respond with ONLY the JSON array. Do not include any other text, explanations, or the prompt content.
+CRITICAL: Start your response immediately with [ and end with ]. No other text before or after the JSON.
 <|end|>
 
-<|assistant|>"""
+<|assistant|>
+"""
 
 # =============================================================================
 # ENHANCED QWEN PROMPT FOR DESCRIPTIVE STORYTELLING

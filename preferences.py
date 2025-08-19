@@ -400,8 +400,28 @@ class Preferences:
             
         print(f"Raw Phi model output: {raw_output[:500]}...", file=sys.stderr)
         
+        # Clean the output - remove common Phi artifacts
+        cleaned_output = raw_output
+        
+        # Remove common Phi output artifacts
+        artifacts_to_remove = [
+            'Using libGenie.so version',
+            '[INFO]',
+            '[PROMPT]:',
+            '<|system|>',
+            '<|user|>',
+            '<|end|>',
+            'Starting from',
+            'Available places:'
+        ]
+        
+        for artifact in artifacts_to_remove:
+            cleaned_output = cleaned_output.replace(artifact, '')
+        
+        print(f"Cleaned output: {cleaned_output[:300]}...", file=sys.stderr)
+        
         # Simple approach: Look for the first [ and last ] to extract JSON array
-        start_idx = raw_output.find('[')
+        start_idx = cleaned_output.find('[')
         if start_idx == -1:
             print("❌ No JSON array start found", file=sys.stderr)
             return None
@@ -410,7 +430,7 @@ class Preferences:
         bracket_count = 0
         end_idx = -1
         
-        for i, char in enumerate(raw_output[start_idx:], start_idx):
+        for i, char in enumerate(cleaned_output[start_idx:], start_idx):
             if char == '[':
                 bracket_count += 1
             elif char == ']':
@@ -424,7 +444,7 @@ class Preferences:
             return None
             
         # Extract the potential JSON
-        potential_json = raw_output[start_idx:end_idx]
+        potential_json = cleaned_output[start_idx:end_idx]
         print(f"🔍 Extracted potential JSON (length: {len(potential_json)}): {potential_json[:200]}...", file=sys.stderr)
         
         try:
@@ -440,8 +460,15 @@ class Preferences:
                 if place['latitude'] == 0 or place['longitude'] == 0:
                     print(f"❌ Place {i+1} has zero coordinates: {place.get('place_name', 'Unknown')}", file=sys.stderr)
                     return None
+                
+                # Check for duplicate coordinates
+                for j, other_place in enumerate(parsed):
+                    if i != j and (place['latitude'] == other_place['latitude'] and 
+                                   place['longitude'] == other_place['longitude']):
+                        print(f"❌ Places {i+1} and {j+1} have duplicate coordinates: {place.get('place_name', 'Unknown')} and {other_place.get('place_name', 'Unknown')}", file=sys.stderr)
+                        return None
             
-            print(f"✅ All {len(parsed)} places have valid coordinates", file=sys.stderr)
+            print(f"✅ All {len(parsed)} places have valid, unique coordinates", file=sys.stderr)
             return potential_json
             
         except json.JSONDecodeError as e:
