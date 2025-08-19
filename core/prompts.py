@@ -241,6 +241,7 @@ def build_phi_location_prompt(
     return f"""<|system|>
 You are a travel planner. Select 4-5 locations from 20 candidates.
 Respond with a simple list of selected places, not JSON.
+IMPORTANT: You MUST use the EXACT place names from the candidates below. Do NOT use generic terms like "Place Name" or "Location".
 <|end|>
 
 <|user|>
@@ -264,18 +265,20 @@ PROCESS:
 2. Select top 4-5 places based on criteria
 3. List them in order (1, 2, 3, 4, 5)
 4. Include the place name and why you chose it
+5. CRITICAL: Use ONLY the exact place names from the candidates below
 
 OUTPUT: Simple numbered list of your selected places:
-1. Place Name - Brief reason for selection
-2. Place Name - Brief reason for selection
-3. Place Name - Brief reason for selection
-4. Place Name - Brief reason for selection
-5. Place Name - Brief reason for selection
+1. [EXACT PLACE NAME FROM CANDIDATES] - Brief reason for selection
+2. [EXACT PLACE NAME FROM CANDIDATES] - Brief reason for selection
+3. [EXACT PLACE NAME FROM CANDIDATES] - Brief reason for selection
+4. [EXACT PLACE NAME FROM CANDIDATES] - Brief reason for selection
+5. [EXACT PLACE NAME FROM CANDIDATES] - Brief reason for selection
 
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
 IMPORTANT: Select actual places from the candidates above. Do NOT use placeholder text.
+Use ONLY the exact place names as they appear in the candidates list.
 <|end|>
 
 <|assistant|>

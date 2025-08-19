@@ -383,6 +383,9 @@ class Preferences:
         selected_places = self._extract_places_from_text(cleaned_output)
         
         if selected_places:
+            # Ensure we have minimum required locations for map functionality
+            selected_places = self._ensure_minimum_locations(selected_places, min_locations=4)
+            
             # Convert to JSON format
             json_output = self._convert_places_to_json(selected_places)
             if json_output:
@@ -431,6 +434,116 @@ class Preferences:
         
         print(f"🔍 Extracted {len(places)} valid places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
         return places
+    
+    def _ensure_minimum_locations(self, selected_places: List[Dict], min_locations: int = 4) -> List[Dict]:
+        """
+        Ensure we have a minimum number of locations by supplementing with fallback places if needed.
+        
+        This addresses the issue where Phi generates generic placeholders instead of real locations.
+        
+        Args:
+            selected_places (List[Dict]): List of places extracted from Phi output
+            min_locations (int): Minimum number of locations required
+            
+        Returns:
+            List[Dict]: List with minimum required locations
+        """
+        if len(selected_places) >= min_locations:
+            return selected_places
+        
+        print(f"⚠️ Only {len(selected_places)} valid places found, need minimum {min_locations}", file=sys.stderr)
+        print("🔧 Supplementing with fallback locations to ensure map functionality", file=sys.stderr)
+        
+        # Get all available candidates to supplement the list
+        all_candidates = self._get_all_candidates()
+        if not all_candidates:
+            print("❌ No candidate places available for supplementation", file=sys.stderr)
+            return selected_places
+        
+        # Create a set of already selected place names to avoid duplicates
+        selected_names = {place['place_name'].lower() for place in selected_places}
+        
+        # Find additional candidates that weren't selected
+        additional_places = []
+        for candidate in all_candidates:
+            candidate_name = candidate.get('place_name', '').lower()
+            if candidate_name not in selected_names:
+                additional_places.append({
+                    "place_name": candidate.get('place_name', 'Unknown'),
+                    "selection_reason": f"Supplemented location for complete itinerary"
+                })
+                selected_names.add(candidate_name)
+                
+                # Stop when we have enough locations
+                if len(selected_places) + len(additional_places) >= min_locations:
+                    break
+        
+        # Combine original and additional places
+        final_places = selected_places + additional_places
+        
+        print(f"✅ Supplemented to {len(final_places)} total locations", file=sys.stderr)
+        print(f"✅ Original: {len(selected_places)}, Additional: {len(additional_places)}", file=sys.stderr)
+        
+        return final_places
+    
+    def _create_fallback_locations_for_qwen(self, existing_locations: List[Dict]) -> List[Dict]:
+        """
+        Create fallback locations when we don't have enough for Qwen story generation.
+        
+        This ensures the Qwen prompts always have enough locations to work with.
+        
+        Args:
+            existing_locations (List[Dict]): List of existing valid locations
+            
+        Returns:
+            List[Dict]: List with minimum 4 locations for Qwen generation
+        """
+        print(f"🔧 Creating fallback locations for Qwen (current: {len(existing_locations)})", file=sys.stderr)
+        
+        # We need at least 4 locations for the Qwen prompts to work properly
+        min_locations = 4
+        if len(existing_locations) >= min_locations:
+            return existing_locations
+        
+        # Get all available candidates to supplement
+        all_candidates = self._get_all_candidates()
+        if not all_candidates:
+            print("❌ No candidate places available for Qwen fallback", file=sys.stderr)
+            return existing_locations
+        
+        # Create a set of already selected place names to avoid duplicates
+        selected_names = {loc.get('place_name', '').lower() for loc in existing_locations}
+        
+        # Find additional candidates that weren't selected
+        additional_locations = []
+        for candidate in all_candidates:
+            candidate_name = candidate.get('place_name', '').lower()
+            if candidate_name not in selected_names:
+                # Create a location entry compatible with Qwen prompts
+                fallback_location = {
+                    "place_name": candidate.get('place_name', 'Unknown'),
+                    "road_address_name": candidate.get('road_address_name', ''),
+                    "place_type": candidate.get('place_type', 'Unknown'),
+                    "distance": str(candidate.get('distance', 0)),
+                    "place_url": candidate.get('place_url', ''),
+                    "latitude": float(candidate.get('y', 0)),
+                    "longitude": float(candidate.get('x', 0)),
+                    "selection_reason": f"Fallback location for complete itinerary"
+                }
+                additional_locations.append(fallback_location)
+                selected_names.add(candidate_name)
+                
+                # Stop when we have enough locations
+                if len(existing_locations) + len(additional_locations) >= min_locations:
+                    break
+        
+        # Combine existing and additional locations
+        final_locations = existing_locations + additional_locations
+        
+        print(f"✅ Created Qwen fallback locations: {len(final_locations)} total", file=sys.stderr)
+        print(f"✅ Original: {len(existing_locations)}, Additional: {len(additional_locations)}", file=sys.stderr)
+        
+        return final_locations
     
     def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
         """
@@ -595,6 +708,16 @@ class Preferences:
             
             if len(selected_locations) == 0:
                 return "No locations selected for itinerary - cannot generate story"
+            
+            # Final safety check: Ensure we have enough locations for the prompts
+            if len(selected_locations) < 3:
+                print(f"⚠️ Only {len(selected_locations)} locations available, creating fallback locations", file=sys.stderr)
+                fallback_locations = self._create_fallback_locations_for_qwen(selected_locations)
+                if fallback_locations:
+                    selected_locations = fallback_locations
+                    print(f"✅ Created fallback locations: {len(selected_locations)} total", file=sys.stderr)
+                else:
+                    return "Insufficient locations for itinerary generation"
             
             print(f"✅ Proceeding with {len(selected_locations)} locations for Qwen story generation", file=sys.stderr)
             
