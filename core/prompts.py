@@ -263,17 +263,17 @@ PROCESS:
 3. List them in order (1, 2, 3, 4, 5)
 4. Include the place name and why you chose it
 
-OUTPUT: Simple text list like:
-1. [Place Name] - [Brief reason for selection]
-2. [Place Name] - [Brief reason for selection]
-3. [Place Name] - [Brief reason for selection]
-4. [Place Name] - [Brief reason for selection]
-5. [Place Name] - [Brief reason for selection]
+OUTPUT: Simple numbered list of your selected places:
+1. Place Name - Brief reason for selection
+2. Place Name - Brief reason for selection
+3. Place Name - Brief reason for selection
+4. Place Name - Brief reason for selection
+5. Place Name - Brief reason for selection
 
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
-IMPORTANT: Respond with a simple numbered list. Do NOT generate JSON.
+IMPORTANT: Select actual places from the candidates above. Do NOT use placeholder text.
 <|end|>
 
 <|assistant|>
