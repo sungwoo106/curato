@@ -299,37 +299,86 @@ IMPORTANT:
 # TOKEN-EFFICIENT QWEN PROMPT FOR COMPREHENSIVE STORYTELLING
 # =============================================================================
 
-def _get_location_description(position: int, total_locations: int) -> str:
+def build_qwen_itinerary_prompt(
+    locations: list,
+    companion_type: str,
+    budget_level: str,
+    start_time: int = 12,
+) -> str:
     """
-    Generate appropriate description for a location based on its position in the itinerary.
+    Build a unified, well-engineered prompt for Qwen that ensures comprehensive coverage.
+    
+    This is the primary prompt that consolidates all Qwen functionality into a single,
+    optimized prompt for maximum place coverage and emotional engagement.
     
     Args:
-        position (int): 0-based position of the location
-        total_locations (int): Total number of locations in the itinerary
+        locations (list): List of 4-5 locations from the location selector
+        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
+        budget_level (str): Budget level (low, medium, high)
+        start_time (int): Starting time for temporal context
         
     Returns:
-        str: Description appropriate for the location's position
+        str: Unified prompt string for comprehensive itinerary generation
     """
-    if total_locations == 4:
-        descriptions = [
-            "Opening experience, emotional tone",
-            "Development, building connection", 
-            "Climax, peak experience",
-            "Closing, satisfying resolution"
-        ]
-    elif total_locations == 5:
-        descriptions = [
-            "Opening experience, emotional tone",
-            "Development, building connection",
-            "Climax, peak experience", 
-            "Continuation, maintaining momentum",
-            "Closing, satisfying resolution"
-        ]
-    else:
-        # Fallback for unexpected counts
-        descriptions = ["Carefully selected location"] * total_locations
     
-    return descriptions[position] if position < len(descriptions) else "Carefully selected location"
+    # Get tone and style for companion type
+    tone_style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
+    
+    # Get budget-appropriate activities
+    budget_activities = {
+        "low": LOW_BUDGET,
+        "medium": MEDIUM_BUDGET,
+        "high": HIGH_BUDGET,
+    }
+    
+    # Select 2-3 budget-appropriate activities
+    selected_activities = random.sample(budget_activities[budget_level], k=min(3, len(budget_activities[budget_level])))
+    
+    # Format locations with detailed context
+    locs_text = "\n".join([
+        f"{i+1}. {loc['place_name']} ({loc.get('place_type', 'Selected location')}) - {loc.get('selection_reason', 'Carefully chosen for optimal experience')}"
+        for i, loc in enumerate(locations)
+    ])
+    
+    # Time context
+    if start_time < 12:
+        time_context = "morning light, fresh energy, new beginnings"
+    elif start_time < 17:
+        time_context = "warm afternoon glow, active exploration, golden sunlight"
+    else:
+        time_context = "golden hour magic, evening enchantment, soft lighting"
+    
+    # Unified comprehensive prompt
+    prompt = f"""<|im_start|>system
+You are a master storyteller creating comprehensive travel itineraries.
+Your task is to cover ALL {len(locations)} locations in detail, ensuring no place is missed.
+Use {tone_style['tone']} language and {tone_style['style_note']} for maximum engagement.
+<|im_end|>
+
+<|im_start|>user
+Create a {tone_style['tone']} itinerary for {companion_type} exploring these locations:
+
+{locs_text}
+
+CRITICAL REQUIREMENTS:
+- MUST cover ALL {len(locations)} locations with equal attention
+- Each location gets its own detailed paragraph
+- Use {tone_style['style_note']}
+- Include budget activities: {', '.join(selected_activities)}
+- Time context: {time_context}
+- Budget level: {budget_level}
+
+MANDATORY STRUCTURE (follow exactly):
+{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
+
+IMPORTANT: Each location must be clearly labeled and described in detail.
+Do not skip any location. Make emotional connections between them.
+Create a cohesive narrative that flows from one location to the next.
+<|im_end|>
+
+<|im_start|>assistant"""
+
+    return prompt
 
 def build_qwen_story_prompt(
     locations: list,
@@ -416,313 +465,34 @@ Make each location memorable and connect them emotionally. Ensure comprehensive 
 
     return prompt
 
-def build_comprehensive_qwen_prompt(
-    locations: list,
-    companion_type: str,
-    budget_level: str,
-    start_time: int = 12,
-) -> str:
+def _get_location_description(position: int, total_locations: int) -> str:
     """
-    Build a comprehensive prompt for Qwen that ensures ALL places are covered.
-    
-    This is an alternative prompt that provides more explicit guidance for comprehensive coverage.
-    Use this when the token-efficient version doesn't provide enough coverage.
+    Generate appropriate description for a location based on its position in the itinerary.
     
     Args:
-        locations (list): List of 4-5 locations from the location selector
-        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
-        budget_level (str): Budget level (low, medium, high)
-        start_time (int): Starting time for temporal context
+        position (int): 0-based position of the location
+        total_locations (int): Total number of locations in the itinerary
         
     Returns:
-        str: Comprehensive prompt string for complete coverage
+        str: Description appropriate for the location's position
     """
-    
-    # Get tone and style for companion type
-    tone_style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
-    
-    # Get budget-appropriate activities
-    budget_activities = {
-        "low": LOW_BUDGET,
-        "medium": MEDIUM_BUDGET,
-        "high": HIGH_BUDGET,
-    }
-    
-    # Select 2-3 budget-appropriate activities
-    selected_activities = random.sample(budget_activities[budget_level], k=min(3, len(budget_activities[budget_level])))
-    
-    # Format locations with more context
-    locs_text = "\n".join([
-        f"{i+1}. {loc['place_name']} ({loc.get('place_type', 'Selected location')}) - {loc.get('selection_reason', 'Carefully chosen for optimal experience')}"
-        for i, loc in enumerate(locations)
-    ])
-    
-    # Time context
-    if start_time < 12:
-        time_context = "morning light, fresh energy, new beginnings"
-    elif start_time < 17:
-        time_context = "warm afternoon glow, active exploration, golden sunlight"
+    if total_locations == 4:
+        descriptions = [
+            "Opening experience, emotional tone",
+            "Development, building connection", 
+            "Climax, peak experience",
+            "Closing, satisfying resolution"
+        ]
+    elif total_locations == 5:
+        descriptions = [
+            "Opening experience, emotional tone",
+            "Development, building connection",
+            "Climax, peak experience", 
+            "Continuation, maintaining momentum",
+            "Closing, satisfying resolution"
+        ]
     else:
-        time_context = "golden hour magic, evening enchantment, soft lighting"
+        # Fallback for unexpected counts
+        descriptions = ["Carefully selected location"] * total_locations
     
-    # Enhanced comprehensive prompt
-    prompt = f"""<|im_start|>system
-You are a master storyteller creating comprehensive travel itineraries.
-Your task is to cover ALL {len(locations)} locations in detail, ensuring no place is missed.
-<|im_end|>
-
-<|im_start|>user
-Create a {tone_style['tone']} itinerary for {companion_type} exploring these locations:
-
-{locs_text}
-
-CRITICAL REQUIREMENTS:
-- MUST cover ALL {len(locations)} locations with equal attention
-- Each location gets its own detailed paragraph
-- Use {tone_style['style_note']}
-- Include budget activities: {', '.join(selected_activities)}
-- Time context: {time_context}
-- Budget level: {budget_level}
-
-MANDATORY STRUCTURE (follow exactly):
-{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
-
-IMPORTANT: Each location must be clearly labeled and described in detail.
-Do not skip any location. Make emotional connections between them.
-<|im_end|>
-
-<|im_start|>assistant"""
-
-    return prompt
-
-def build_ultra_comprehensive_qwen_prompt(
-    locations: list,
-    companion_type: str,
-    budget_level: str,
-    start_time: int = 12,
-) -> str:
-    """
-    Build an ultra-comprehensive prompt for Qwen that guarantees ALL places are covered.
-    
-    This is the most explicit prompt that uses numbered sections and strict formatting
-    to ensure maximum coverage. Use this as a final fallback when other prompts fail.
-    
-    Args:
-        locations (list): List of 4-5 locations from the location selector
-        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
-        budget_level (str): Budget level (low, medium, high)
-        start_time (int): Starting time for temporal context
-        
-    Returns:
-        str: Ultra-comprehensive prompt string for guaranteed coverage
-    """
-    
-    # Get tone and style for companion type
-    tone_style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
-    
-    # Get budget-appropriate activities
-    budget_activities = {
-        "low": LOW_BUDGET,
-        "medium": MEDIUM_BUDGET,
-        "high": HIGH_BUDGET,
-    }
-    
-    # Select 2-3 budget-appropriate activities
-    selected_activities = random.sample(budget_activities[budget_level], k=min(3, len(budget_activities[budget_level])))
-    
-    # Time context
-    if start_time < 12:
-        time_context = "morning light, fresh energy, new beginnings"
-    elif start_time < 17:
-        time_context = "warm afternoon glow, active exploration, golden sunlight"
-    else:
-        time_context = "golden hour magic, evening enchantment, soft lighting"
-    
-    # Build dynamic location sections based on actual count
-    location_sections = []
-    for i, location in enumerate(locations, 1):
-        if i == 1:
-            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, including emotional tone and {tone_style['style_note']}]"
-        elif i == 2:
-            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, building connection from previous location]"
-        elif i == 3:
-            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, creating peak experience]"
-        elif i == 4:
-            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, maintaining momentum]"
-        elif i == 5:
-            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, providing satisfying resolution]"
-        else:
-            # Handle any additional locations dynamically
-            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, continuing the journey]"
-        
-        location_sections.append(section)
-    
-    # Join all location sections
-    locations_text = "\n\n".join(location_sections)
-    
-    # Ultra-comprehensive prompt with dynamic formatting
-    prompt = f"""<|im_start|>system
-You are a travel writer creating detailed itineraries. You MUST cover ALL {len(locations)} locations.
-Use the EXACT format specified below. Do not skip any location.
-<|im_end|>
-
-<|im_start|>user
-Write a {tone_style['tone']} itinerary for {companion_type} with budget {budget_level}.
-Time: {time_context}
-
-FORMAT: Use exactly this structure with these exact headings:
-
-{locations_text}
-
-Include these budget activities: {', '.join(selected_activities)}
-<|im_end|>
-
-<|im_start|>assistant"""
-
-    return prompt
-
-def build_adaptive_qwen_prompt(
-    locations: list,
-    companion_type: str,
-    budget_level: str,
-    start_time: int = 12,
-    target_tokens: int = 800,
-) -> str:
-    """
-    Build an adaptive prompt for Qwen that automatically adjusts based on target token count.
-    
-    This function creates prompts that are optimized for specific token targets while
-    maintaining comprehensive coverage of all locations.
-    
-    Args:
-        locations (list): List of 4-5 locations from the location selector
-        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
-        budget_level (str): Budget level (low, medium, high)
-        start_time (int): Starting time for temporal context
-        target_tokens (int): Target token count for the generated response
-        
-    Returns:
-        str: Adaptive prompt string optimized for target token count
-    """
-    
-    # Get tone and style for companion type
-    tone_style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
-    
-    # Get budget-appropriate activities
-    budget_activities = {
-        "low": LOW_BUDGET,
-        "medium": MEDIUM_BUDGET,
-        "high": HIGH_BUDGET,
-    }
-    
-    # Select activities based on target token count
-    if target_tokens <= 600:
-        activity_count = 1
-    elif target_tokens <= 800:
-        activity_count = 2
-    else:
-        activity_count = 3
-    
-    selected_activities = random.sample(budget_activities[budget_level], k=min(activity_count, len(budget_activities[budget_level])))
-    
-    # Time context
-    if start_time < 12:
-        time_context = "morning light, fresh energy, new beginnings"
-    elif start_time < 17:
-        time_context = "warm afternoon glow, active exploration, golden sunlight"
-    else:
-        time_context = "golden hour magic, evening enchantment, soft lighting"
-    
-    # Calculate sentences per location based on target tokens
-    # Assume ~20-25 tokens per sentence
-    total_sentences = max(3, target_tokens // 25)
-    sentences_per_location = max(2, total_sentences // len(locations))
-    
-    # Format locations efficiently
-    locs_text = "\n".join([
-        f"{i+1}. {loc['place_name']} ({loc.get('place_type', 'Selected location')})"
-        for i, loc in enumerate(locations)
-    ])
-    
-    # Adaptive prompt based on target tokens
-    if target_tokens <= 600:
-        # Compact prompt
-        prompt = f"""<|im_start|>system
-You are a travel writer. Cover ALL {len(locations)} locations in {target_tokens} tokens.
-<|im_end|>
-
-<|im_start|>user
-Write a {tone_style['tone']} itinerary for {companion_type} ({budget_level} budget, {time_context}):
-
-{locs_text}
-
-REQUIREMENTS:
-- Cover ALL {len(locations)} locations
-- Use {tone_style['style_note']}
-- Include: {', '.join(selected_activities)}
-- Target: {target_tokens} tokens total
-- {sentences_per_location} sentences per location
-
-Format: Number each location clearly.
-<|im_end|>
-
-<|im_start|>assistant"""
-    
-    elif target_tokens <= 800:
-        # Standard prompt
-        prompt = f"""<|im_start|>system
-You are a travel writer creating comprehensive itineraries.
-Cover ALL {len(locations)} locations with emotional depth.
-<|im_end|>
-
-<|im_start|>user
-Create a {tone_style['tone']} itinerary for {companion_type} exploring:
-
-{locs_text}
-
-REQUIREMENTS:
-- Cover ALL {len(locations)} locations in detail
-- Use {tone_style['style_note']}
-- Include budget activities: {', '.join(selected_activities)}
-- Time context: {time_context}
-- Budget: {budget_level}
-- Target: {target_tokens} tokens
-
-STRUCTURE: Number each location and describe it with {sentences_per_location} sentences.
-<|im_end|>
-
-<|im_start|>assistant"""
-    
-    else:
-        # Detailed prompt
-        prompt = f"""<|im_start|>system
-You are a master storyteller creating immersive travel narratives.
-Generate a comprehensive itinerary covering ALL {len(locations)} locations with rich detail.
-<|im_end|>
-
-<|im_start|>user
-Create a {tone_style['tone']} itinerary for {companion_type} exploring:
-
-{locs_text}
-
-REQUIREMENTS:
-- Cover ALL {len(locations)} locations comprehensively
-- Use {tone_style['style_note']}
-- Include budget activities: {', '.join(selected_activities)}
-- Time context: {time_context}
-- Budget level: {budget_level}
-- Target: {target_tokens} tokens
-
-STRUCTURE:
-1. Location 1: Opening experience and emotional tone
-2. Location 2: Development and connection building
-3. Location 3: Peak experience and climax
-4. Location 4: Continuation and momentum
-5. Location 5: Resolution and future anticipation
-
-Each location: {sentences_per_location} detailed sentences with emotional depth.
-<|im_end|>
-
-<|im_start|>assistant"""
-    
-    return prompt
+    return descriptions[position] if position < len(descriptions) else "Carefully selected location"

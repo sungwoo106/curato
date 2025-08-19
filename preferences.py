@@ -14,7 +14,7 @@ The class serves as the main interface between the UI layer and the backend
 AI models and external services.
 """
 
-from core.prompts import build_phi_location_prompt, build_qwen_story_prompt, build_comprehensive_qwen_prompt, build_ultra_comprehensive_qwen_prompt
+from core.prompts import build_phi_location_prompt, build_qwen_itinerary_prompt
 from models.genie_runner import GenieRunner
 from data.api_clients.kakao_api import format_kakao_places_for_prompt, get_progressive_place_selection_enhanced
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
@@ -207,6 +207,21 @@ class Preferences:
                 self.progress_callback(60, "Collecting place recommendations...")
             
             self.collect_best_place()
+            
+            # Apply geographic clustering to ensure walkable itineraries
+            if self.progress_callback:
+                self.progress_callback(61, "Creating geographic clusters for walkability...")
+            
+            clustered_candidates = self._create_geographic_clusters()
+            if clustered_candidates:
+                print(f"✅ Created {len(clustered_candidates)} geographic clusters for walkable itineraries", file=sys.stderr)
+                # Use the largest cluster for Phi selection
+                largest_cluster = max(clustered_candidates, key=len)
+                print(f"✅ Using largest cluster with {len(largest_cluster)} places for Phi selection", file=sys.stderr)
+                # Update best_places to use only the clustered locations
+                self.best_places = {'clustered': largest_cluster}
+            else:
+                print("⚠️ Could not create geographic clusters, using all candidates", file=sys.stderr)
             
             # Places are already optimally selected and ordered by the progressive selection system
             if self.progress_callback:
@@ -542,7 +557,7 @@ class Preferences:
                 place1 = place_coordinates[i]
                 place2 = place_coordinates[j]
                 
-                # Calculate distance using Haversine formula (approximate)
+                # Calculate distance using Haversine formula
                 distance = self._calculate_distance(
                     place1['lat'], place1['lng'],
                     place2['lat'], place2['lng']
@@ -986,6 +1001,79 @@ class Preferences:
             print("⚠️ No candidate places available in self.best_places", file=sys.stderr)
             return []
 
+    def _create_geographic_clusters(self, max_cluster_distance: float = 0.8) -> List[List[Dict]]:
+        """
+        Create geographic clusters of places that are within walking distance of each other.
+        
+        This method implements spatial clustering to ensure Phi only selects from
+        geographically proximate locations, addressing the issue of scattered selections.
+        
+        Args:
+            max_cluster_distance (float): Maximum distance in km between places in a cluster
+            
+        Returns:
+            List[List[Dict]]: List of clusters, each containing nearby places
+        """
+        if not self.best_places:
+            return []
+        
+        # Flatten all places into a single list
+        all_places = []
+        for place_type, places in self.best_places.items():
+            for place in places:
+                place['place_type'] = place_type
+                all_places.append(place)
+        
+        if len(all_places) < 2:
+            return [all_places]  # Single place or empty
+        
+        print(f"🌍 Creating geographic clusters from {len(all_places)} places", file=sys.stderr)
+        
+        # Convert max_cluster_distance to meters
+        max_distance_m = max_cluster_distance * 1000
+        
+        # Create clusters using a simple distance-based approach
+        clusters = []
+        used_places = set()
+        
+        for i, place in enumerate(all_places):
+            if i in used_places:
+                continue
+                
+            # Start a new cluster with this place
+            cluster = [place]
+            used_places.add(i)
+            
+            # Find all places within the maximum distance
+            for j, other_place in enumerate(all_places):
+                if j in used_places:
+                    continue
+                    
+                # Calculate distance between places
+                distance = self._calculate_distance(
+                    place.get('y', 0), place.get('x', 0),
+                    other_place.get('y', 0), other_place.get('x', 0)
+                )
+                
+                if distance <= max_distance_m:
+                    cluster.append(other_place)
+                    used_places.add(j)
+            
+            clusters.append(cluster)
+        
+        # Sort clusters by size (largest first) and filter out tiny clusters
+        clusters = [cluster for cluster in clusters if len(cluster) >= 4]  # Need at least 4 places
+        clusters.sort(key=len, reverse=True)
+        
+        print(f"🌍 Created {len(clusters)} geographic clusters:", file=sys.stderr)
+        for i, cluster in enumerate(clusters):
+            print(f"🌍 Cluster {i+1}: {len(cluster)} places", file=sys.stderr)
+            if cluster:
+                first_place = cluster[0]
+                print(f"🌍   Center: {first_place.get('place_name', 'Unknown')} at ({first_place.get('y', 0)}, {first_place.get('x', 0)})", file=sys.stderr)
+        
+        return clusters
+    
     def _attempt_json_reconstruction(self, partial_json: str) -> str:
         """
         Attempt to reconstruct a JSON array from a partial or malformed JSON string.
@@ -1038,21 +1126,21 @@ class Preferences:
         
         return None
 
-    def run_qwen_story(self, route_plan_json=None):
+    def run_qwen_itinerary(self, route_plan_json=None):
         """
-        Generate an emotional, storytelling itinerary using the Qwen model.
+        Generate a comprehensive, personalized travel itinerary using the Qwen model.
         
         This method takes the route plan from run_route_planner and generates
-        a narrative, emotional description of the day that matches the companion
-        type and budget preferences. It includes fallback mechanisms to ensure
-        all selected places are covered.
+        a detailed, emotionally engaging itinerary that covers all selected places
+        while reflecting user preferences for companion type, budget, and timing.
+        It includes fallback mechanisms to ensure comprehensive coverage.
         
         Args:
             route_plan_json (str, optional): Pre-generated route plan JSON. 
                                           If None, will call run_route_planner().
         
         Returns:
-            str: Emotional itinerary text or error message
+            str: Comprehensive itinerary text or error message
         """
         # Get the route plan - either from parameter or by calling route planner
         if route_plan_json is None:
@@ -1088,8 +1176,8 @@ class Preferences:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
             return f"Failed to parse route plan: {e}"
         
-        # First attempt: Use comprehensive prompt for maximum coverage
-        prompt = build_comprehensive_qwen_prompt(
+        # Use the unified, well-engineered Qwen prompt for comprehensive itinerary generation
+        prompt = build_qwen_itinerary_prompt(
             selected_locations,                         # The 4-5 locations from route planner
             self.companion_type,                    # Companion type for tone/style
             self.budget,                            # Budget level for activity suggestions
@@ -1114,8 +1202,8 @@ class Preferences:
             else:
                 print("⚠️ Not all places covered, attempting fallback with token-efficient prompt", file=sys.stderr)
                 
-                # Fallback: Use token-efficient prompt
-                fallback_prompt = build_qwen_story_prompt(
+                # Fallback: Use the unified prompt with enhanced guidance
+                fallback_prompt = build_qwen_itinerary_prompt(
                     selected_locations,
                     self.companion_type,
                     self.budget,
@@ -1134,8 +1222,8 @@ class Preferences:
                 else:
                     print("⚠️ Fallback also incomplete, attempting ultra-comprehensive prompt", file=sys.stderr)
                     
-                    # Ultra-comprehensive fallback: Use the most detailed prompt
-                    ultra_prompt = build_ultra_comprehensive_qwen_prompt(
+                    # Enhanced fallback: Use the unified prompt with additional emphasis on coverage
+                    enhanced_prompt = build_qwen_itinerary_prompt(
                         selected_locations,
                         self.companion_type,
                         self.budget,
@@ -1143,16 +1231,16 @@ class Preferences:
                     )
                     
                     if self.progress_callback:
-                        self.progress_callback(90, "Retrying with ultra-comprehensive prompt...")
+                        self.progress_callback(90, "Retrying with enhanced prompt...")
                     
-                    ultra_output = runner.run_qwen(ultra_prompt)
-                    ultra_story = self._extract_story_from_output(ultra_output)
+                    enhanced_output = runner.run_qwen(enhanced_prompt)
+                    enhanced_story = self._extract_story_from_output(enhanced_output)
                     
-                    if ultra_story and self._verify_place_coverage(ultra_story, selected_locations):
-                        print("✅ All places covered in ultra-comprehensive fallback", file=sys.stderr)
-                        return ultra_story
+                    if enhanced_story and self._verify_place_coverage(enhanced_story, selected_locations):
+                        print("✅ All places covered in enhanced fallback", file=sys.stderr)
+                        return enhanced_story
                     else:
-                        print("⚠️ Ultra-comprehensive fallback also incomplete, returning best available story", file=sys.stderr)
+                        print("⚠️ Enhanced fallback also incomplete, returning best available story", file=sys.stderr)
                         return fallback_story if fallback_story else clean_story
                     
         except Exception as e:
