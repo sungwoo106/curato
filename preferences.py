@@ -14,7 +14,7 @@ The class serves as the main interface between the UI layer and the backend
 AI models and external services.
 """
 
-from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
+from core.prompts import build_phi_location_prompt, build_qwen_story_prompt, build_comprehensive_qwen_prompt, build_ultra_comprehensive_qwen_prompt
 from models.genie_runner import GenieRunner
 from data.api_clients.kakao_api import format_kakao_places_for_prompt, get_progressive_place_selection_enhanced
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
@@ -540,7 +540,8 @@ class Preferences:
         
         This method takes the route plan from run_route_planner and generates
         a narrative, emotional description of the day that matches the companion
-        type and budget preferences.
+        type and budget preferences. It includes fallback mechanisms to ensure
+        all selected places are covered.
         
         Returns:
             str: Emotional itinerary text or error message
@@ -558,11 +559,12 @@ class Preferences:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
             return f"Failed to parse route plan: {e}"
         
-        # Build the prompt for the Qwen model to generate emotional storytelling
-        prompt = build_qwen_story_prompt(
+        # First attempt: Use comprehensive prompt for maximum coverage
+        prompt = build_comprehensive_qwen_prompt(
             selected_locations,                         # The 4-5 locations from route planner
             self.companion_type,                    # Companion type for tone/style
             self.budget,                            # Budget level for activity suggestions
+            self.starting_time,                     # Starting time for temporal context
         )
         
         # Run the Qwen model to generate emotional storytelling
@@ -575,13 +577,91 @@ class Preferences:
             
             # Extract clean story text from the model output
             clean_story = self._extract_story_from_output(raw_output)
-            return clean_story if clean_story else raw_output
             
+            # Check if all places were covered
+            if clean_story and self._verify_place_coverage(clean_story, selected_locations):
+                print("✅ All places covered in first attempt", file=sys.stderr)
+                return clean_story
+            else:
+                print("⚠️ Not all places covered, attempting fallback with token-efficient prompt", file=sys.stderr)
+                
+                # Fallback: Use token-efficient prompt
+                fallback_prompt = build_qwen_story_prompt(
+                    selected_locations,
+                    self.companion_type,
+                    self.budget,
+                    self.starting_time,
+                )
+                
+                if self.progress_callback:
+                    self.progress_callback(85, "Retrying with optimized prompt...")
+                
+                fallback_output = runner.run_qwen(fallback_prompt)
+                fallback_story = self._extract_story_from_output(fallback_output)
+                
+                if fallback_story and self._verify_place_coverage(fallback_story, selected_locations):
+                    print("✅ All places covered in fallback attempt", file=sys.stderr)
+                    return fallback_story
+                else:
+                    print("⚠️ Fallback also incomplete, attempting ultra-comprehensive prompt", file=sys.stderr)
+                    
+                    # Ultra-comprehensive fallback: Use the most detailed prompt
+                    ultra_prompt = build_ultra_comprehensive_qwen_prompt(
+                        selected_locations,
+                        self.companion_type,
+                        self.budget,
+                        self.starting_time,
+                    )
+                    
+                    if self.progress_callback:
+                        self.progress_callback(90, "Retrying with ultra-comprehensive prompt...")
+                    
+                    ultra_output = runner.run_qwen(ultra_prompt)
+                    ultra_story = self._extract_story_from_output(ultra_output)
+                    
+                    if ultra_story and self._verify_place_coverage(ultra_story, selected_locations):
+                        print("✅ All places covered in ultra-comprehensive fallback", file=sys.stderr)
+                        return ultra_story
+                    else:
+                        print("⚠️ Ultra-comprehensive fallback also incomplete, returning best available story", file=sys.stderr)
+                        return fallback_story if fallback_story else clean_story
+                    
         except Exception as e:
             print(f"Qwen model failed: {e}", file=sys.stderr)
             if self.progress_callback:
                 self.progress_callback(95, "Qwen model failed")
             return f"Failed to generate emotional story: {e}"
+    
+    def _verify_place_coverage(self, story_text: str, selected_locations: list) -> bool:
+        """
+        Verify that all selected places are mentioned in the generated story.
+        
+        Args:
+            story_text (str): The generated story text
+            selected_locations (list): List of selected locations to verify
+            
+        Returns:
+            bool: True if all places are covered, False otherwise
+        """
+        if not story_text or not selected_locations:
+            return False
+        
+        story_lower = story_text.lower()
+        covered_count = 0
+        
+        for location in selected_locations:
+            place_name = location.get('place_name', '').lower()
+            if place_name and place_name in story_lower:
+                covered_count += 1
+                print(f"✅ Found coverage for: {location['place_name']}", file=sys.stderr)
+            else:
+                print(f"❌ Missing coverage for: {location['place_name']}", file=sys.stderr)
+        
+        coverage_percentage = (covered_count / len(selected_locations)) * 100
+        print(f"📊 Place coverage: {covered_count}/{len(selected_locations)} ({coverage_percentage:.1f}%)", file=sys.stderr)
+        
+        # Consider it covered if at least 80% of places are mentioned
+        return coverage_percentage >= 80
     
     def _extract_story_from_output(self, raw_output: str) -> str:
         """
