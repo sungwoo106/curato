@@ -21,6 +21,140 @@ from constants import TONE_STYLE_MAP, LOW_BUDGET, MEDIUM_BUDGET, HIGH_BUDGET
 # HELPER FUNCTIONS FOR PHI PROMPT OPTIMIZATION
 # =============================================================================
 
+def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Calculate the distance between two coordinates using the Haversine formula.
+    
+    Args:
+        lat1, lon1: First coordinate pair
+        lat2, lon2: Second coordinate pair
+        
+    Returns:
+        float: Distance in meters
+    """
+    import math
+    
+    # Convert to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    # Earth's radius in meters
+    r = 6371000
+    return r * c
+
+def validate_geographic_proximity(locations: list, max_distance: float = 800.0) -> dict:
+    """
+    Validate that selected locations are within acceptable walking distance.
+    
+    Args:
+        locations (list): List of location dictionaries with lat/lng coordinates
+        max_distance (float): Maximum acceptable distance in meters
+        
+    Returns:
+        dict: Validation results with distances and recommendations
+    """
+    if len(locations) < 2:
+        return {"valid": True, "max_distance": 0, "average_distance": 0, "recommendations": []}
+    
+    distances = []
+    recommendations = []
+    
+    for i in range(len(locations)):
+        for j in range(i + 1, len(locations)):
+            loc1 = locations[i]
+            loc2 = locations[j]
+            
+            if 'latitude' in loc1 and 'longitude' in loc1 and 'latitude' in loc2 and 'longitude' in loc2:
+                distance = calculate_distance(
+                    loc1['latitude'], loc1['longitude'],
+                    loc2['latitude'], loc2['longitude']
+                )
+                distances.append(distance)
+                
+                if distance > max_distance:
+                    recommendations.append(
+                        f"Consider replacing {loc1['place_name']} or {loc2['place_name']} "
+                        f"with a closer alternative (distance: {distance:.1f}m)"
+                    )
+    
+    if distances:
+        max_dist = max(distances)
+        avg_dist = sum(distances) / len(distances)
+        valid = max_dist <= max_distance
+    else:
+        max_dist = avg_dist = 0
+        valid = True
+    
+    return {
+        "valid": valid,
+        "max_distance": max_dist,
+        "average_distance": avg_dist,
+        "recommendations": recommendations
+    }
+
+def get_geographic_clustering_info(recommendations_json: json) -> str:
+    """
+    Analyze and provide geographic clustering information for Phi prompt optimization.
+    
+    Args:
+        recommendations_json (json): Raw place recommendations from Kakao API
+        
+    Returns:
+        str: Geographic clustering analysis and recommendations
+    """
+    if not recommendations_json:
+        return "No geographic data available."
+    
+    # Extract coordinates and calculate basic clustering info
+    coordinates = []
+    for place in recommendations_json:
+        if 'latitude' in place and 'longitude' in place:
+            coordinates.append({
+                'name': place.get('place_name', 'Unknown'),
+                'lat': place['latitude'],
+                'lng': place['longitude']
+            })
+    
+    if len(coordinates) < 2:
+        return f"Single location available: {coordinates[0]['name'] if coordinates else 'None'}"
+    
+    # Calculate center point
+    center_lat = sum(coord['lat'] for coord in coordinates) / len(coordinates)
+    center_lng = sum(coord['lng'] for coord in coordinates) / len(coordinates)
+    
+    # Find distances from center
+    distances_from_center = []
+    for coord in coordinates:
+        distance = calculate_distance(center_lat, center_lng, coord['lat'], coord['lng'])
+        distances_from_center.append((coord['name'], distance))
+    
+    # Sort by distance from center
+    distances_from_center.sort(key=lambda x: x[1])
+    
+    # Group into proximity zones
+    close_places = [name for name, dist in distances_from_center if dist <= 400]
+    medium_places = [name for name, dist in distances_from_center if 400 < dist <= 800]
+    far_places = [name for name, dist in distances_from_center if dist > 800]
+    
+    # Generate clustering recommendations
+    clustering_info = f"""GEOGRAPHIC CLUSTERING ANALYSIS:
+Center point: {len(coordinates)} places clustered around ({center_lat:.6f}, {center_lng:.6f})
+
+PROXIMITY ZONES:
+• Close (≤400m): {len(close_places)} places - {', '.join(close_places[:3])}{'...' if len(close_places) > 3 else ''}
+• Medium (400-800m): {len(medium_places)} places - {', '.join(medium_places[:3])}{'...' if len(medium_places) > 3 else ''}
+• Far (>800m): {len(far_places)} places - {', '.join(far_places[:3])}{'...' if len(far_places) > 3 else ''}
+
+RECOMMENDATION: Prioritize places in the Close and Medium zones for walkable itineraries.
+Avoid selecting multiple places from the Far zone unless necessary."""
+    
+    return clustering_info
+
 def format_recommendations_for_phi(recommendations_json: json) -> str:
     """
     Format place recommendations in a Phi-optimized structure for better choice selection.
@@ -198,102 +332,75 @@ def build_phi_location_prompt(
             "avoid": ["quiet/isolated", "romantic", "educational only"]
         },
         "family": {
-            "priority": ["child-friendly", "educational value", "safe environment", "entertainment for all ages"],
+            "priority": ["all-ages appeal", "educational value", "safe environment", "group activities"],
             "avoid": ["adult-only", "dangerous", "expensive", "quiet/reflective"]
         }
     }
     
-    # Time-based selection guidance
-    time_guidance = {
-        "morning": {
-            "ideal": ["breakfast spots", "morning activities", "fresh starts", "daytime exploration"],
-            "avoid": ["evening venues", "nightlife", "late dining"]
-        },
-        "afternoon": {
-            "ideal": ["lunch spots", "daytime activities", "outdoor exploration", "cultural visits"],
-            "avoid": ["breakfast-only", "late night venues"]
-        },
-        "evening": {
-            "ideal": ["dinner spots", "evening atmosphere", "nightlife", "romantic settings"],
-            "avoid": ["breakfast spots", "daytime activities", "early closing"]
-        }
-    }
-    
-    # Budget considerations
-    budget_guidance = {
-        "low": "Focus on free or low-cost activities, public spaces, and budget-friendly dining",
-        "medium": "Mix of free and paid activities, moderate dining options, and varied experiences",
-        "high": "Premium experiences, fine dining, exclusive venues, and luxury activities"
-    }
-    
-    # Determine time period
-    if start_time < 12:
-        time_period = "morning"
-    elif start_time < 17:
-        time_period = "afternoon"
-    else:
-        time_period = "evening"
-    
     # Get companion-specific criteria
     criteria = companion_criteria.get(companion_type.lower(), companion_criteria["solo"])
-    time_criteria = time_guidance.get(time_period, time_guidance["afternoon"])
     
-    return f"""<|system|>
+    # Get companion-specific prompt enhancement
+    companion_enhancement = get_companion_specific_prompt_enhancement(
+        companion_type, start_time, budget_level
+    )
+    
+    # Format recommendations for Phi
+    formatted_recommendations = format_recommendations_for_phi(recommendations_json)
+    
+    # Get geographic clustering information
+    clustering_info = get_geographic_clustering_info(recommendations_json)
+    
+    # Enhanced prompt with stronger geographic constraints
+    prompt = f"""<|system|>
 You are a travel planner. Select EXACTLY 4-5 locations from the provided candidates.
 Respond with a simple list of selected places, not JSON.
 IMPORTANT: You must select REAL places from the candidates list below. 
 Do not use placeholder text or generic terms.
 CRITICAL: Generate EXACTLY 4-5 places, no more, no less.
+
 GEOGRAPHIC CONSTRAINT: The candidates below are PRE-CLUSTERED for geographic proximity.
+You MUST prioritize places that are within 800 meters of each other for a walkable experience.
+Maximum walking distance between any two places should be 800m or less.
+
+COMPANION TYPE: {companion_type}
+PRIORITY CRITERIA: {', '.join(criteria['priority'])}
+AVOID: {', '.join(criteria['avoid'])}
+
+{companion_enhancement}
+
+{clustering_info}
+
+CANDIDATE PLACES:
+{formatted_recommendations}
+
+SELECTION PROCESS:
+1. First, identify places that match your companion type priorities
+2. Then, ensure geographic proximity (max 800m between places)
+3. Finally, select EXACTLY 4-5 places that create a logical walking route
+4. List only the exact place names from the candidates above
+
+RESPONSE FORMAT:
+[Copy exact name from candidates]
+[Copy exact name from candidates]
+[Copy exact name from candidates]
+[Copy exact name from candidates]
+[Copy exact name from candidates] (if selecting 5)
+
+Remember: Geographic proximity is CRITICAL for walkable itineraries!
 <|end|>
 
 <|user|>
-TASK: Select EXACTLY 4-5 locations from the pre-clustered candidates below.
-Location: {start_location}
-Companion: {companion_type}
-Time: {start_time}:00 ({time_period})
-Budget: {budget_level}
-
-CRITERIA (in order of priority):
-1. GEOGRAPHIC PROXIMITY: The candidates are already clustered for walkability
-2. Companion fit: {', '.join(criteria['priority'])}
-3. Time appropriate: {', '.join(time_criteria['ideal'])}
-4. Budget: {budget_guidance[budget_level]}
-5. Variety: different place types
-6. Logical flow: places that can be visited in sequence
-
-{get_companion_specific_prompt_enhancement(companion_type, start_time, budget_level)}
-
-PROCESS:
-1. Review the pre-clustered candidates below (already grouped by geographic proximity)
-2. Select EXACTLY 4-5 places that work well together
-3. List them in order (1, 2, 3, 4, 5)
-4. Include the place name and why you chose it
-5. CRITICAL: Copy the exact place names from the candidates below
-6. STOP after listing exactly 4-5 places
-
-OUTPUT FORMAT (EXACTLY 4-5 places):
-1. [Copy exact name from candidates] - Brief reason for selection
-2. [Copy exact name from candidates] - Brief reason for selection
-3. [Copy exact name from candidates] - Brief reason for selection
-4. [Copy exact name from candidates] - Brief reason for selection
-5. [Copy exact name from candidates] - Brief reason for selection
-
-PRE-CLUSTERED CANDIDATES (Geographically proximate):
-{format_recommendations_for_phi(recommendations_json)}
-
-IMPORTANT: 
-- Select EXACTLY 4-5 actual places from the pre-clustered candidates above
-- Copy the exact names as they appear in the candidates list
-- Do NOT generate more than 5 places
-- Do NOT generate fewer than 4 places
-- The candidates are already clustered for geographic proximity - trust the clustering
-- STOP after listing exactly 4-5 places
-
+TASK: Select EXACTLY 4-5 locations from the candidates above for a {companion_type.lower()} outing.
+Focus on geographic proximity (max 800m between places) and {companion_type.lower()}-appropriate experiences.
 <|end|>
 
 <|assistant|>
+I'll select 4-5 places that are geographically close and suitable for {companion_type.lower()} outings:
+
 """
+
+    return prompt
 
 # =============================================================================
 # TOKEN-EFFICIENT QWEN PROMPT FOR COMPREHENSIVE STORYTELLING
@@ -348,11 +455,13 @@ def build_qwen_itinerary_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Unified comprehensive prompt
+    # Enhanced structure with stronger place coverage requirements
     prompt = f"""<|im_start|>system
 You are a master storyteller creating comprehensive travel itineraries.
 Your task is to cover ALL {len(locations)} locations in detail, ensuring no place is missed.
 Use {tone_style['tone']} language and {tone_style['style_note']} for maximum engagement.
+
+CRITICAL: You MUST cover every single location listed below. Missing any location is NOT acceptable.
 <|im_end|>
 
 <|im_start|>user
@@ -371,9 +480,17 @@ CRITICAL REQUIREMENTS:
 MANDATORY STRUCTURE (follow exactly):
 {chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
 
-IMPORTANT: Each location must be clearly labeled and described in detail.
-Do not skip any location. Make emotional connections between them.
-Create a cohesive narrative that flows from one location to the next.
+PLACE COVERAGE CHECKLIST:
+{chr(10).join([f"□ {locations[i]['place_name']}" for i in range(len(locations))])}
+
+IMPORTANT: 
+- Each location must be clearly labeled and described in detail
+- Do not skip any location - this is mandatory
+- Make emotional connections between them
+- Create a cohesive narrative that flows from one location to the next
+- End with [END] to signal completion
+
+VERIFICATION: Before finishing, ensure you have covered all {len(locations)} locations.
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -433,10 +550,12 @@ def build_qwen_story_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Core prompt - token-efficient but comprehensive
+    # Enhanced core prompt with stronger coverage requirements
     prompt = f"""<|im_start|>system
 You are a master storyteller creating immersive travel narratives. 
 Generate a comprehensive itinerary covering ALL {len(locations)} locations with emotional depth.
+
+CRITICAL: You MUST cover every single location listed below. Missing any location is NOT acceptable.
 <|im_end|>
 
 <|im_start|>user
@@ -451,14 +570,16 @@ REQUIREMENTS:
 - Time context: {time_context}
 - Budget level: {budget_level}
 
-STRUCTURE:
-1. Opening at Location 1: Set emotional tone
-2. Development at Location 2: Build connection
-3. Climax at Location 3: Peak experience
-4. Continuation at Location 4: Maintain momentum
-5. Closing at Location 5: Satisfying resolution
+MANDATORY STRUCTURE (follow exactly):
+{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
+
+PLACE COVERAGE CHECKLIST:
+{chr(10).join([f"□ {locations[i]['place_name']}" for i in range(len(locations))])}
 
 Make each location memorable and connect them emotionally. Ensure comprehensive coverage.
+End with [END] to signal completion.
+
+VERIFICATION: Before finishing, ensure you have covered all {len(locations)} locations.
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -496,3 +617,127 @@ def _get_location_description(position: int, total_locations: int) -> str:
         descriptions = ["Carefully selected location"] * total_locations
     
     return descriptions[position] if position < len(descriptions) else "Carefully selected location"
+
+def analyze_itinerary_quality(itinerary_text: str, locations: list) -> dict:
+    """
+    Analyze the quality of a generated itinerary and provide improvement suggestions.
+    
+    Args:
+        itinerary_text (str): The generated itinerary text
+        locations (list): List of locations that should be covered
+        
+    Returns:
+        dict: Analysis results with quality metrics and suggestions
+    """
+    analysis = {
+        "total_locations": len(locations),
+        "covered_locations": 0,
+        "missing_locations": [],
+        "coverage_percentage": 0.0,
+        "structure_quality": "unknown",
+        "emotional_depth": "unknown",
+        "suggestions": []
+    }
+    
+    # Check location coverage
+    covered = []
+    missing = []
+    
+    for location in locations:
+        place_name = location.get('place_name', '')
+        if place_name and place_name in itinerary_text:
+            covered.append(place_name)
+        else:
+            missing.append(place_name)
+    
+    analysis["covered_locations"] = len(covered)
+    analysis["missing_locations"] = missing
+    analysis["coverage_percentage"] = (len(covered) / len(locations)) * 100 if locations else 0
+    
+    # Analyze structure quality
+    if "LOCATION 1:" in itinerary_text and "LOCATION 2:" in itinerary_text:
+        analysis["structure_quality"] = "good"
+    elif any(f"LOCATION {i}:" in itinerary_text for i in range(1, len(locations) + 1)):
+        analysis["structure_quality"] = "moderate"
+    else:
+        analysis["structure_quality"] = "poor"
+    
+    # Analyze emotional depth
+    emotional_keywords = ["feeling", "emotion", "beautiful", "romantic", "tender", "warm", "magical", "special"]
+    emotional_count = sum(1 for keyword in emotional_keywords if keyword.lower() in itinerary_text.lower())
+    
+    if emotional_count >= 5:
+        analysis["emotional_depth"] = "excellent"
+    elif emotional_count >= 3:
+        analysis["emotional_depth"] = "good"
+    elif emotional_count >= 1:
+        analysis["emotional_depth"] = "moderate"
+    else:
+        analysis["emotional_depth"] = "poor"
+    
+    # Generate improvement suggestions
+    if analysis["coverage_percentage"] < 100:
+        analysis["suggestions"].append(
+            f"Missing {len(missing)} locations: {', '.join(missing)}. "
+            "Ensure all selected locations are covered in detail."
+        )
+    
+    if analysis["structure_quality"] == "poor":
+        analysis["suggestions"].append(
+            "Improve structure by clearly labeling each location with 'LOCATION X:' format."
+        )
+    
+    if analysis["emotional_depth"] == "poor":
+        analysis["suggestions"].append(
+            "Enhance emotional engagement by including more descriptive language and feelings."
+        )
+    
+    if len(itinerary_text) < 1000:
+        analysis["suggestions"].append(
+            "Consider expanding the itinerary with more detailed descriptions and activities."
+        )
+    
+    return analysis
+
+def generate_improvement_prompt(analysis: dict, locations: list) -> str:
+    """
+    Generate a targeted improvement prompt based on itinerary analysis.
+    
+    Args:
+        analysis (dict): Quality analysis results
+        locations (list): List of locations to cover
+        
+    Returns:
+        str: Targeted improvement prompt
+    """
+    if analysis["coverage_percentage"] == 100 and analysis["structure_quality"] == "good":
+        return "Itinerary quality is good. No specific improvements needed."
+    
+    improvement_prompt = f"""<|im_start|>system
+You are improving an existing travel itinerary. Address the following issues:
+
+QUALITY ANALYSIS:
+- Location Coverage: {analysis['coverage_percentage']:.1f}% ({analysis['covered_locations']}/{analysis['total_locations']})
+- Structure Quality: {analysis['structure_quality']}
+- Emotional Depth: {analysis['emotional_depth']}
+
+ISSUES TO FIX:
+{chr(10).join([f"• {suggestion}" for suggestion in analysis['suggestions']])}
+
+TARGET LOCATIONS:
+{chr(10).join([f"{i+1}. {loc.get('place_name', 'Unknown')}" for i, loc in enumerate(locations)])}
+
+IMPROVEMENT REQUIREMENTS:
+- Cover ALL {len(locations)} locations with equal attention
+- Use clear 'LOCATION X:' structure
+- Maintain emotional engagement and narrative flow
+- End with [END] to signal completion
+<|im_end|>
+
+<|im_start|>user
+Please improve this itinerary to address the quality issues identified above.
+<|im_end|>
+
+<|im_start|>assistant"""
+
+    return improvement_prompt
