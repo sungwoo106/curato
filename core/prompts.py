@@ -351,53 +351,26 @@ def build_phi_location_prompt(
     # Get geographic clustering information
     clustering_info = get_geographic_clustering_info(recommendations_json)
     
-    # Enhanced prompt with stronger geographic constraints
+    # Simplified, direct prompt for better Phi extraction
     prompt = f"""<|system|>
-You are a travel planner. Select EXACTLY 4-5 locations from the provided candidates.
-Respond with a simple list of selected places, not JSON.
-IMPORTANT: You must select REAL places from the candidates list below. 
-Do not use placeholder text or generic terms.
-CRITICAL: Generate EXACTLY 4-5 places, no more, no less.
+You are a travel planner. Select EXACTLY 4-5 locations from the candidates below.
+Respond with ONLY the exact place names, one per line.
+Do not add explanations, just list the names.
 
-GEOGRAPHIC CONSTRAINT: The candidates below are PRE-CLUSTERED for geographic proximity.
-You MUST prioritize places that are within 800 meters of each other for a walkable experience.
-Maximum walking distance between any two places should be 800m or less.
-
-COMPANION TYPE: {companion_type}
-PRIORITY CRITERIA: {', '.join(criteria['priority'])}
-AVOID: {', '.join(criteria['avoid'])}
-
-{companion_enhancement}
-
-{clustering_info}
-
-CANDIDATE PLACES:
-{formatted_recommendations}
-
-SELECTION PROCESS:
-1. First, identify places that match your companion type priorities
-2. Then, ensure geographic proximity (max 800m between places)
-3. Finally, select EXACTLY 4-5 places that create a logical walking route
-4. List only the exact place names from the candidates above
-
-RESPONSE FORMAT:
-[Copy exact name from candidates]
-[Copy exact name from candidates]
-[Copy exact name from candidates]
-[Copy exact name from candidates]
-[Copy exact name from candidates] (if selecting 5)
-
-Remember: Geographic proximity is CRITICAL for walkable itineraries!
+CRITICAL: Select EXACTLY 4-5 places, no more, no less.
 <|end|>
 
 <|user|>
-TASK: Select EXACTLY 4-5 locations from the candidates above for a {companion_type.lower()} outing.
-Focus on geographic proximity (max 800m between places) and {companion_type.lower()}-appropriate experiences.
+Select 4-5 places for a {companion_type.lower()} outing near Hongdae Station.
+Choose places that are close together (within 800m) and suitable for {companion_type.lower()}s.
+
+Available places:
+{formatted_recommendations}
+
+List exactly 4-5 place names:
 <|end|>
 
 <|assistant|>
-I'll select 4-5 places that are geographically close and suitable for {companion_type.lower()} outings:
-
 """
 
     return prompt
@@ -455,42 +428,28 @@ def build_qwen_itinerary_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Enhanced structure with stronger place coverage requirements
+    # Simplified, direct prompt for better place coverage
     prompt = f"""<|im_start|>system
-You are a master storyteller creating comprehensive travel itineraries.
-Your task is to cover ALL {len(locations)} locations in detail, ensuring no place is missed.
-Use {tone_style['tone']} language and {tone_style['style_note']} for maximum engagement.
-
-CRITICAL: You MUST cover every single location listed below. Missing any location is NOT acceptable.
+You are a master storyteller. Create a {tone_style['tone']} itinerary covering ALL {len(locations)} locations.
+Each location must have its own detailed section. Do not skip any location.
 <|im_end|>
 
 <|im_start|>user
-Create a {tone_style['tone']} itinerary for {companion_type} exploring these locations:
+Write a romantic itinerary for a couple visiting these places near Hongdae Station:
 
 {locs_text}
 
-CRITICAL REQUIREMENTS:
-- MUST cover ALL {len(locations)} locations with equal attention
-- Each location gets its own detailed paragraph
-- Use {tone_style['style_note']}
-- Include budget activities: {', '.join(selected_activities)}
-- Time context: {time_context}
-- Budget level: {budget_level}
+REQUIREMENTS:
+- Cover ALL {len(locations)} locations (one section each)
+- Use romantic, poetic language
+- Include activities: {', '.join(selected_activities)}
+- Time: {time_context}
+- Budget: {budget_level}
 
-MANDATORY STRUCTURE (follow exactly):
-{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
+STRUCTURE (follow exactly):
+{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
 
-PLACE COVERAGE CHECKLIST:
-{chr(10).join([f"□ {locations[i]['place_name']}" for i in range(len(locations))])}
-
-IMPORTANT: 
-- Each location must be clearly labeled and described in detail
-- Do not skip any location - this is mandatory
-- Make emotional connections between them
-- Create a cohesive narrative that flows from one location to the next
-- End with [END] to signal completion
-
-VERIFICATION: Before finishing, ensure you have covered all {len(locations)} locations.
+Write a detailed paragraph for each location. End with [END].
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -550,36 +509,19 @@ def build_qwen_story_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Enhanced core prompt with stronger coverage requirements
+    # Simplified fallback prompt for better coverage
     prompt = f"""<|im_start|>system
-You are a master storyteller creating immersive travel narratives. 
-Generate a comprehensive itinerary covering ALL {len(locations)} locations with emotional depth.
-
-CRITICAL: You MUST cover every single location listed below. Missing any location is NOT acceptable.
+You are a storyteller. Write a {tone_style['tone']} itinerary covering ALL {len(locations)} locations.
 <|im_end|>
 
 <|im_start|>user
-Create a {tone_style['tone']} itinerary for {companion_type} exploring these locations:
+Create a romantic itinerary for a couple visiting these places:
 
 {locs_text}
 
-REQUIREMENTS:
-- Cover ALL {len(locations)} locations in detail
-- Use {tone_style['style_note']}
-- Include budget activities: {', '.join(selected_activities)}
-- Time context: {time_context}
-- Budget level: {budget_level}
-
-MANDATORY STRUCTURE (follow exactly):
-{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']} - {_get_location_description(i, len(locations))}" for i in range(len(locations))])}
-
-PLACE COVERAGE CHECKLIST:
-{chr(10).join([f"□ {locations[i]['place_name']}" for i in range(len(locations))])}
-
-Make each location memorable and connect them emotionally. Ensure comprehensive coverage.
-End with [END] to signal completion.
-
-VERIFICATION: Before finishing, ensure you have covered all {len(locations)} locations.
+Write a detailed section for each location. Cover ALL {len(locations)} places.
+Use romantic language and include activities: {', '.join(selected_activities)}.
+End with [END].
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -617,6 +559,84 @@ def _get_location_description(position: int, total_locations: int) -> str:
         descriptions = ["Carefully selected location"] * total_locations
     
     return descriptions[position] if position < len(descriptions) else "Carefully selected location"
+
+def extract_and_validate_place_names(phi_output: str, candidate_places: list) -> list:
+    """
+    Extract and validate place names from Phi model output.
+    
+    Args:
+        phi_output (str): Raw output from Phi model
+        candidate_places (list): List of candidate places to match against
+        
+    Returns:
+        list: List of validated place names
+    """
+    if not phi_output or not candidate_places:
+        return []
+    
+    # Clean the output
+    cleaned_output = phi_output.strip()
+    
+    # Extract potential place names
+    potential_names = []
+    lines = cleaned_output.split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if line and not line.startswith('<') and not line.startswith('['):
+            # Remove common prefixes and suffixes
+            clean_line = line.replace('1.', '').replace('2.', '').replace('3.', '').replace('4.', '').replace('5.', '')
+            clean_line = clean_line.replace('-', '').replace(':', '').strip()
+            if clean_line:
+                potential_names.append(clean_line)
+    
+    # Match against candidate places
+    validated_names = []
+    candidate_names = [place.get('place_name', '') for place in candidate_places]
+    
+    for potential_name in potential_names:
+        # Exact match
+        if potential_name in candidate_names:
+            validated_names.append(potential_name)
+            continue
+        
+        # Partial match (for cases where Phi might truncate names)
+        for candidate_name in candidate_names:
+            if candidate_name in potential_name or potential_name in candidate_name:
+                if candidate_name not in validated_names:
+                    validated_names.append(candidate_name)
+                break
+    
+    return validated_names
+
+def create_fallback_route_plan(candidate_places: list, companion_type: str, max_places: int = 4) -> list:
+    """
+    Create a fallback route plan when Phi model fails to select places.
+    
+    Args:
+        candidate_places (list): List of candidate places
+        companion_type (str): Type of outing
+        max_places (int): Maximum number of places to select
+        
+    Returns:
+        list: Fallback route plan with selected places
+    """
+    if not candidate_places:
+        return []
+    
+    # Sort by distance and select closest places
+    sorted_places = sorted(candidate_places, key=lambda x: float(x.get('distance', 999999)))
+    
+    # Select up to max_places
+    selected_places = sorted_places[:max_places]
+    
+    # Ensure we have at least 4 places
+    if len(selected_places) < 4 and len(candidate_places) >= 4:
+        # Add more places if available
+        remaining = [p for p in candidate_places if p not in selected_places]
+        selected_places.extend(remaining[:4 - len(selected_places)])
+    
+    return selected_places
 
 def analyze_itinerary_quality(itinerary_text: str, locations: list) -> dict:
     """
