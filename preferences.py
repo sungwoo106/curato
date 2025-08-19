@@ -566,6 +566,79 @@ class Preferences:
             else:
                 print(f"✅ Places are well-clustered ({max_distance:.1f}m) - good for walking itinerary", file=sys.stderr)
     
+    def _create_geographic_clusters(self, max_cluster_distance: float = 0.8) -> List[List[Dict]]:
+        """
+        Create geographic clusters of places that are within walking distance of each other.
+        
+        This method implements spatial clustering to ensure Phi only selects from
+        geographically proximate locations, addressing the issue of scattered selections.
+        
+        Args:
+            max_cluster_distance (float): Maximum distance in km between places in a cluster
+            
+        Returns:
+            List[List[Dict]]: List of clusters, each containing nearby places
+        """
+        if not self.best_places:
+            return []
+        
+        # Flatten all places into a single list
+        all_places = []
+        for place_type, places in self.best_places.items():
+            for place in places:
+                place['place_type'] = place_type
+                all_places.append(place)
+        
+        if len(all_places) < 2:
+            return [all_places]  # Single place or empty
+        
+        print(f"🌍 Creating geographic clusters from {len(all_places)} places", file=sys.stderr)
+        
+        # Convert max_cluster_distance to meters
+        max_distance_m = max_cluster_distance * 1000
+        
+        # Create clusters using a simple distance-based approach
+        clusters = []
+        used_places = set()
+        
+        for i, place in enumerate(all_places):
+            if i in used_places:
+                continue
+                
+            # Start a new cluster with this place
+            cluster = [place]
+            used_places.add(i)
+            
+            # Find all places within the maximum distance
+            for j, other_place in enumerate(all_places):
+                if j in used_places:
+                    continue
+                    
+                # Calculate distance between places
+                distance = self._calculate_distance(
+                    place.get('y', 0), place.get('x', 0),
+                    other_place.get('y', 0), other_place.get('x', 0)
+                )
+                
+                if distance <= max_distance_m:
+                    cluster.append(other_place)
+                    used_places.add(j)
+            
+            clusters.append(cluster)
+        
+        # Sort clusters by size (largest first) and filter out tiny clusters
+        clusters = [cluster for cluster in clusters if len(cluster) >= 4]  # Need at least 4 places
+        clusters.sort(key=len, reverse=True)
+        
+        print(f"🌍 Created {len(clusters)} geographic clusters:", file=sys.stderr)
+        for i, cluster in enumerate(clusters):
+            print(f"🌍 Cluster {i+1}: {len(cluster)} places", file=sys.stderr)
+            if cluster:
+                first_place = cluster[0]
+                print(f"🌍   Center: {first_place.get('place_name', 'Unknown')} at ({first_place.get('y', 0)}, {first_place.get('x', 0)})", file=sys.stderr)
+        
+        return clusters
+    
     def _calculate_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
         """
         Calculate approximate distance between two coordinates using Haversine formula.

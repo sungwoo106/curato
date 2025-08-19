@@ -239,23 +239,23 @@ def build_phi_location_prompt(
     time_criteria = time_guidance.get(time_period, time_guidance["afternoon"])
     
     return f"""<|system|>
-You are a travel planner. Select EXACTLY 4-5 locations from 20 candidates.
+You are a travel planner. Select EXACTLY 4-5 locations from the provided candidates.
 Respond with a simple list of selected places, not JSON.
 IMPORTANT: You must select REAL places from the candidates list below. 
 Do not use placeholder text or generic terms.
 CRITICAL: Generate EXACTLY 4-5 places, no more, no less.
-GEOGRAPHIC CONSTRAINT: Select places that are CLOSE TOGETHER and WALKABLE.
+GEOGRAPHIC CONSTRAINT: The candidates below are PRE-CLUSTERED for geographic proximity.
 <|end|>
 
 <|user|>
-TASK: Select EXACTLY 4-5 locations from 20 candidates.
+TASK: Select EXACTLY 4-5 locations from the pre-clustered candidates below.
 Location: {start_location}
 Companion: {companion_type}
 Time: {start_time}:00 ({time_period})
 Budget: {budget_level}
 
 CRITERIA (in order of priority):
-1. GEOGRAPHIC PROXIMITY: Choose places that are CLOSE TOGETHER and WALKABLE
+1. GEOGRAPHIC PROXIMITY: The candidates are already clustered for walkability
 2. Companion fit: {', '.join(criteria['priority'])}
 3. Time appropriate: {', '.join(time_criteria['ideal'])}
 4. Budget: {budget_guidance[budget_level]}
@@ -265,13 +265,12 @@ CRITERIA (in order of priority):
 {get_companion_specific_prompt_enhancement(companion_type, start_time, budget_level)}
 
 PROCESS:
-1. Review 20 candidates below
-2. FIRST: Identify clusters of places that are geographically close (within 500m-1km)
-3. SECOND: Select EXACTLY 4-5 places from the SAME CLUSTER
-4. List them in order (1, 2, 3, 4, 5)
-5. Include the place name and why you chose it
-6. CRITICAL: Copy the exact place names from the candidates below
-7. STOP after listing exactly 4-5 places
+1. Review the pre-clustered candidates below (already grouped by geographic proximity)
+2. Select EXACTLY 4-5 places that work well together
+3. List them in order (1, 2, 3, 4, 5)
+4. Include the place name and why you chose it
+5. CRITICAL: Copy the exact place names from the candidates below
+6. STOP after listing exactly 4-5 places
 
 OUTPUT FORMAT (EXACTLY 4-5 places):
 1. [Copy exact name from candidates] - Brief reason for selection
@@ -280,15 +279,15 @@ OUTPUT FORMAT (EXACTLY 4-5 places):
 4. [Copy exact name from candidates] - Brief reason for selection
 5. [Copy exact name from candidates] - Brief reason for selection
 
-CANDIDATES:
+PRE-CLUSTERED CANDIDATES (Geographically proximate):
 {format_recommendations_for_phi(recommendations_json)}
 
 IMPORTANT: 
-- Select EXACTLY 4-5 actual places from the candidates above
+- Select EXACTLY 4-5 actual places from the pre-clustered candidates above
 - Copy the exact names as they appear in the candidates list
 - Do NOT generate more than 5 places
 - Do NOT generate fewer than 4 places
-- PRIORITIZE GEOGRAPHIC PROXIMITY - choose places that are close together
+- The candidates are already clustered for geographic proximity - trust the clustering
 - STOP after listing exactly 4-5 places
 
 <|end|>
