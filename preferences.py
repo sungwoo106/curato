@@ -693,6 +693,65 @@ class Preferences:
                             matching_candidate = candidate
                             break
             
+            # Strategy 5: Character-level fuzzy matching for compound names
+            if not matching_candidate:
+                for candidate in all_candidates:
+                    candidate_name = candidate.get('place_name', '').lower()
+                    
+                    # Handle compound names by checking if they contain key components
+                    # Example: '디벙크우정국' might match '디벙크' or '우정국'
+                    if len(selected_name) > 4:  # Only for longer names
+                        # Check if candidate contains any significant part of the selected name
+                        for i in range(2, len(selected_name) - 1):
+                            for j in range(i + 2, len(selected_name) + 1):
+                                substring = selected_name[i:j]
+                                if len(substring) >= 3 and substring in candidate_name:
+                                    # Found a significant substring match
+                                    matching_candidate = candidate
+                                    print(f"🔍 Fuzzy matched '{selected_name}' to '{candidate_name}' via substring '{substring}'", file=sys.stderr)
+                                    break
+                            if matching_candidate:
+                                break
+            
+            # Strategy 6: Last resort - find any candidate with similar characteristics
+            if not matching_candidate:
+                for candidate in all_candidates:
+                    candidate_name = candidate.get('place_name', '').lower()
+                    candidate_type = candidate.get('place_type', '').lower()
+                    
+                    # Check if they're the same type of place (e.g., both cafes, both galleries)
+                    if (candidate_type and 
+                        any(type_word in candidate_type for type_word in ['카페', 'cafe', '갤러리', 'gallery', '미술관', 'museum'])):
+                        
+                        # If we can't find an exact match, use the first candidate of the same type
+                        # This ensures we don't lose places due to minor name variations
+                        matching_candidate = candidate
+                        print(f"🔍 Type-based fallback: '{selected_name}' -> '{candidate_name}' (type: {candidate_type})", file=sys.stderr)
+                        break
+            
+            # Strategy 7: Specific handling for compound names like '디벙크우정국'
+            if not matching_candidate:
+                # Look for candidates that contain parts of the compound name
+                best_match = None
+                best_score = 0
+                
+                for candidate in all_candidates:
+                    candidate_name = candidate.get('place_name', '').lower()
+                    
+                    # Calculate similarity score based on character overlap
+                    if len(selected_name) >= 4 and len(candidate_name) >= 3:
+                        # Check for significant substring matches
+                        for i in range(0, len(selected_name) - 2):
+                            for j in range(i + 3, len(selected_name) + 1):
+                                substring = selected_name[i:j]
+                                if substring in candidate_name and len(substring) > best_score:
+                                    best_score = len(substring)
+                                    best_match = candidate
+                
+                if best_match and best_score >= 3:  # At least 3 characters must match
+                    matching_candidate = best_match
+                    print(f"🔍 Compound name match: '{selected_name}' -> '{best_match.get('place_name', '')}' (score: {best_score})", file=sys.stderr)
+            
             if matching_candidate:
                 # Create complete place entry
                 place_entry = {
