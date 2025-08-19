@@ -767,7 +767,7 @@ class Preferences:
         
         return final_places
     
-    def _create_fallback_locations_for_qwen(self, existing_locations: List[Dict]) -> List[Dict]:
+    def _create_fallback_locations_for_qwen(self, existing_locations: List[Dict], min_locations: int = 4) -> List[Dict]:
         """
         Create fallback locations when we don't have enough for Qwen story generation.
         
@@ -775,14 +775,14 @@ class Preferences:
         
         Args:
             existing_locations (List[Dict]): List of existing valid locations
+            min_locations (int): Minimum number of locations required
             
         Returns:
-            List[Dict]: List with minimum 4 locations for Qwen generation
+            List[Dict]: List with minimum required locations
         """
         print(f"🔧 Creating fallback locations for Qwen (current: {len(existing_locations)})", file=sys.stderr)
         
         # We need at least 4 locations for the Qwen prompts to work properly
-        min_locations = 4
         if len(existing_locations) >= min_locations:
             return existing_locations
         
@@ -828,139 +828,72 @@ class Preferences:
     
     def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
         """
-        Convert text-based place selection to JSON format using the original candidates.
+        Convert selected places to JSON format for the route planner.
         
         Args:
-            selected_places (List[Dict]): List of places with names from Phi
+            selected_places (List[Dict]): List of places from Phi output
             
         Returns:
-            str: JSON string with complete place data, or None if conversion fails
+            str: JSON string or None if conversion fails
         """
         if not selected_places:
+            print("⚠️ No places to convert to JSON", file=sys.stderr)
             return None
-            
-        # Get the original candidate places that were sent to Phi
+        
         all_candidates = self._get_all_candidates()
         if not all_candidates:
-            print("❌ No candidate places available for conversion", file=sys.stderr)
+            print("⚠️ No candidate data available for conversion", file=sys.stderr)
             return None
         
-        # Match Phi's selections to actual candidate data
+        print(f"🔄 Converting {len(selected_places)} places to JSON format", file=sys.stderr)
         converted_places = []
-        seen_place_names = set()  # Track duplicates
         
         for selected in selected_places:
-            selected_name = selected['place_name']
+            selected_name = selected['place_name'].strip()
+            print(f"🔍 Looking for match: '{selected_name}'", file=sys.stderr)
             
-            # Skip duplicates
-            if selected_name.lower() in seen_place_names:
-                print(f"⚠️ Skipping duplicate place: {selected_name}", file=sys.stderr)
-                continue
-            seen_place_names.add(selected_name.lower())
-            
-            # Find matching candidate by name using multiple matching strategies
+            # Try exact match first
             matching_candidate = None
+            best_score = 0
             
-            # Strategy 1: Exact match (case-insensitive)
             for candidate in all_candidates:
-                if selected_name.lower() == candidate.get('place_name', '').lower():
+                candidate_name = candidate.get('place_name', '').strip()
+                
+                # Exact match (case-insensitive)
+                if selected_name.lower() == candidate_name.lower():
                     matching_candidate = candidate
+                    best_score = 100
+                    print(f"✅ Exact match found: '{selected_name}' -> '{candidate_name}'", file=sys.stderr)
                     break
-            
-            # Strategy 2: Substring match (case-insensitive)
-            if not matching_candidate:
-                for candidate in all_candidates:
-                    if selected_name.lower() in candidate.get('place_name', '').lower():
+                
+                # Fuzzy matching for Korean place names
+                if self._is_korean_text(selected_name) and self._is_korean_text(candidate_name):
+                    # Calculate similarity score for Korean text
+                    similarity = self._calculate_korean_similarity(selected_name, candidate_name)
+                    if similarity > best_score and similarity > 70:  # 70% similarity threshold
+                        best_score = similarity
                         matching_candidate = candidate
-                        break
-            
-            # Strategy 3: Fuzzy match for slight variations
-            if not matching_candidate:
-                for candidate in all_candidates:
-                    candidate_name = candidate.get('place_name', '').lower()
-                    # Check if names are very similar (handle spacing, special chars)
-                    if (selected_name.lower().replace(' ', '') == candidate_name.replace(' ', '') or
-                        selected_name.lower().replace('-', '') == candidate_name.replace('-', '') or
-                        selected_name.lower().replace('_', '') == candidate_name.replace('_', '')):
-                        matching_candidate = candidate
-                        break
-            
-            # Strategy 4: Partial word matching for compound names
-            if not matching_candidate:
-                for candidate in all_candidates:
-                    candidate_name = candidate.get('place_name', '').lower()
-                    # Split into words and check for partial matches
-                    selected_words = selected_name.lower().split()
-                    candidate_words = candidate_name.split()
-                    
-                    # Check if most words match
-                    if len(selected_words) > 1 and len(candidate_words) > 1:
-                        matching_words = sum(1 for word in selected_words if any(word in cw for cw in candidate_words))
-                        if matching_words >= len(selected_words) * 0.7:  # 70% word match
+                        print(f"🔍 Korean fuzzy match: '{selected_name}' -> '{candidate_name}' (score: {similarity})", file=sys.stderr)
+                
+                # Partial match (one name contains the other)
+                elif selected_name.lower() in candidate_name.lower() or candidate_name.lower() in selected_name.lower():
+                    if len(selected_name) > 3 and len(candidate_name) > 3:  # Avoid very short matches
+                        similarity = 85  # High score for partial matches
+                        if similarity > best_score:
+                            best_score = similarity
                             matching_candidate = candidate
-                            break
-            
-            # Strategy 5: Character-level fuzzy matching for compound names
-            if not matching_candidate:
-                for candidate in all_candidates:
-                    candidate_name = candidate.get('place_name', '').lower()
-                    
-                    # Handle compound names by checking if they contain key components
-                    # Example: '디벙크우정국' might match '디벙크' or '우정국'
-                    if len(selected_name) > 4:  # Only for longer names
-                        # Check if candidate contains any significant part of the selected name
-                        for i in range(2, len(selected_name) - 1):
-                            for j in range(i + 2, len(selected_name) + 1):
-                                substring = selected_name[i:j]
-                                if len(substring) >= 3 and substring in candidate_name:
-                                    # Found a significant substring match
-                                    matching_candidate = candidate
-                                    print(f"🔍 Fuzzy matched '{selected_name}' to '{candidate_name}' via substring '{substring}'", file=sys.stderr)
-                                    break
-                            if matching_candidate:
-                                break
-            
-            # Strategy 6: Last resort - find any candidate with similar characteristics
-            if not matching_candidate:
-                for candidate in all_candidates:
-                    candidate_name = candidate.get('place_name', '').lower()
-                    candidate_type = candidate.get('place_type', '').lower()
-                    
-                    # Check if they're the same type of place (e.g., both cafes, both galleries)
-                    if (candidate_type and 
-                        any(type_word in candidate_type for type_word in ['카페', 'cafe', '갤러리', 'gallery', '미술관', 'museum'])):
-                        
-                        # If we can't find an exact match, use the first candidate of the same type
-                        # This ensures we don't lose places due to minor name variations
+                            print(f"🔍 Partial match: '{selected_name}' -> '{candidate_name}' (score: {similarity})", file=sys.stderr)
+                
+                # Compound name matching (split by spaces or special characters)
+                elif self._is_compound_name_match(selected_name, candidate_name):
+                    similarity = 80  # Good score for compound matches
+                    if similarity > best_score:
+                        best_score = similarity
                         matching_candidate = candidate
-                        print(f"🔍 Type-based fallback: '{selected_name}' -> '{candidate_name}' (type: {candidate_type})", file=sys.stderr)
-                        break
-            
-            # Strategy 7: Specific handling for compound names like '디벙크우정국'
-            if not matching_candidate:
-                # Look for candidates that contain parts of the compound name
-                best_match = None
-                best_score = 0
-                
-                for candidate in all_candidates:
-                    candidate_name = candidate.get('place_name', '').lower()
-                    
-                    # Calculate similarity score based on character overlap
-                    if len(selected_name) >= 4 and len(candidate_name) >= 3:
-                        # Check for significant substring matches
-                        for i in range(0, len(selected_name) - 2):
-                            for j in range(i + 3, len(selected_name) + 1):
-                                substring = selected_name[i:j]
-                                if substring in candidate_name and len(substring) > best_score:
-                                    best_score = len(substring)
-                                    best_match = candidate
-                
-                if best_match and best_score >= 3:  # At least 3 characters must match
-                    matching_candidate = best_match
-                    print(f"🔍 Compound name match: '{selected_name}' -> '{best_match.get('place_name', '')}' (score: {best_score})", file=sys.stderr)
+                        print(f"🔍 Compound name match: '{selected_name}' -> '{candidate_name}' (score: {similarity})", file=sys.stderr)
             
             if matching_candidate:
-                # Create complete place entry
+                # Create complete place entry with proper UTF-8 encoding
                 place_entry = {
                     "place_name": matching_candidate.get('place_name', selected_name),
                     "road_address_name": matching_candidate.get('road_address_name', ''),
@@ -974,19 +907,122 @@ class Preferences:
                 converted_places.append(place_entry)
                 print(f"✅ Matched '{selected_name}' to '{matching_candidate.get('place_name', '')}'", file=sys.stderr)
             else:
-                print(f"⚠️ Could not find candidate data for: {selected_name}", file=sys.stderr)
+                print(f"⚠️ Could not find candidate data for: '{selected_name}'", file=sys.stderr)
                 print(f"🔍 Available candidates: {[c.get('place_name', '') for c in all_candidates[:5]]}", file=sys.stderr)
         
         if converted_places:
             try:
-                json_output = json.dumps(converted_places, ensure_ascii=False)
-                print(f"✅ Converted {len(converted_places)} places to JSON", file=sys.stderr)
+                # Ensure proper UTF-8 encoding for Korean text
+                json_output = json.dumps(converted_places, ensure_ascii=False, indent=2)
+                print(f"✅ Converted {len(converted_places)} places to JSON with UTF-8 encoding", file=sys.stderr)
                 return json_output
             except Exception as e:
                 print(f"❌ Failed to convert places to JSON: {e}", file=sys.stderr)
                 return None
         
         return None
+    
+    def _is_korean_text(self, text: str) -> bool:
+        """
+        Check if text contains Korean characters.
+        
+        Args:
+            text (str): Text to check
+            
+        Returns:
+            bool: True if text contains Korean characters
+        """
+        if not text:
+            return False
+        
+        # Korean character ranges in Unicode
+        korean_ranges = [
+            (0xAC00, 0xD7AF),  # Hangul Syllables
+            (0x1100, 0x11FF),  # Hangul Jamo
+            (0x3130, 0x318F),  # Hangul Compatibility Jamo
+        ]
+        
+        for char in text:
+            char_code = ord(char)
+            for start, end in korean_ranges:
+                if start <= char_code <= end:
+                    return True
+        
+        return False
+    
+    def _calculate_korean_similarity(self, text1: str, text2: str) -> float:
+        """
+        Calculate similarity between two Korean texts using character-based comparison.
+        
+        Args:
+            text1 (str): First text
+            text2 (str): Second text
+            
+        Returns:
+            float: Similarity score (0-100)
+        """
+        if not text1 or not text2:
+            return 0.0
+        
+        # Normalize texts (remove spaces, convert to lowercase)
+        norm1 = ''.join(text1.lower().split())
+        norm2 = ''.join(text2.lower().split())
+        
+        if norm1 == norm2:
+            return 100.0
+        
+        # Calculate character overlap
+        chars1 = set(norm1)
+        chars2 = set(norm2)
+        
+        intersection = len(chars1.intersection(chars2))
+        union = len(chars1.union(chars2))
+        
+        if union == 0:
+            return 0.0
+        
+        # Jaccard similarity
+        jaccard = intersection / union
+        
+        # Additional weight for length similarity
+        length_similarity = 1.0 - abs(len(norm1) - len(norm2)) / max(len(norm1), len(norm2))
+        
+        # Combined score
+        final_score = (jaccard * 70) + (length_similarity * 30)
+        
+        return min(100.0, final_score)
+    
+    def _is_compound_name_match(self, name1: str, name2: str) -> bool:
+        """
+        Check if two names are compound matches (contain similar components).
+        
+        Args:
+            name1 (str): First name
+            name2 (str): Second name
+            
+        Returns:
+            bool: True if names are compound matches
+        """
+        if not name1 or not name2:
+            return False
+        
+        # Split names into components (by spaces, hyphens, etc.)
+        components1 = set(re.split(r'[\s\-_]+', name1.lower()))
+        components2 = set(re.split(r'[\s\-_]+', name2.lower()))
+        
+        # Remove empty components
+        components1.discard('')
+        components2.discard('')
+        
+        if not components1 or not components2:
+            return False
+        
+        # Check if there's significant overlap
+        intersection = len(components1.intersection(components2))
+        min_components = min(len(components1), len(components2))
+        
+        # At least 50% of components should match
+        return intersection >= max(1, min_components * 0.5)
     
     def _get_all_candidates(self) -> List[Dict]:
         """
@@ -1095,14 +1131,14 @@ class Preferences:
                 return "No locations selected for itinerary - cannot generate story"
             
             # Final safety check: Ensure we have enough locations for the prompts
-            if len(selected_locations) < 3:
-                print(f"⚠️ Only {len(selected_locations)} locations available, creating fallback locations", file=sys.stderr)
-                fallback_locations = self._create_fallback_locations_for_qwen(selected_locations)
+            if len(selected_locations) < 4:
+                print(f"⚠️ Only {len(selected_locations)} locations available, need minimum 4 for map functionality", file=sys.stderr)
+                fallback_locations = self._create_fallback_locations_for_qwen(selected_locations, min_locations=4)
                 if fallback_locations:
                     selected_locations = fallback_locations
-                    print(f"✅ Created fallback locations: {len(selected_locations)} total", file=sys.stderr)
+                    print(f"✅ Created fallback locations: {len(selected_locations)} total (minimum 4 achieved)", file=sys.stderr)
                 else:
-                    return "Insufficient locations for itinerary generation"
+                    return "Insufficient locations for itinerary generation - need at least 4 places"
             
             print(f"✅ Proceeding with {len(selected_locations)} locations for Qwen story generation", file=sys.stderr)
             

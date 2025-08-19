@@ -364,7 +364,8 @@ TASK: Select EXACTLY 4-5 locations from the candidates below for a {companion_ty
 
 CRITICAL REQUIREMENTS:
 - Choose EXACTLY 4-5 places (no more, no less) - PREFER 5 PLACES
-- **MINIMUM REQUIREMENT: You MUST select at least 4 places**
+- **ABSOLUTE MINIMUM: You MUST select at least 4 places**
+- **CRITICAL: If you select fewer than 4 places, your response will be rejected**
 - Select places suitable for {companion_type.lower()} outings
 - PRIORITIZE geographic proximity - all places must be within 800m walking distance
 - Copy the EXACT place names from the candidates list below
@@ -383,8 +384,8 @@ CONTEXT:
 - Location: Hongdae Station (Line 2)
 
 SELECTION CRITERIA (in order of importance):
-1. **GEOGRAPHIC PROXIMITY FIRST**: All selected places must be within 800m of each other
-2. **PLACE COUNT**: Select EXACTLY 4-5 places (aim for 5 for better experience)
+1. **PLACE COUNT FIRST**: Select EXACTLY 4-5 places (preferably 5)
+2. **GEOGRAPHIC PROXIMITY**: All selected places must be within 800m of each other
 3. **Companion suitability**: {', '.join(criteria['priority'])}
 4. **Variety**: Mix of cafes and restaurants for diverse experience
 5. **Avoid**: {', '.join(criteria['avoid'])}
@@ -393,23 +394,25 @@ AVAILABLE CANDIDATES:
 {formatted_recommendations}
 
 STEP-BY-STEP PROCESS:
-1. **FIRST**: Analyze geographic distances between all candidates
-2. **SECOND**: Identify clusters of places within 800m of each other
-3. **THIRD**: From the largest cluster, select 4-5 places that match companion criteria
-4. **FOURTH**: Ensure you have EXACTLY 4-5 places total
-5. **FIFTH**: Format each selection using the EXACT format below
+1. **FIRST**: Count the total available candidates
+2. **SECOND**: Analyze geographic distances between all candidates
+3. **THIRD**: Identify clusters of places within 800m of each other
+4. **FOURTH**: From the largest cluster, select 4-5 places that match companion criteria
+5. **FIFTH**: Ensure you have EXACTLY 4-5 places total
+6. **SIXTH**: Format each selection using the EXACT format below
+
+PLACE COUNT REQUIREMENT:
+- **ABSOLUTE MINIMUM: 4 places**
+- **TARGET: 5 places for optimal experience**
+- **NEVER select fewer than 4 places**
+- **If you can't find 5 suitable places within 800m, select exactly 4**
+- **Your response will be rejected if you select fewer than 4 places**
 
 GEOGRAPHIC CLUSTERING REQUIREMENT:
 - You MUST prioritize places that are geographically close
 - Maximum walking distance between any two places: 800m
 - If places are too far apart, focus on the largest cluster near Hongdae Station
 - This ensures a walkable, enjoyable itinerary
-
-PLACE COUNT REQUIREMENT:
-- **ABSOLUTE MINIMUM: 4 places**
-- **TARGET: 5 places for optimal experience**
-- **NEVER select fewer than 4 places**
-- If you can't find 5 suitable places within 800m, select exactly 4
 
 REQUIRED OUTPUT FORMAT (copy exactly):
 1. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
@@ -425,6 +428,11 @@ VERIFICATION CHECKLIST:
 □ All names match exactly with the candidates above
 □ Places are suitable for {companion_type.lower()} outings
 □ I prioritized geographic proximity for walkability
+
+FINAL WARNING:
+- **You MUST select at least 4 places**
+- **If you select fewer than 4, your response will be rejected**
+- **Double-check your count before submitting**
 
 Now select your 4-5 places from the candidates above using the exact format:
 <|end|>
