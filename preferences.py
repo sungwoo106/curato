@@ -98,37 +98,56 @@ class Preferences:
         Select appropriate place types based on companion type and user preferences.
         
         This method intelligently combines:
-        1. Companion-specific recommendations (e.g., romantic spots for couples)
-        2. User manually selected types (if any)
-        3. Random selection to ensure variety
+        1. User manually selected types (highest priority)
+        2. Companion-specific recommendations (limited selection)
+        3. Ensures variety while respecting user choices
         
         Args:
             user_selected_types (list, optional): User's manually selected place types
         """
+        # Start with user-selected types as highest priority
+        if user_selected_types:
+            self.selected_types = user_selected_types.copy()
+            print(f"🔍 User selected place types: {self.selected_types}", file=sys.stderr)
+        else:
+            self.selected_types = []
+        
         # Get companion-specific place type recommendations
         companion_places = COMPANION_PLACE_TYPES.get(self.companion_type.lower(), [])
         
-        # Randomly select 4-5 place types for variety
-        num_to_select = random.choice([4, 5])
-        random_types = []
+        # Only add 1-2 companion-specific types to maintain variety
+        # This prevents overwhelming the search with too many types
+        max_companion_types = 2
+        if len(companion_places) > 0:
+            # Randomly select 1-2 companion types that complement user selections
+            available_companion_types = [t for t in companion_places if t not in self.selected_types]
+            if available_companion_types:
+                num_to_add = min(max_companion_types, len(available_companion_types))
+                additional_types = random.sample(available_companion_types, num_to_add)
+                self.selected_types.extend(additional_types)
+                print(f"🔍 Added {len(additional_types)} companion-specific types: {additional_types}", file=sys.stderr)
         
-        if len(companion_places) >= num_to_select:
-            # If we have enough companion-specific types, randomly sample from them
-            random_types = random.sample(companion_places, num_to_select)
-        else:
-            # If we don't have enough, use all available companion types
-            random_types = companion_places.copy()
+        # Ensure we have at least 2 types for variety
+        if len(self.selected_types) < 2:
+            # Add default types if we don't have enough
+            default_types = ['Cafe', 'Restaurant']
+            for default_type in default_types:
+                if default_type not in self.selected_types:
+                    self.selected_types.append(default_type)
+                    if len(self.selected_types) >= 2:
+                        break
+            print(f"🔍 Added default types to ensure minimum variety: {self.selected_types}", file=sys.stderr)
         
-        # Combine user selected types and random companion types, ensuring uniqueness
-        combined_types = set(random_types)
-        if user_selected_types:
-            combined_types.update(user_selected_types)
+        # Limit total types to prevent overwhelming the search
+        if len(self.selected_types) > 4:
+            # Keep user-selected types and limit companion types
+            user_types = [t for t in self.selected_types if t in (user_selected_types or [])]
+            companion_types = [t for t in self.selected_types if t not in user_types]
+            # Keep all user types + max 2 companion types
+            self.selected_types = user_types + companion_types[:2]
+            print(f"🔍 Limited total types to prevent search overload: {self.selected_types}", file=sys.stderr)
         
-        self.selected_types = list(combined_types)
-        
-        # Fallback to a default place type if none were selected
-        if not self.selected_types:
-            self.selected_types = [USER_SELECTABLE_PLACE_TYPES[0]]
+        print(f"🔍 Final selected place types: {self.selected_types}", file=sys.stderr)
 
     # =============================================================================
     # PLACE RECOMMENDATION COLLECTION
@@ -226,14 +245,15 @@ class Preferences:
             clustered_candidates = self._create_geographic_clusters()
             if clustered_candidates:
                 print(f"✅ Created {len(clustered_candidates)} geographic clusters for walkable itineraries", file=sys.stderr)
-                # Use the largest cluster for Phi selection
-                largest_cluster = max(clustered_candidates, key=len)
-                print(f"✅ Using largest cluster with {len(largest_cluster)} places for Phi selection", file=sys.stderr)
+                
+                # Select the best cluster that balances variety and proximity
+                best_cluster = self._select_best_balanced_cluster(clustered_candidates)
+                print(f"✅ Selected best balanced cluster with {len(best_cluster)} places", file=sys.stderr)
                 
                 # Preserve original place types while using clustered locations
                 # Group clustered places by their original place types
                 clustered_by_type = {}
-                for place in largest_cluster:
+                for place in best_cluster:
                     # Get the original place type from the place data
                     original_type = place.get('place_type', 'Unknown')
                     if original_type not in clustered_by_type:
@@ -243,6 +263,8 @@ class Preferences:
                 # Update best_places with clustered locations grouped by original types
                 self.best_places = clustered_by_type
                 print(f"✅ Preserved place types in clustering: {list(clustered_by_type.keys())}", file=sys.stderr)
+                for place_type, places in clustered_by_type.items():
+                    print(f"✅ {place_type}: {len(places)} places", file=sys.stderr)
             else:
                 print("⚠️ Could not create geographic clusters, using all candidates", file=sys.stderr)
             
@@ -631,6 +653,7 @@ class Preferences:
             return [all_places]  # Single place or empty
         
         print(f"🌍 Creating geographic clusters from {len(all_places)} places", file=sys.stderr)
+        print(f"🌍 Place types available: {list(set(p.get('place_type') for p in all_places))}", file=sys.stderr)
         
         # Convert max_cluster_distance to meters
         max_distance_m = max_cluster_distance * 1000
@@ -675,14 +698,160 @@ class Preferences:
         clusters = [cluster for cluster in clusters if len(cluster) >= 4]  # Need at least 4 places
         clusters.sort(key=len, reverse=True)
         
+        # Prioritize clusters with better place type variety
+        if len(clusters) > 1:
+            def cluster_variety_score(cluster):
+                place_types = set(p.get('place_type') for p in cluster)
+                # Higher score for clusters with more diverse place types
+                return len(place_types) * 10 + len(cluster)
+            
+            # Sort by variety score (place type diversity + size)
+            clusters.sort(key=cluster_variety_score, reverse=True)
+            print(f"🌍 Reordered clusters by place type variety", file=sys.stderr)
+        
         print(f"🌍 Created {len(clusters)} geographic clusters:", file=sys.stderr)
         for i, cluster in enumerate(clusters):
-            print(f"🌍 Cluster {i+1}: {len(cluster)} places", file=sys.stderr)
+            place_types = set(p.get('place_type') for p in cluster)
+            print(f"🌍 Cluster {i+1}: {len(cluster)} places, types: {list(place_types)}", file=sys.stderr)
             if cluster:
                 first_place = cluster[0]
                 print(f"🌍   Center: {first_place.get('place_name', 'Unknown')} at ({first_place.get('y', 0)}, {first_place.get('x', 0)})", file=sys.stderr)
         
         return clusters
+    
+    def _select_best_balanced_cluster(self, clusters: List[List[Dict]]) -> List[Dict]:
+        """
+        Select the best cluster that balances geographic proximity with place type variety.
+        
+        This method ensures we get a mix of different place types (cafes, restaurants, cultural spots)
+        instead of clusters dominated by a single type.
+        
+        Args:
+            clusters (List[List[Dict]]): List of geographic clusters
+            
+        Returns:
+            List[Dict]: Best balanced cluster with variety
+        """
+        if not clusters:
+            return []
+        
+        print(f"🔍 Selecting best balanced cluster from {len(clusters)} options", file=sys.stderr)
+        
+        # Score each cluster based on variety and size
+        cluster_scores = []
+        for i, cluster in enumerate(clusters):
+            # Count place types in this cluster
+            place_types = set(p.get('place_type') for p in cluster)
+            type_variety = len(place_types)
+            
+            # Calculate average distance from center (lower is better)
+            center_lat = sum(float(p.get('y', 0)) for p in cluster) / len(cluster)
+            center_lng = sum(float(p.get('x', 0)) for p in cluster) / len(cluster)
+            
+            total_distance = 0
+            for place in cluster:
+                try:
+                    lat = float(place.get('y', 0))
+                    lng = float(place.get('x', 0))
+                    distance = self._calculate_distance(center_lat, center_lng, lat, lng)
+                    total_distance += distance
+                except:
+                    continue
+            
+            avg_distance = total_distance / len(cluster) if cluster else 0
+            
+            # Score formula: prioritize variety, then size, then proximity
+            # Higher variety gets much higher score (multiply by 100)
+            # Size matters but less than variety (multiply by 10)
+            # Proximity matters least (divide by 1000 to make it small)
+            variety_score = type_variety * 100
+            size_score = len(cluster) * 10
+            proximity_score = max(0, 1000 - avg_distance) / 1000
+            
+            total_score = variety_score + size_score + proximity_score
+            
+            cluster_scores.append({
+                'index': i,
+                'cluster': cluster,
+                'score': total_score,
+                'variety': type_variety,
+                'size': len(cluster),
+                'avg_distance': avg_distance,
+                'place_types': list(place_types)
+            })
+            
+            print(f"🔍 Cluster {i+1}: Score={total_score:.1f}, Variety={type_variety}, Size={len(cluster)}, Types={list(place_types)}", file=sys.stderr)
+        
+        # Sort by score (highest first)
+        cluster_scores.sort(key=lambda x: x['score'], reverse=True)
+        
+        best_cluster = cluster_scores[0]['cluster']
+        best_info = cluster_scores[0]
+        
+        print(f"✅ Selected cluster {best_info['index']+1} with score {best_info['score']:.1f}", file=sys.stderr)
+        print(f"✅ Variety: {best_info['variety']} types, Size: {best_info['size']} places", file=sys.stderr)
+        print(f"✅ Place types: {best_info['place_types']}", file=sys.stderr)
+        
+        return best_cluster
+    
+    def _calculate_cluster_score(self, cluster: List[Dict]) -> float:
+        """
+        Calculate a score for a given cluster based on variety and proximity.
+        
+        This score is a weighted combination of place type diversity and
+        geographic proximity.
+        
+        Args:
+            cluster (List[Dict]): The cluster to score
+            
+        Returns:
+            float: The calculated score
+        """
+        if not cluster:
+            return 0.0
+        
+        # Calculate place type variety score
+        place_types = set(p.get('place_type') for p in cluster)
+        variety_score = len(place_types) * 10
+        
+        # Calculate geographic proximity score
+        # This is a simplified approach; a more sophisticated method would
+        # calculate distances between all pairs and find the max/min.
+        # For now, we'll just check if all places are close.
+        # A more robust solution would involve a distance matrix.
+        
+        # For simplicity, we'll assume a max distance of 500m for a "close" cluster
+        # and a max distance of 1000m for a "distant" cluster.
+        # This is a heuristic and might need tuning.
+        
+        # Find the maximum distance in the cluster
+        max_distance = 0
+        for i in range(len(cluster)):
+            for j in range(i + 1, len(cluster)):
+                try:
+                    lat1 = float(cluster[i].get('y', 0))
+                    lng1 = float(cluster[i].get('x', 0))
+                    lat2 = float(cluster[j].get('y', 0))
+                    lng2 = float(cluster[j].get('x', 0))
+                    
+                    distance = self._calculate_distance(lat1, lng1, lat2, lng2)
+                    max_distance = max(max_distance, distance)
+                except (ValueError, TypeError):
+                    continue # Skip if coordinates are missing
+        
+        # Assign a score based on distance
+        if max_distance < 500: # Very close cluster
+            proximity_score = 100
+        elif max_distance < 1000: # Moderately distant cluster
+            proximity_score = 70
+        else: # Far cluster
+            proximity_score = 50
+        
+        # Combine variety and proximity scores
+        # Weights can be adjusted based on desired balance
+        total_score = variety_score + proximity_score
+        
+        return total_score
     
     def _calculate_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
         """
