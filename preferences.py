@@ -385,8 +385,11 @@ class Preferences:
         if selected_places:
             # Ensure we have minimum required locations for map functionality
             print(f"🔍 Before supplementation: {len(selected_places)} places", file=sys.stderr)
+            print(f"🔍 Places before supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
+            
             selected_places = self._ensure_minimum_locations(selected_places, min_locations=4)
             print(f"🔍 After supplementation: {len(selected_places)} places", file=sys.stderr)
+            print(f"🔍 Places after supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
             
             # Convert to JSON format
             json_output = self._convert_places_to_json(selected_places)
@@ -575,12 +578,32 @@ class Preferences:
         for selected in selected_places:
             selected_name = selected['place_name']
             
-            # Find matching candidate by name
+            # Find matching candidate by name using multiple matching strategies
             matching_candidate = None
+            
+            # Strategy 1: Exact match (case-insensitive)
             for candidate in all_candidates:
-                if selected_name.lower() in candidate.get('place_name', '').lower():
+                if selected_name.lower() == candidate.get('place_name', '').lower():
                     matching_candidate = candidate
                     break
+            
+            # Strategy 2: Substring match (case-insensitive)
+            if not matching_candidate:
+                for candidate in all_candidates:
+                    if selected_name.lower() in candidate.get('place_name', '').lower():
+                        matching_candidate = candidate
+                        break
+            
+            # Strategy 3: Fuzzy match for slight variations
+            if not matching_candidate:
+                for candidate in all_candidates:
+                    candidate_name = candidate.get('place_name', '').lower()
+                    # Check if names are very similar (handle spacing, special chars)
+                    if (selected_name.lower().replace(' ', '') == candidate_name.replace(' ', '') or
+                        selected_name.lower().replace('-', '') == candidate_name.replace('-', '') or
+                        selected_name.lower().replace('_', '') == candidate_name.replace('_', '')):
+                        matching_candidate = candidate
+                        break
             
             if matching_candidate:
                 # Create complete place entry
@@ -595,8 +618,10 @@ class Preferences:
                     "selection_reason": selected.get('selection_reason', 'Selected by Phi')
                 }
                 converted_places.append(place_entry)
+                print(f"✅ Matched '{selected_name}' to '{matching_candidate.get('place_name', '')}'", file=sys.stderr)
             else:
                 print(f"⚠️ Could not find candidate data for: {selected_name}", file=sys.stderr)
+                print(f"🔍 Available candidates: {[c.get('place_name', '') for c in all_candidates[:5]]}", file=sys.stderr)
         
         if converted_places:
             try:
