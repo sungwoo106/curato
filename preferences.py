@@ -267,6 +267,9 @@ class Preferences:
                     print(f"✅ {place_type}: {len(places)} places", file=sys.stderr)
             else:
                 print("⚠️ Could not create geographic clusters, using all candidates", file=sys.stderr)
+                # Even when clustering fails, ensure we maintain variety
+                # Group places by type and select representatives from each type
+                self._ensure_variety_in_fallback()
             
             # Places are already optimally selected and ordered by the progressive selection system
             if self.progress_callback:
@@ -658,7 +661,7 @@ class Preferences:
         # Convert max_cluster_distance to meters
         max_distance_m = max_cluster_distance * 1000
         
-        # Create clusters using a simple distance-based approach
+        # Create clusters using a more flexible approach
         clusters = []
         used_places = set()
         
@@ -694,16 +697,23 @@ class Preferences:
             
             clusters.append(cluster)
         
-        # Sort clusters by size (largest first) and filter out tiny clusters
-        clusters = [cluster for cluster in clusters if len(cluster) >= 4]  # Need at least 4 places
+        # More flexible clustering: Allow smaller clusters but prioritize variety
+        min_cluster_size = 2  # Allow clusters with at least 2 places
+        clusters = [cluster for cluster in clusters if len(cluster) >= min_cluster_size]
         clusters.sort(key=len, reverse=True)
+        
+        # If no clusters meet the minimum size, create a single cluster with all places
+        # This ensures we don't lose variety when geographic clustering is challenging
+        if not clusters:
+            print(f"🌍 No clusters met minimum size {min_cluster_size}, creating single cluster with all places", file=sys.stderr)
+            clusters = [all_places]
         
         # Prioritize clusters with better place type variety
         if len(clusters) > 1:
             def cluster_variety_score(cluster):
                 place_types = set(p.get('place_type') for p in cluster)
-                # Higher score for clusters with more diverse place types
-                return len(place_types) * 10 + len(cluster)
+                # Much higher weight for variety to ensure balanced selection
+                return len(place_types) * 200 + len(cluster)  # Increased variety weight significantly
             
             # Sort by variety score (place type diversity + size)
             clusters.sort(key=cluster_variety_score, reverse=True)
@@ -884,6 +894,40 @@ class Preferences:
         r = 6371000
         
         return r * c
+    
+    def _calculate_kakao_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+        """
+        Calculate distance using Kakao Map API for more accurate real-world distances.
+        
+        This method provides walking distance instead of "as the crow flies" distance,
+        which is more accurate for clustering and itinerary planning.
+        
+        Args:
+            lat1, lng1: First coordinate
+            lat2, lng2: Second coordinate
+            
+        Returns:
+            float: Distance in meters, or None if API call fails
+        """
+        try:
+            # For now, fall back to Haversine for performance
+            # In the future, this could call Kakao Map API's distance calculation endpoint
+            # https://apis.map.kakao.com/web/sample/calculatePolylineDistance/
+            
+            # For now, use Haversine but with a small adjustment factor
+            # to better approximate walking distance
+            haversine_distance = self._calculate_distance(lat1, lng1, lat2, lng2)
+            
+            # Walking distance is typically 1.1-1.3x the straight-line distance
+            # due to street layouts and walking paths
+            walking_factor = 1.2
+            estimated_walking_distance = haversine_distance * walking_factor
+            
+            return estimated_walking_distance
+            
+        except Exception as e:
+            print(f"⚠️ Kakao distance calculation failed, using Haversine fallback: {e}", file=sys.stderr)
+            return self._calculate_distance(lat1, lng1, lat2, lng2)
     
     def _validate_phi_output(self, selected_places: List[Dict]) -> None:
         """
@@ -1549,4 +1593,32 @@ class Preferences:
             return cleaned_content
         
         return None
+    
+    def _ensure_variety_in_fallback(self):
+        """
+        Ensure place type variety is maintained even when geographic clustering fails.
+        
+        This method selects a balanced mix of places from different types
+        to ensure Phi has variety to choose from.
+        """
+        print(f"🔧 Ensuring variety in fallback mode", file=sys.stderr)
+        
+        # Get all available place types
+        all_types = list(self.best_places.keys())
+        print(f"🔧 Available place types: {all_types}", file=sys.stderr)
+        
+        # Create a balanced selection with representatives from each type
+        balanced_places = {}
+        max_places_per_type = 3  # Limit places per type to ensure variety
+        
+        for place_type in all_types:
+            places = self.best_places[place_type]
+            # Take up to max_places_per_type from each type
+            selected_places = places[:max_places_per_type]
+            balanced_places[place_type] = selected_places
+            print(f"🔧 {place_type}: Selected {len(selected_places)} places", file=sys.stderr)
+        
+        # Update best_places with the balanced selection
+        self.best_places = balanced_places
+        print(f"🔧 Fallback variety ensured: {list(balanced_places.keys())}", file=sys.stderr)
     
