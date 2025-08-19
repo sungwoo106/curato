@@ -16,6 +16,7 @@ The prompts are engineered to:
 import json
 import random
 from constants import TONE_STYLE_MAP, LOW_BUDGET, MEDIUM_BUDGET, HIGH_BUDGET
+from typing import List, Dict
 
 # =============================================================================
 # HELPER FUNCTIONS FOR PHI PROMPT OPTIMIZATION
@@ -367,11 +368,13 @@ CRITICAL REQUIREMENTS:
 - **ABSOLUTE MINIMUM: You MUST select at least 4 places**
 - **CRITICAL: If you select fewer than 4 places, your response will be rejected**
 - **CRITICAL: If you select more than 5 places, your response will be rejected**
+- **CRITICAL: You MUST ONLY select from the exact place names in the candidates list below**
+- **CRITICAL: DO NOT generate new place names, addresses, or locations**
+- **CRITICAL: DO NOT create fictional or made-up places**
 - Select places suitable for {companion_type.lower()} outings
 - **CRITICAL: PRIORITIZE geographic proximity FIRST - all places MUST be within 800m walking distance**
 - **CRITICAL: Ensure VARIETY across different place types**
 - Copy the EXACT place names from the candidates list below
-- DO NOT create new place names - only select from the candidates provided
 - Use the EXACT format specified below
 <|end|>
 
@@ -411,6 +414,15 @@ PLACE COUNT REQUIREMENT:
 - **If you can't find 5 suitable places within 800m, select exactly 4**
 - **Your response will be rejected if you select fewer than 4 or more than 5 places**
 
+PLACE NAME REQUIREMENT (CRITICAL):
+- **CRITICAL: You MUST ONLY select from the exact place names in the candidates list above**
+- **CRITICAL: DO NOT generate new place names, addresses, or locations**
+- **CRITICAL: DO NOT create fictional or made-up places**
+- **CRITICAL: DO NOT use street addresses like "마포구 양화로 160"**
+- **CRITICAL: DO NOT use generic names like "Seoul Sip"**
+- **CRITICAL: Copy the EXACT place names as they appear in the candidates list**
+- **If you cannot find 4-5 suitable places in the candidates, select the best available ones**
+
 GEOGRAPHIC PROXIMITY REQUIREMENT (HIGHEST PRIORITY):
 - **CRITICAL: All selected places MUST be within 800m walking distance of each other**
 - **This is MORE IMPORTANT than place type variety**
@@ -437,6 +449,7 @@ VERIFICATION CHECKLIST:
 □ I have ensured VARIETY across different place types
 □ I used the exact format: "1. Place Name - Reason"
 □ All names match exactly with the candidates above
+□ I did NOT generate new place names or addresses
 □ Places are suitable for {companion_type.lower()} outings
 □ I prioritized geographic proximity for walkability
 
@@ -444,9 +457,11 @@ FINAL WARNING:
 - **You MUST select at least 4 places**
 - **You MUST NOT select more than 5 places**
 - **You MUST ensure all places are within 800m of each other**
+- **You MUST ONLY select from the candidates list above**
 - **If you select fewer than 4 or more than 5, your response will be rejected**
+- **If you generate new place names, your response will be rejected**
 - **If places are too far apart, your response will be rejected**
-- **Double-check your count and distances before submitting**
+- **Double-check your count, distances, and place names before submitting**
 
 Now select your 4-5 places from the candidates above using the exact format:
 <|end|>
@@ -462,61 +477,70 @@ I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongd
 # SINGLE FOCUSED QWEN PROMPT FOR COMPREHENSIVE ITINERARY GENERATION
 # =============================================================================
 
-def build_qwen_itinerary_prompt(
-    locations: list,
-    companion_type: str,
-    budget_level: str,
-    start_time: int = 12,
-) -> str:
+def build_qwen_itinerary_prompt(companion_type: str, budget_level: str, start_time: int, selected_places: List[Dict]) -> str:
     """
-    Build a focused, direct prompt for Qwen to generate comprehensive itineraries.
+    Build a focused, directive prompt for Qwen to generate detailed itineraries.
     
-    This prompt is designed to be clear, concise, and directive to ensure
-    the model covers all locations with detailed descriptions.
+    This prompt is designed to be:
+    - Concise and directive (not verbose)
+    - Specific about output format
+    - Clear about content requirements
+    - Focused on generating complete descriptions
     
     Args:
-        locations (list): List of 4-5 locations from the location selector
         companion_type (str): Type of outing (Solo, Couple, Friends, Family)
         budget_level (str): Budget level (low, medium, high)
-        start_time (int): Starting time for temporal context
+        start_time (int): Starting time in 24-hour format
+        selected_places (List[Dict]): List of selected places with metadata
         
     Returns:
-        str: Focused prompt string for comprehensive itinerary generation
+        str: Formatted prompt for Qwen
     """
+    # Format places for the prompt
+    places_text = ""
+    for i, place in enumerate(selected_places, 1):
+        place_name = place.get('place_name', 'Unknown')
+        place_type = place.get('place_type', 'Unknown')
+        places_text += f"{i}. {place_name} - {place_type}\n"
     
-    # Format locations simply
-    locs_text = "\n".join([
-        f"{i+1}. {loc['place_name']} - {loc.get('place_type', 'Location')}"
-        for i, loc in enumerate(locations)
-    ])
-    
-    # Simple, direct prompt
     prompt = f"""<|im_start|>system
 You are a travel writer creating detailed itineraries for {companion_type.lower()} outings in Seoul.
 <|im_end|>
 
 <|im_start|>user
 Create a detailed itinerary for a {companion_type.lower()} outing starting at {start_time}:00. 
-Cover ALL {len(locations)} locations below with 3-4 sentences each:
+Cover ALL {len(selected_places)} locations below with 3-4 sentences each:
 
-{locs_text}
-
+{places_text}
 Budget: {budget_level}
-Style: Romantic and engaging for {companion_type.lower()}
+Style: {get_companion_style(companion_type)}
 
 Format each location exactly like this:
-1. LOCATION 1: [Place Name]
-   [3-4 detailed sentences about atmosphere, experience, and romantic moments]
+1. LOCATION 1: [Place Name] - [Place Type]
+   [3-4 detailed sentences describing the experience, atmosphere, and why it's perfect for {companion_type.lower()} outings]
 
-2. LOCATION 2: [Place Name]
-   [3-4 detailed sentences about atmosphere, experience, and romantic moments]
+2. LOCATION 2: [Place Name] - [Place Type]
+   [3-4 detailed sentences describing the experience, atmosphere, and why it's perfect for {companion_type.lower()} outings]
 
-Continue for all {len(locations)} locations. Make it engaging and romantic.
+Continue this format for all {len(selected_places)} locations. Do not stop early or truncate your response.
 <|im_end|>
 
-<|im_start|>assistant"""
+<|im_start|>assistant|
+I'll create a detailed itinerary for your {companion_type.lower()} outing in Seoul, covering all {len(selected_places)} locations:
 
+"""
+    
     return prompt
+
+def get_companion_style(companion_type: str) -> str:
+    """Get the appropriate style description for the companion type."""
+    styles = {
+        "solo": "Peaceful and introspective for individual exploration",
+        "couple": "Romantic and engaging for intimate experiences", 
+        "friends": "Fun and social for group activities",
+        "family": "Warm and educational for family bonding"
+    }
+    return styles.get(companion_type.lower(), "Enjoyable and memorable")
 
 # =============================================================================
 # HELPER FUNCTIONS FOR LOCATION DESCRIPTION

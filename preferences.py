@@ -197,9 +197,9 @@ class Preferences:
             self.selected_types,                       # List of place types to search for
             self.start_location,                       # Starting coordinates
             int(self.max_distance_km * 1000),          # Distance in meters
-            places_per_type=20,                        # Increased from 15 to 20 per type for maximum variety
-            max_cluster_distance=600,                  # Reduced from 300m to 600m for better walkability
-            target_places=30                           # Increased from 20 to 30 for Phi to choose from
+            places_per_type=25,                        # Increased from 20 to 25 per type for maximum variety
+            max_cluster_distance=800,                  # Increased from 600m to 800m for better clustering
+            target_places=40                           # Increased from 30 to 40 for Phi to choose from
         )
         
         print(f"🔍 Found {len(optimal_places)} optimal places", file=sys.stderr)
@@ -648,18 +648,15 @@ class Preferences:
             else:
                 print(f"✅ Places are well-clustered ({max_distance:.1f}m) - good for walking itinerary", file=sys.stderr)
     
-    def _create_geographic_clusters(self, max_cluster_distance: float = 0.8) -> List[List[Dict]]:
+    def _create_geographic_clusters(self) -> List[List[Dict]]:
         """
-        Create geographic clusters of places that are within walking distance of each other.
+        Create geographic clusters from the collected places.
         
-        This method implements spatial clustering to ensure Phi only selects from
-        geographically proximate locations, addressing the issue of scattered selections.
+        This method groups places that are within walking distance of each other,
+        ensuring the final itinerary is walkable and enjoyable.
         
-        Args:
-            max_cluster_distance (float): Maximum distance in km between places in a cluster
-            
         Returns:
-            List[List[Dict]]: List of clusters, each containing nearby places
+            List[List[Dict]]: List of clusters, where each cluster is a list of places
         """
         if not self.best_places:
             return []
@@ -667,56 +664,46 @@ class Preferences:
         # Flatten all places into a single list
         all_places = []
         for place_type, places in self.best_places.items():
-            for place in places:
-                place['place_type'] = place_type
-                all_places.append(place)
+            all_places.extend(places)
         
         if len(all_places) < 2:
-            return [all_places]  # Single place or empty
+            return [all_places] if all_places else []
         
         print(f"🌍 Creating geographic clusters from {len(all_places)} places", file=sys.stderr)
         print(f"🌍 Place types available: {list(set(p.get('place_type') for p in all_places))}", file=sys.stderr)
         
-        # Convert max_cluster_distance to meters
-        max_distance_m = max_cluster_distance * 1000
-        
-        # Create clusters using a more flexible approach
+        # Create clusters based on geographic proximity
         clusters = []
-        used_places = set()
+        used_indices = set()
         
-        for i, place in enumerate(all_places):
-            if i in used_places:
+        for i, place1 in enumerate(all_places):
+            if i in used_indices:
                 continue
                 
-            # Start a new cluster with this place
-            cluster = [place]
-            used_places.add(i)
+            cluster = [place1]
+            used_indices.add(i)
             
-            # Find all places within the maximum distance
-            for j, other_place in enumerate(all_places):
-                if j in used_places:
+            for j, place2 in enumerate(all_places):
+                if j in used_indices:
                     continue
                     
-                # Calculate distance between places
                 try:
-                    # Ensure coordinates are floats
-                    lat1 = float(place.get('y', 0))
-                    lng1 = float(place.get('x', 0))
-                    lat2 = float(other_place.get('y', 0))
-                    lng2 = float(other_place.get('x', 0))
+                    lat1, lng1 = float(place1.get('y', 0)), float(place1.get('x', 0))
+                    lat2, lng2 = float(place2.get('y', 0)), float(place2.get('x', 0))
                     
                     distance = self._calculate_distance(lat1, lng1, lat2, lng2)
                     
-                    if distance <= max_distance_m:
-                        cluster.append(other_place)
-                        used_places.add(j)
-                except (ValueError, TypeError) as e:
-                    print(f"⚠️ Skipping distance calculation for place {other_place.get('place_name', 'Unknown')}: {e}", file=sys.stderr)
+                    if distance <= 800:  # 800m walking distance
+                        cluster.append(place2)
+                        used_indices.add(j)
+                except:
                     continue
             
-            clusters.append(cluster)
+            if len(cluster) >= 2:  # Only keep clusters with at least 2 places
+                clusters.append(cluster)
         
-        # More flexible clustering: Allow smaller clusters but prioritize variety
+        # Sort clusters by size (largest first) and filter out tiny clusters
+        # Lower the minimum requirement to allow smaller but diverse clusters
         min_cluster_size = 2  # Allow clusters with at least 2 places
         clusters = [cluster for cluster in clusters if len(cluster) >= min_cluster_size]
         clusters.sort(key=len, reverse=True)
@@ -731,20 +718,22 @@ class Preferences:
         if len(clusters) > 1:
             def cluster_variety_score(cluster):
                 place_types = set(p.get('place_type') for p in cluster)
-                # Much higher weight for variety to ensure balanced selection
-                return len(place_types) * 200 + len(cluster)  # Increased variety weight significantly
+                # Higher score for clusters with more diverse place types
+                return len(place_types) * 100 + len(cluster)  # Increased variety weight
             
             # Sort by variety score (place type diversity + size)
             clusters.sort(key=cluster_variety_score, reverse=True)
             print(f"🌍 Reordered clusters by place type variety", file=sys.stderr)
         
-        print(f"🌍 Created {len(clusters)} geographic clusters:", file=sys.stderr)
+        # Print cluster information for debugging
         for i, cluster in enumerate(clusters):
             place_types = set(p.get('place_type') for p in cluster)
-            print(f"🌍 Cluster {i+1}: {len(cluster)} places, types: {list(place_types)}", file=sys.stderr)
-            if cluster:
-                first_place = cluster[0]
-                print(f"🌍   Center: {first_place.get('place_name', 'Unknown')} at ({first_place.get('y', 0)}, {first_place.get('x', 0)})", file=sys.stderr)
+            center_place = cluster[0]
+            center_lat = float(center_place.get('y', 0))
+            center_lng = float(center_place.get('x', 0))
+            
+            print(f"🌍 Cluster {i+1}: {len(cluster)} places, types: {list(place_types)}")
+            print(f"🌍   Center: {center_place.get('place_name', 'Unknown')} at ({center_lat}, {center_lng})")
         
         return clusters
     
