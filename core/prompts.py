@@ -437,18 +437,18 @@ PLACE TYPE VARIETY REQUIREMENT:
 - **This creates a richer, more interesting experience**
 
 REQUIRED OUTPUT FORMAT (copy exactly):
-1. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
-2. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
-3. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
-4. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
-5. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings] (if selecting 5)
+1. [Place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+2. [Place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+3. [Place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+4. [Place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+5. [Place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings] (if selecting 5)
 
 VERIFICATION CHECKLIST:
 □ I have selected EXACTLY 4-5 places (preferably 5)
 □ All selected places are within 800m walking distance of each other
 □ I have ensured VARIETY across different place types
 □ I used the exact format: "1. Place Name - Reason"
-□ All names match exactly with the candidates above
+□ All names are real place names from the candidates above
 □ I did NOT generate new place names or addresses
 □ Places are suitable for {companion_type.lower()} outings
 □ I prioritized geographic proximity for walkability

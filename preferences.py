@@ -1433,10 +1433,10 @@ class Preferences:
         
         # Use the unified, well-engineered Qwen prompt for comprehensive itinerary generation
         prompt = build_qwen_itinerary_prompt(
-            selected_locations,                         # The 4-5 locations from route planner
             self.companion_type,                    # Companion type for tone/style
             self.budget,                            # Budget level for activity suggestions
             self.starting_time,                     # Starting time for temporal context
+            selected_locations,                     # The 4-5 locations from route planner
         )
         
         # Run the Qwen model to generate emotional storytelling
@@ -1459,10 +1459,10 @@ class Preferences:
                 
                 # Fallback: Use the unified prompt with enhanced guidance
                 fallback_prompt = build_qwen_itinerary_prompt(
-                    selected_locations,
                     self.companion_type,
                     self.budget,
                     self.starting_time,
+                    selected_locations,
                 )
                 
                 if self.progress_callback:
@@ -1479,10 +1479,10 @@ class Preferences:
                     
                     # Enhanced fallback: Use the unified prompt with additional emphasis on coverage
                     enhanced_prompt = build_qwen_itinerary_prompt(
-                        selected_locations,
                         self.companion_type,
                         self.budget,
                         self.starting_time,
+                        selected_locations,
                     )
                     
                     if self.progress_callback:
