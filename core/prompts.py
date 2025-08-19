@@ -496,7 +496,29 @@ def build_ultra_comprehensive_qwen_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Ultra-comprehensive prompt with strict formatting
+    # Build dynamic location sections based on actual count
+    location_sections = []
+    for i, location in enumerate(locations, 1):
+        if i == 1:
+            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, including emotional tone and {tone_style['style_note']}]"
+        elif i == 2:
+            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, building connection from previous location]"
+        elif i == 3:
+            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, creating peak experience]"
+        elif i == 4:
+            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, maintaining momentum]"
+        elif i == 5:
+            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, providing satisfying resolution]"
+        else:
+            # Handle any additional locations dynamically
+            section = f"# LOCATION {i}: {location['place_name']}\n[Write 3-4 sentences about this location, continuing the journey]"
+        
+        location_sections.append(section)
+    
+    # Join all location sections
+    locations_text = "\n\n".join(location_sections)
+    
+    # Ultra-comprehensive prompt with dynamic formatting
     prompt = f"""<|im_start|>system
 You are a travel writer creating detailed itineraries. You MUST cover ALL {len(locations)} locations.
 Use the EXACT format specified below. Do not skip any location.
@@ -508,20 +530,7 @@ Time: {time_context}
 
 FORMAT: Use exactly this structure with these exact headings:
 
-# LOCATION 1: {locations[0]['place_name']}
-[Write 3-4 sentences about this location, including emotional tone and {tone_style['style_note']}]
-
-# LOCATION 2: {locations[1]['place_name']}
-[Write 3-4 sentences about this location, building connection from previous location]
-
-# LOCATION 3: {locations[2]['place_name']}
-[Write 3-4 sentences about this location, creating peak experience]
-
-# LOCATION 4: {locations[3]['place_name']}
-[Write 3-4 sentences about this location, maintaining momentum]
-
-# LOCATION 5: {locations[4]['place_name']}
-[Write 3-4 sentences about this location, providing satisfying resolution]
+{locations_text}
 
 Include these budget activities: {', '.join(selected_activities)}
 <|im_end|>

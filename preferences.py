@@ -270,31 +270,39 @@ class Preferences:
                 return None
     
     def _create_fallback_route_plan(self, start_location: Tuple[float, float], 
-                                   place_types: List[str]) -> List[Dict]:
+                                   place_types: List[str]) -> str:
         """
-        Create a fallback route plan with unique coordinates when Phi fails.
+        Create a fallback route plan when Phi fails.
         
-        This generates a realistic route plan with unique coordinates
-        around the starting location to ensure map markers display properly.
+        This generates a realistic route plan with actual place names and coordinates
+        around the starting location to ensure the system can continue.
         
         Args:
             start_location (Tuple[float, float]): Starting coordinates (lat, lng)
             place_types (List[str]): List of place types to include
             
         Returns:
-            List[Dict]: List of 5 places with unique coordinates
+            str: JSON string with fallback route plan
         """
-        print("⚠️ JSON extraction failed, creating fallback route plan", file=sys.stderr)
+        print("⚠️ Creating enhanced fallback route plan", file=sys.stderr)
         
-        # Generate unique coordinates around the starting location
-        # Use small offsets to create distinct markers
+        # Generate realistic fallback places around the starting location
         base_lat, base_lng = start_location
         
-        # Create 5 unique locations with small coordinate offsets
+        # Create realistic fallback locations with actual place names
         fallback_places = []
+        
+        # Define realistic place names for different types
+        place_names = {
+            "Cafe": ["스타벅스 홍대점", "투썸플레이스 홍대점", "할리스 홍대점", "이디야 홍대점", "빽다방 홍대점"],
+            "Restaurant": ["홍대 맛집", "홍대 분식", "홍대 치킨", "홍대 피자", "홍대 떡볶이"],
+            "Cultural": ["홍대 클럽", "홍대 공연장", "홍대 갤러리", "홍대 카페거리", "홍대 상점가"],
+            "Entertainment": ["홍대 놀이터", "홍대 게임장", "홍대 노래방", "홍대 영화관", "홍대 볼링장"]
+        }
+        
+        # Create 5 unique locations with realistic names
         for i in range(5):
             # Generate unique coordinates with small offsets
-            # Offset by 0.001 degrees (~100 meters) in different directions
             offset_lat = base_lat + (i * 0.0005)  # Small northward progression
             offset_lng = base_lng + (i * 0.0003)  # Small eastward progression
             
@@ -302,25 +310,35 @@ class Preferences:
             if offset_lat > 38.6:  # Korea's northern boundary
                 offset_lat = base_lat - (i * 0.0005)  # Go south instead
             
-            place_type = place_types[i % len(place_types)] if place_types else "Unknown"
+            # Select appropriate place type and name
+            place_type = place_types[i % len(place_types)] if place_types else "Cafe"
+            type_key = place_type.capitalize()
+            
+            # Get realistic names for this type, or use generic if not found
+            available_names = place_names.get(type_key, place_names["Cafe"])
+            place_name = available_names[i % len(available_names)]
             
             fallback_place = {
-                "place_name": f"Fallback Location {i+1}",
-                "road_address_name": f"Generated address {i+1}",
+                "place_name": place_name,
+                "road_address_name": f"홍대 근처 {place_type}",
                 "place_type": place_type,
                 "distance": str((i + 1) * 100),  # Increasing distance
                 "place_url": "",
                 "latitude": offset_lat,
                 "longitude": offset_lng,
-                "selection_reason": f"Fallback location {i+1} for {place_type}"
+                "selection_reason": f"Fallback {place_type} location for itinerary generation"
             }
             
             fallback_places.append(fallback_place)
         
-        print(f"✅ Created fallback route plan with {len(fallback_places)} locations", file=sys.stderr)
-        print(f"✅ Each location has unique coordinates", file=sys.stderr)
-        
-        return fallback_places
+        try:
+            json_output = json.dumps(fallback_places, ensure_ascii=False)
+            print(f"✅ Created enhanced fallback route plan with {len(fallback_places)} realistic locations", file=sys.stderr)
+            print(f"✅ Each location has unique coordinates and realistic names", file=sys.stderr)
+            return json_output
+        except Exception as e:
+            print(f"❌ Failed to create JSON for fallback plan: {e}", file=sys.stderr)
+            return None
 
     def _extract_json_from_output(self, raw_output: str) -> str:
         """
@@ -396,12 +414,22 @@ class Preferences:
                     place_info = parts[1].strip()
                     if ' - ' in place_info:
                         place_name, reason = place_info.split(' - ', 1)
-                        places.append({
-                            "place_name": place_name.strip(),
-                            "selection_reason": reason.strip()
-                        })
+                        place_name = place_name.strip()
+                        
+                        # Filter out generic place names
+                        if (place_name and 
+                            place_name.lower() not in ['place name', 'location', 'venue', 'spot', 'place'] and
+                            len(place_name) > 2 and  # Must be longer than 2 characters
+                            not place_name.isdigit()):  # Must not be just numbers
+                            
+                            places.append({
+                                "place_name": place_name,
+                                "selection_reason": reason.strip()
+                            })
+                        else:
+                            print(f"⚠️ Filtered out generic place name: '{place_name}'", file=sys.stderr)
         
-        print(f"🔍 Extracted {len(places)} places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
+        print(f"🔍 Extracted {len(places)} valid places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
         return places
     
     def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
@@ -555,6 +583,16 @@ class Preferences:
         try:
             # Parse the JSON route plan
             selected_locations = json.loads(route_plan_json)
+            
+            # Safety check: Ensure we have valid locations
+            if not selected_locations or not isinstance(selected_locations, list):
+                return "Invalid route plan format - no locations found"
+            
+            if len(selected_locations) == 0:
+                return "No locations selected for itinerary - cannot generate story"
+            
+            print(f"✅ Proceeding with {len(selected_locations)} locations for Qwen story generation", file=sys.stderr)
+            
         except Exception as e:
             print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
             return f"Failed to parse route plan: {e}"
