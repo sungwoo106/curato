@@ -239,14 +239,15 @@ def build_phi_location_prompt(
     time_criteria = time_guidance.get(time_period, time_guidance["afternoon"])
     
     return f"""<|system|>
-You are a travel planner. Select 4-5 locations from 20 candidates.
+You are a travel planner. Select EXACTLY 4-5 locations from 20 candidates.
 Respond with a simple list of selected places, not JSON.
 IMPORTANT: You must select REAL places from the candidates list below. 
 Do not use placeholder text or generic terms.
+CRITICAL: Generate EXACTLY 4-5 places, no more, no less.
 <|end|>
 
 <|user|>
-TASK: Select 4-5 locations from 20 candidates.
+TASK: Select EXACTLY 4-5 locations from 20 candidates.
 Location: {start_location}
 Companion: {companion_type}
 Time: {start_time}:00 ({time_period})
@@ -263,12 +264,13 @@ CRITERIA:
 
 PROCESS:
 1. Review 20 candidates below
-2. Select top 4-5 places based on criteria
+2. Select EXACTLY 4-5 places based on criteria
 3. List them in order (1, 2, 3, 4, 5)
 4. Include the place name and why you chose it
 5. CRITICAL: Copy the exact place names from the candidates below
+6. STOP after listing exactly 4-5 places
 
-OUTPUT: Simple numbered list of your selected places:
+OUTPUT FORMAT (EXACTLY 4-5 places):
 1. [Copy exact name from candidates] - Brief reason for selection
 2. [Copy exact name from candidates] - Brief reason for selection
 3. [Copy exact name from candidates] - Brief reason for selection
@@ -278,8 +280,13 @@ OUTPUT: Simple numbered list of your selected places:
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
-IMPORTANT: Select actual places from the candidates above. 
-Copy the exact names as they appear in the candidates list.
+IMPORTANT: 
+- Select EXACTLY 4-5 actual places from the candidates above
+- Copy the exact names as they appear in the candidates list
+- Do NOT generate more than 5 places
+- Do NOT generate fewer than 4 places
+- STOP after listing exactly 4-5 places
+
 <|end|>
 
 <|assistant|>

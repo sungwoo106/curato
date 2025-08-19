@@ -383,13 +383,22 @@ class Preferences:
         selected_places = self._extract_places_from_text(cleaned_output)
         
         if selected_places:
+            # Validate Phi's output meets our 4-5 place requirement
+            self._validate_phi_output(selected_places)
+            
             # Ensure we have minimum required locations for map functionality
             print(f"🔍 Before supplementation: {len(selected_places)} places", file=sys.stderr)
             print(f"🔍 Places before supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
             
-            selected_places = self._ensure_minimum_locations(selected_places, min_locations=4)
-            print(f"🔍 After supplementation: {len(selected_places)} places", file=sys.stderr)
-            print(f"🔍 Places after supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
+            # Only supplement if we have fewer than 3 places (system stability requirement)
+            # Phi should generate 4-5, so supplementation should rarely be needed
+            if len(selected_places) < 3:
+                print(f"⚠️ Phi generated only {len(selected_places)} places, supplementing for system stability", file=sys.stderr)
+                selected_places = self._ensure_minimum_locations(selected_places, min_locations=3)
+                print(f"🔍 After supplementation: {len(selected_places)} places", file=sys.stderr)
+                print(f"🔍 Places after supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
+            else:
+                print(f"✅ Phi generated {len(selected_places)} places as expected (4-5 range)", file=sys.stderr)
             
             # Convert to JSON format
             json_output = self._convert_places_to_json(selected_places)
@@ -443,6 +452,29 @@ class Preferences:
         
         print(f"🔍 Extracted {len(places)} valid places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
         return places
+    
+    def _validate_phi_output(self, selected_places: List[Dict]) -> None:
+        """
+        Validate that Phi's output meets our 4-5 place requirement.
+        
+        Args:
+            selected_places (List[Dict]): List of places extracted from Phi output
+        """
+        place_count = len(selected_places)
+        expected_min = 4
+        expected_max = 5
+        
+        if place_count < expected_min:
+            print(f"⚠️ Phi generated only {place_count} places (expected {expected_min}-{expected_max})", file=sys.stderr)
+            print(f"⚠️ This may indicate the model didn't follow instructions properly", file=sys.stderr)
+        elif place_count > expected_max:
+            print(f"⚠️ Phi generated {place_count} places (expected {expected_min}-{expected_max})", file=sys.stderr)
+            print(f"⚠️ The model generated more places than requested", file=sys.stderr)
+        else:
+            print(f"✅ Phi generated {place_count} places as expected ({expected_min}-{expected_max} range)", file=sys.stderr)
+        
+        # Log the actual places for debugging
+        print(f"🔍 Phi selected places: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
     
     def _ensure_minimum_locations(self, selected_places: List[Dict], min_locations: int = 4) -> List[Dict]:
         """
