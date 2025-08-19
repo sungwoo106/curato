@@ -302,7 +302,7 @@ def build_phi_location_prompt(
     This prompt is specifically designed for Phi-3-mini's choice selection capabilities:
     - Clear selection criteria and ranking system
     - Structured decision-making process
-    - Companion type and context awareness
+    - Dynamic companion type awareness
     - Geographic flow optimization
     - Budget and timing considerations
     
@@ -317,7 +317,7 @@ def build_phi_location_prompt(
         str: Optimized prompt string for Phi-3.5 Mini choice selection
     """
     
-    # Enhanced companion-specific selection criteria
+    # Dynamic companion-specific selection criteria
     companion_criteria = {
         "solo": {
             "priority": ["quiet atmosphere", "personal reflection", "cultural depth", "unique experiences"],
@@ -340,33 +340,30 @@ def build_phi_location_prompt(
     # Get companion-specific criteria
     criteria = companion_criteria.get(companion_type.lower(), companion_criteria["solo"])
     
-    # Get companion-specific prompt enhancement
-    companion_enhancement = get_companion_specific_prompt_enhancement(
-        companion_type, start_time, budget_level
-    )
-    
     # Format recommendations for Phi
     formatted_recommendations = format_recommendations_for_phi(recommendations_json)
     
     # Get geographic clustering information
     clustering_info = get_geographic_clustering_info(recommendations_json)
     
-    # Enhanced prompt with specific guidance and examples
+    # Dynamic prompt based on companion type
     prompt = f"""<|system|>
-You are a professional travel planner specializing in romantic couple outings in Seoul.
-Your expertise: Selecting optimal locations for romantic experiences, ensuring walkability, and creating memorable date itineraries.
+You are a professional travel planner specializing in {companion_type.lower()} outings in Seoul.
+Your expertise: Selecting optimal locations for {companion_type.lower()} experiences, ensuring walkability, and creating memorable itineraries.
 
-TASK: Select EXACTLY 4-5 locations from the candidates below for a couple's romantic outing near Hongdae Station.
+TASK: Select EXACTLY 4-5 locations from the candidates below for a {companion_type.lower()} outing near Hongdae Station.
 
 CRITICAL REQUIREMENTS:
 - Choose EXACTLY 4-5 places (no more, no less)
-- Select places suitable for couples (romantic atmosphere, intimate settings)
+- Select places suitable for {companion_type.lower()} outings
 - Ensure all selected places are within 800m walking distance of each other
 - Copy the EXACT place names from the candidates list below
+- DO NOT create new place names - only select from the candidates provided
+- Use the EXACT format specified below
 <|end|>
 
 <|user|>
-I need you to select 4-5 places for a couple's romantic outing near Hongdae Station.
+I need you to select 4-5 places for a {companion_type.lower()} outing near Hongdae Station.
 
 CONTEXT:
 - Companion Type: {companion_type}
@@ -376,8 +373,8 @@ CONTEXT:
 - Location: Hongdae Station (Line 2)
 
 SELECTION CRITERIA:
-1. Romantic atmosphere and intimate settings
-2. Suitable for couples (not family-oriented or solo-focused)
+1. {', '.join(criteria['priority'])}
+2. Suitable for {companion_type.lower()} (not {', '.join(criteria['avoid'])})
 3. Within 800m walking distance of each other
 4. Mix of cafes and restaurants for variety
 
@@ -386,35 +383,37 @@ AVAILABLE CANDIDATES:
 
 STEP-BY-STEP PROCESS:
 1. Read through all candidate places above
-2. Identify places that match the romantic couple criteria
+2. Identify places that match the {companion_type.lower()} criteria
 3. Check that selected places are geographically close (within 800m)
 4. Select EXACTLY 4-5 places total
-5. List them one per line using the exact names from the candidates
+5. Format each selection using the EXACT format below
 
-REQUIRED OUTPUT FORMAT:
-[Exact place name from candidates]
-[Exact place name from candidates]
-[Exact place name from candidates]
-[Exact place name from candidates]
-[Exact place name from candidates] (if selecting 5)
+REQUIRED OUTPUT FORMAT (copy exactly):
+1. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+2. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+3. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+4. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
+5. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings] (if selecting 5)
 
 VERIFICATION:
 - Count your selections: you must have exactly 4 or 5 places
 - Ensure all names match exactly with the candidates above
-- Confirm all places are suitable for romantic couple outings
+- Confirm all places are suitable for {companion_type.lower()} outings
+- DO NOT invent new places - only select from the provided list
+- Use the exact format: "1. Place Name - Reason"
 
-Now select your 4-5 places:
+Now select your 4-5 places from the candidates above using the exact format:
 <|end|>
 
 <|assistant|>
-I'll select 4-5 romantic places for a couple's outing near Hongdae Station:
+I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station:
 
 """
 
     return prompt
 
 # =============================================================================
-# TOKEN-EFFICIENT QWEN PROMPT FOR COMPREHENSIVE STORYTELLING
+# SINGLE FOCUSED QWEN PROMPT FOR COMPREHENSIVE ITINERARY GENERATION
 # =============================================================================
 
 def build_qwen_itinerary_prompt(
@@ -424,10 +423,10 @@ def build_qwen_itinerary_prompt(
     start_time: int = 12,
 ) -> str:
     """
-    Build a unified, well-engineered prompt for Qwen that ensures comprehensive coverage.
+    Build a focused, direct prompt for Qwen to generate comprehensive itineraries.
     
-    This is the primary prompt that consolidates all Qwen functionality into a single,
-    optimized prompt for maximum place coverage and emotional engagement.
+    This prompt is designed to be clear, concise, and directive to ensure
+    the model covers all locations with detailed descriptions.
     
     Args:
         locations (list): List of 4-5 locations from the location selector
@@ -436,204 +435,46 @@ def build_qwen_itinerary_prompt(
         start_time (int): Starting time for temporal context
         
     Returns:
-        str: Unified prompt string for comprehensive itinerary generation
+        str: Focused prompt string for comprehensive itinerary generation
     """
     
-    # Get tone and style for companion type
-    tone_style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
-    
-    # Get budget-appropriate activities
-    budget_activities = {
-        "low": LOW_BUDGET,
-        "medium": MEDIUM_BUDGET,
-        "high": HIGH_BUDGET,
-    }
-    
-    # Select 2-3 budget-appropriate activities
-    selected_activities = random.sample(budget_activities[budget_level], k=min(3, len(budget_activities[budget_level])))
-    
-    # Format locations with detailed context
+    # Format locations simply
     locs_text = "\n".join([
-        f"{i+1}. {loc['place_name']} ({loc.get('place_type', 'Selected location')}) - {loc.get('selection_reason', 'Carefully chosen for optimal experience')}"
+        f"{i+1}. {loc['place_name']} - {loc.get('place_type', 'Location')}"
         for i, loc in enumerate(locations)
     ])
     
-    # Time context
-    if start_time < 12:
-        time_context = "morning light, fresh energy, new beginnings"
-    elif start_time < 17:
-        time_context = "warm afternoon glow, active exploration, golden sunlight"
-    else:
-        time_context = "golden hour magic, evening enchantment, soft lighting"
-    
-    # Focused prompt for comprehensive itinerary creation
+    # Simple, direct prompt
     prompt = f"""<|im_start|>system
-You are a professional travel writer specializing in romantic couple itineraries in Seoul.
-Your expertise: Creating detailed, emotional, and engaging travel narratives that capture the essence of romantic experiences.
-
-TASK: Create a comprehensive romantic itinerary covering ALL {len(locations)} locations selected by the travel planner.
-
-CRITICAL REQUIREMENT: You MUST cover every single location listed below with detailed, romantic descriptions.
+You are a travel writer creating detailed itineraries for {companion_type.lower()} outings in Seoul.
 <|im_end|>
 
 <|im_start|>user
-Create a romantic, poetic itinerary for a couple visiting these places near Hongdae Station:
+Create a detailed itinerary for a {companion_type.lower()} outing starting at {start_time}:00. 
+Cover ALL {len(locations)} locations below with 3-4 sentences each:
 
 {locs_text}
 
-USER PREFERENCES & CONTEXT:
-- Companion Type: {companion_type}
-- Budget Level: {budget_level}
-- Start Time: {start_time}:00
-- Suggested Activities: {', '.join(selected_activities)}
-- Time Atmosphere: {time_context}
-- Location: Hongdae Station (Line 2)
+Budget: {budget_level}
+Style: Romantic and engaging for {companion_type.lower()}
 
-ITINERARY REQUIREMENTS:
-1. **Complete Coverage**: Write about ALL {len(locations)} locations
-2. **Romantic Tone**: Use romantic, poetic language throughout
-3. **Detailed Descriptions**: Each location gets 3-4 detailed sentences
-4. **Sensory Experience**: Include sights, sounds, smells, and feelings
-5. **Emotional Connection**: Connect locations with romantic narrative flow
-6. **User Preferences**: Incorporate the couple's preferences and budget level
-
-REQUIRED STRUCTURE (copy exactly):
-{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
-
-WRITING GUIDELINES FOR EACH LOCATION:
-- Start with the exact format above
-- Write 3-4 detailed, romantic sentences
-- Include: atmosphere, romantic moments, sensory details
-- Connect emotionally to the next location
-- Make it engaging and memorable for couples
-
-EXAMPLE OF EXPECTED OUTPUT:
+Format each location exactly like this:
 1. LOCATION 1: [Place Name]
-   As the couple steps into this charming venue, they're immediately enveloped in a warm, intimate atmosphere. The soft lighting casts gentle shadows across the cozy seating areas, perfect for intimate conversations. They can feel the romantic energy in the air as they settle into their seats, their hands naturally finding each other's. The gentle background music and the aroma of freshly brewed coffee create the perfect backdrop for their romantic afternoon together.
+   [3-4 detailed sentences about atmosphere, experience, and romantic moments]
 
 2. LOCATION 2: [Place Name]
-   [Continue with similar detailed, romantic descriptions for each location...]
+   [3-4 detailed sentences about atmosphere, experience, and romantic moments]
 
-VERIFICATION CHECKLIST:
-□ I have written about ALL {len(locations)} locations
-□ Each location has 3-4 detailed sentences
-□ I used romantic, poetic language throughout
-□ I included sensory details and emotional connections
-□ I incorporated user preferences and budget level
-□ I ended with [END]
-
-Now create your complete romantic itinerary covering all {len(locations)} locations:
+Continue for all {len(locations)} locations. Make it engaging and romantic.
 <|im_end|>
 
 <|im_start|>assistant"""
 
     return prompt
 
-def build_qwen_story_prompt(
-    locations: list,
-    companion_type: str,
-    budget_level: str,
-    start_time: int = 12,
-) -> str:
-    """
-    Build a token-efficient prompt for Qwen to generate comprehensive, emotional itineraries.
-    
-    This prompt is engineered to:
-    - Cover ALL selected places comprehensively
-    - Create emotional connections between locations
-    - Use minimal tokens while maintaining quality
-    - Ensure consistent narrative flow
-    - Incorporate user preferences effectively
-    
-    Args:
-        locations (list): List of 4-5 locations from the location selector
-        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
-        budget_level (str): Budget level (low, medium, high)
-        start_time (int): Starting time for temporal context
-        
-    Returns:
-        str: Token-efficient prompt string for comprehensive storytelling
-    """
-    
-    # Get tone and style for companion type
-    tone_style = TONE_STYLE_MAP.get(companion_type.lower(), TONE_STYLE_MAP["solo"])
-    
-    # Get budget-appropriate activities
-    budget_activities = {
-        "low": LOW_BUDGET,
-        "medium": MEDIUM_BUDGET,
-        "high": HIGH_BUDGET,
-    }
-    
-    # Select 2-3 budget-appropriate activities
-    selected_activities = random.sample(budget_activities[budget_level], k=min(3, len(budget_activities[budget_level])))
-    
-    # Format locations efficiently
-    locs_text = "\n".join([
-        f"{i+1}. {loc['place_name']} ({loc.get('place_type', 'Selected location')})"
-        for i, loc in enumerate(locations)
-    ])
-    
-    # Time context
-    if start_time < 12:
-        time_context = "morning light, fresh energy, new beginnings"
-    elif start_time < 17:
-        time_context = "warm afternoon glow, active exploration, golden sunlight"
-    else:
-        time_context = "golden hour magic, evening enchantment, soft lighting"
-    
-    # Focused fallback prompt for comprehensive coverage
-    prompt = f"""<|im_start|>system
-You are a travel writer specializing in romantic couple itineraries.
-Your task: Create a detailed itinerary covering ALL {len(locations)} locations selected by the travel planner.
-
-CRITICAL: You MUST cover every single location listed below with romantic descriptions.
-<|im_end|>
-
-<|im_start|>user
-Create a romantic itinerary for a couple visiting these places:
-
-{locs_text}
-
-USER PREFERENCES:
-- Companion Type: {companion_type}
-- Budget Level: {budget_level}
-- Suggested Activities: {', '.join(selected_activities)}
-
-ITINERARY REQUIREMENTS:
-1. **Complete Coverage**: Write about ALL {len(locations)} locations
-2. **Romantic Tone**: Use romantic, emotional language throughout
-3. **Detailed Descriptions**: Each location gets 2-3 detailed sentences
-4. **Sensory Experience**: Include atmosphere, romantic moments, sensory details
-5. **User Preferences**: Incorporate the couple's preferences and budget level
-
-REQUIRED STRUCTURE (copy exactly):
-{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
-
-WRITING GUIDELINES FOR EACH LOCATION:
-- Start with the exact format above
-- Write 2-3 detailed, romantic sentences
-- Include: atmosphere, romantic moments, sensory details
-- Make it engaging and memorable for couples
-
-EXAMPLE OF EXPECTED OUTPUT:
-1. LOCATION 1: [Place Name]
-   The couple enters this charming venue and immediately feels the romantic atmosphere. Soft lighting and cozy seating create the perfect setting for intimate conversations. They can sense the romantic energy as they settle in together.
-
-VERIFICATION CHECKLIST:
-□ I have written about ALL {len(locations)} locations
-□ Each location has 2-3 detailed sentences
-□ I used romantic, emotional language throughout
-□ I included sensory details and romantic moments
-□ I incorporated user preferences and budget level
-□ I ended with [END]
-
-Now create your complete romantic itinerary covering all {len(locations)} locations:
-<|im_end|>
-
-<|im_start|>assistant"""
-
-    return prompt
+# =============================================================================
+# HELPER FUNCTIONS FOR LOCATION DESCRIPTION
+# =============================================================================
 
 def _get_location_description(position: int, total_locations: int) -> str:
     """
