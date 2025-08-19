@@ -118,51 +118,52 @@ class Preferences:
         
         # Expand to use more place types for better variety
         # This creates a richer pool for Phi to choose from
-        max_companion_types = 4  # Increased from 2 to 4 for better variety
+        max_companion_types = 3  # Reduced from 4 to 3 to prioritize user types
         if len(companion_places) > 0:
-            # Randomly select 3-4 companion types that complement user selections
+            # Select companion types systematically for consistent variety
+            # Instead of random selection, use a structured approach
             available_companion_types = [t for t in companion_places if t not in self.selected_types]
             if available_companion_types:
+                # Take the first 3 types to ensure consistent selection and prioritize user types
                 num_to_add = min(max_companion_types, len(available_companion_types))
-                additional_types = random.sample(available_companion_types, num_to_add)
+                additional_types = available_companion_types[:num_to_add]  # Remove random.sample for consistency
                 self.selected_types.extend(additional_types)
                 print(f"🔍 Added {len(additional_types)} companion-specific types: {additional_types}", file=sys.stderr)
         
         # Add additional variety types for rich experience
         # These provide more options for Phi to create diverse itineraries
-        variety_types = [
-            "테마카페",      # Theme cafes
-            "문화시설",      # Cultural facilities
-            "관광명소",      # Tourist attractions
-            "공원",         # Parks
-            "쇼핑",         # Shopping
-            "엔터테인먼트"   # Entertainment
-        ]
+        from constants import VARIETY_PLACE_TYPES
+        variety_types = VARIETY_PLACE_TYPES
         
-        # Add 1-2 variety types that aren't already selected
+        # Add variety types systematically for consistent results
+        # Using structured selection ([:num_variety]) instead of random.sample() ensures:
+        # 1. Consistent results across multiple runs
+        # 2. Predictable variety in place types
+        # 3. Better debugging and reproducibility
         available_variety = [t for t in variety_types if t not in self.selected_types]
         if available_variety:
-            num_variety = min(2, len(available_variety))
-            selected_variety = random.sample(available_variety, num_variety)
+            num_variety = min(2, len(available_variety))  # Reduced from 3 to 2 to prioritize user types
+            # Use systematic selection instead of random for consistency
+            selected_variety = available_variety[:num_variety]  # Remove random.sample for consistency
             self.selected_types.extend(selected_variety)
             print(f"🔍 Added {len(selected_variety)} variety types: {selected_variety}", file=sys.stderr)
         
         # Ensure we have at least 6 types for rich variety
         if len(self.selected_types) < 6:
             # Add default types if we don't have enough
-            default_types = ['Cafe', 'Restaurant', '문화시설', '관광명소']
-            for default_type in default_types:
+            from constants import DEFAULT_PLACE_TYPES
+            for default_type in DEFAULT_PLACE_TYPES:
                 if default_type not in self.selected_types and len(self.selected_types) < 6:
                     self.selected_types.append(default_type)
             print(f"🔍 Added default types to ensure minimum variety: {self.selected_types}", file=sys.stderr)
         
         # Limit total types to prevent overwhelming the search
-        if len(self.selected_types) > 8:
+        if len(self.selected_types) > 10:  # Increased from 8 to 10 to allow more variety
             # Keep user-selected types and limit companion/variety types
             user_types = [t for t in self.selected_types if t in (user_selected_types or [])]
             other_types = [t for t in self.selected_types if t not in user_types]
-            # Keep all user types + max 5 other types
-            self.selected_types = user_types + other_types[:5]
+            # Keep all user types + max 7 other types (increased from 5)
+            self.selected_types = user_types + other_types[:7]
             print(f"🔍 Limited total types to prevent search overload: {self.selected_types}", file=sys.stderr)
         
         print(f"🔍 Final selected place types: {self.selected_types} (Total: {len(self.selected_types)})", file=sys.stderr)
@@ -197,7 +198,7 @@ class Preferences:
             self.start_location,                       # Starting coordinates
             int(self.max_distance_km * 1000),          # Distance in meters
             places_per_type=20,                        # Increased from 15 to 20 per type for maximum variety
-            max_cluster_distance=300,                  # 300m clustering for tight walkable coherence
+            max_cluster_distance=600,                  # Reduced from 300m to 600m for better walkability
             target_places=30                           # Increased from 20 to 30 for Phi to choose from
         )
         
@@ -750,53 +751,55 @@ class Preferences:
     def _select_best_balanced_cluster(self, clusters: List[List[Dict]]) -> List[Dict]:
         """
         Select the best cluster that balances geographic proximity with place type variety.
-        
         This method ensures we get a mix of different place types (cafes, restaurants, cultural spots)
-        instead of clusters dominated by a single type.
-        
-        Args:
-            clusters (List[List[Dict]]): List of geographic clusters
-            
-        Returns:
-            List[Dict]: Best balanced cluster with variety
+        instead of clusters dominated by a single type, while prioritizing walkability.
         """
         if not clusters:
             return []
         
         print(f"🔍 Selecting best balanced cluster from {len(clusters)} options", file=sys.stderr)
         
-        # Score each cluster based on variety and size
         cluster_scores = []
         for i, cluster in enumerate(clusters):
-            # Count place types in this cluster
             place_types = set(p.get('place_type') for p in cluster)
             type_variety = len(place_types)
             
-            # Calculate average distance from center (lower is better)
+            # Calculate maximum distance between any two places in the cluster
+            max_distance = 0
+            total_distance = 0
             center_lat = sum(float(p.get('y', 0)) for p in cluster) / len(cluster)
             center_lng = sum(float(p.get('x', 0)) for p in cluster) / len(cluster)
             
-            total_distance = 0
-            for place in cluster:
+            for j, place1 in enumerate(cluster):
+                for k, place2 in enumerate(cluster):
+                    if j < k:  # Only check each pair once
+                        try:
+                            lat1, lng1 = float(place1.get('y', 0)), float(place1.get('x', 0))
+                            lat2, lng2 = float(place2.get('y', 0)), float(place2.get('x', 0))
+                            distance = self._calculate_distance(lat1, lng1, lat2, lng2)
+                            max_distance = max(max_distance, distance)
+                            total_distance += distance
+                        except:
+                            continue
+                
+                # Also calculate distance from center
                 try:
-                    lat = float(place.get('y', 0))
-                    lng = float(place.get('x', 0))
-                    distance = self._calculate_distance(center_lat, center_lng, lat, lng)
-                    total_distance += distance
+                    lat = float(place1.get('y', 0))
+                    lng = float(place1.get('x', 0))
+                    center_distance = self._calculate_distance(center_lat, center_lng, lat, lng)
+                    total_distance += center_distance
                 except:
                     continue
             
-            avg_distance = total_distance / len(cluster) if cluster else 0
+            avg_distance = total_distance / (len(cluster) * 2) if cluster else 0
             
-            # Score formula: prioritize variety, then size, then proximity
-            # Higher variety gets much higher score (multiply by 100)
-            # Size matters but less than variety (multiply by 10)
-            # Proximity matters least (divide by 1000 to make it small)
+            # Score formula: prioritize walkability, then variety, then size
+            # Walkability gets highest weight (1000x), variety gets medium weight (100x), size gets low weight (10x)
+            walkability_score = max(0, 1000 - max_distance) * 10  # Higher score for shorter max distance
             variety_score = type_variety * 100
             size_score = len(cluster) * 10
-            proximity_score = max(0, 1000 - avg_distance) / 1000
             
-            total_score = variety_score + size_score + proximity_score
+            total_score = walkability_score + variety_score + size_score
             
             cluster_scores.append({
                 'index': i,
@@ -804,23 +807,27 @@ class Preferences:
                 'score': total_score,
                 'variety': type_variety,
                 'size': len(cluster),
-                'avg_distance': avg_distance,
-                'place_types': list(place_types)
+                'max_distance': max_distance,
+                'avg_distance': avg_distance
             })
             
-            print(f"🔍 Cluster {i+1}: Score={total_score:.1f}, Variety={type_variety}, Size={len(cluster)}, Types={list(place_types)}", file=sys.stderr)
+            print(f"🔍 Cluster {i+1}: Score={total_score:.1f}, Variety={type_variety}, Size={len(cluster)}, MaxDist={max_distance:.1f}m, Types={list(place_types)}", file=sys.stderr)
         
-        # Sort by score (highest first)
+        # Sort by total score (highest is best)
         cluster_scores.sort(key=lambda x: x['score'], reverse=True)
         
-        best_cluster = cluster_scores[0]['cluster']
-        best_info = cluster_scores[0]
+        best_cluster_info = cluster_scores[0]
+        print(f"✅ Selected cluster {best_cluster_info['index']+1} with score {best_cluster_info['score']:.1f}")
+        print(f"✅ Variety: {best_cluster_info['variety']} types, Size: {best_cluster_info['size']} places")
+        print(f"✅ Max distance: {best_cluster_info['max_distance']:.1f}m, Avg distance: {best_cluster_info['avg_distance']:.1f}m")
+        print(f"✅ Place types: {list(set(p.get('place_type') for p in best_cluster_info['cluster']))}")
         
-        print(f"✅ Selected cluster {best_info['index']+1} with score {best_info['score']:.1f}", file=sys.stderr)
-        print(f"✅ Variety: {best_info['variety']} types, Size: {best_info['size']} places", file=sys.stderr)
-        print(f"✅ Place types: {best_info['place_types']}", file=sys.stderr)
+        # Verify the selected cluster is truly walkable
+        if best_cluster_info['max_distance'] > 800:
+            print(f"⚠️ WARNING: Selected cluster has max distance {best_cluster_info['max_distance']:.1f}m > 800m", file=sys.stderr)
+            print(f"⚠️ This may not be walkable - consider selecting a different cluster", file=sys.stderr)
         
-        return best_cluster
+        return best_cluster_info['cluster']
     
     def _calculate_cluster_score(self, cluster: List[Dict]) -> float:
         """
@@ -1080,101 +1087,136 @@ class Preferences:
         
         return final_locations
     
-    def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
+    def _convert_places_to_json(self, selected_places: List[str]) -> List[Dict]:
         """
-        Convert selected places to JSON format for the route planner.
+        Convert selected place names to JSON format with full place data.
+        
+        This method matches the selected place names with the actual place data
+        to create a complete JSON representation for the itinerary.
         
         Args:
-            selected_places (List[Dict]): List of places from Phi output
+            selected_places (List[str]): List of selected place names
             
         Returns:
-            str: JSON string or None if conversion fails
+            List[Dict]: List of place data in JSON format
         """
-        if not selected_places:
-            print("⚠️ No places to convert to JSON", file=sys.stderr)
-            return None
+        print(f"🔍 Converting {len(selected_places)} places to JSON format", file=sys.stderr)
         
-        all_candidates = self._get_all_candidates()
-        if not all_candidates:
-            print("⚠️ No candidate data available for conversion", file=sys.stderr)
-            return None
+        # Flatten all places from different types into a single list
+        all_candidates = []
+        for place_type, places in self.best_places.items():
+            all_candidates.extend(places)
         
-        print(f"🔄 Converting {len(selected_places)} places to JSON format", file=sys.stderr)
+        print(f"🔍 Available candidates: {[p.get('place_name', 'Unknown') for p in all_candidates[:5]]}", file=sys.stderr)
+        
         converted_places = []
-        
-        for selected in selected_places:
-            selected_name = selected['place_name'].strip()
-            print(f"🔍 Looking for match: '{selected_name}'", file=sys.stderr)
+        for place_name in selected_places:
+            print(f"🔍 Looking for match: '{place_name}'", file=sys.stderr)
             
             # Try exact match first
-            matching_candidate = None
-            best_score = 0
+            exact_match = None
+            for candidate in all_candidates:
+                if candidate.get('place_name') == place_name:
+                    exact_match = candidate
+                    break
+            
+            if exact_match:
+                print(f"✅ Exact match found: '{place_name}' -> '{exact_match.get('place_name')}'", file=sys.stderr)
+                converted_places.append(exact_match)
+                continue
+            
+            # Try fuzzy matching for Korean names
+            best_match = None
+            best_score = 0.0
             
             for candidate in all_candidates:
-                candidate_name = candidate.get('place_name', '').strip()
+                candidate_name = candidate.get('place_name', '')
+                if not candidate_name:
+                    continue
                 
-                # Exact match (case-insensitive)
-                if selected_name.lower() == candidate_name.lower():
-                    matching_candidate = candidate
-                    best_score = 100
-                    print(f"✅ Exact match found: '{selected_name}' -> '{candidate_name}'", file=sys.stderr)
-                    break
+                # Calculate similarity score using multiple methods
+                score = self._calculate_name_similarity(place_name, candidate_name)
                 
-                # Fuzzy matching for Korean place names
-                if self._is_korean_text(selected_name) and self._is_korean_text(candidate_name):
-                    # Calculate similarity score for Korean text
-                    similarity = self._calculate_korean_similarity(selected_name, candidate_name)
-                    if similarity > best_score and similarity > 70:  # 70% similarity threshold
-                        best_score = similarity
-                        matching_candidate = candidate
-                        print(f"🔍 Korean fuzzy match: '{selected_name}' -> '{candidate_name}' (score: {similarity})", file=sys.stderr)
-                
-                # Partial match (one name contains the other)
-                elif selected_name.lower() in candidate_name.lower() or candidate_name.lower() in selected_name.lower():
-                    if len(selected_name) > 3 and len(candidate_name) > 3:  # Avoid very short matches
-                        similarity = 85  # High score for partial matches
-                        if similarity > best_score:
-                            best_score = similarity
-                            matching_candidate = candidate
-                            print(f"🔍 Partial match: '{selected_name}' -> '{candidate_name}' (score: {similarity})", file=sys.stderr)
-                
-                # Compound name matching (split by spaces or special characters)
-                elif self._is_compound_name_match(selected_name, candidate_name):
-                    similarity = 80  # Good score for compound matches
-                    if similarity > best_score:
-                        best_score = similarity
-                        matching_candidate = candidate
-                        print(f"🔍 Compound name match: '{selected_name}' -> '{candidate_name}' (score: {similarity})", file=sys.stderr)
+                if score > best_score and score > 0.7:  # Minimum 70% similarity
+                    best_score = score
+                    best_match = candidate
             
-            if matching_candidate:
-                # Create complete place entry with proper UTF-8 encoding
-                place_entry = {
-                    "place_name": matching_candidate.get('place_name', selected_name),
-                    "road_address_name": matching_candidate.get('road_address_name', ''),
-                    "place_type": matching_candidate.get('place_type', 'Unknown'),
-                    "distance": str(matching_candidate.get('distance', 0)),
-                    "place_url": matching_candidate.get('place_url', ''),
-                    "latitude": float(matching_candidate.get('y', 0)),
-                    "longitude": float(matching_candidate.get('x', 0)),
-                    "selection_reason": selected.get('selection_reason', 'Selected by Phi')
-                }
-                converted_places.append(place_entry)
-                print(f"✅ Matched '{selected_name}' to '{matching_candidate.get('place_name', '')}'", file=sys.stderr)
+            if best_match:
+                print(f"✅ Fuzzy match found: '{place_name}' -> '{best_match.get('place_name')}' (score: {best_score:.2f})", file=sys.stderr)
+                converted_places.append(best_match)
             else:
-                print(f"⚠️ Could not find candidate data for: '{selected_name}'", file=sys.stderr)
-                print(f"🔍 Available candidates: {[c.get('place_name', '') for c in all_candidates[:5]]}", file=sys.stderr)
+                print(f"⚠️ Could not find candidate data for: '{place_name}'", file=sys.stderr)
+                print(f"⚠️ Available candidates: {[p.get('place_name', 'Unknown') for p in all_candidates[:5]]}", file=sys.stderr)
         
-        if converted_places:
-            try:
-                # Ensure proper UTF-8 encoding for Korean text
-                json_output = json.dumps(converted_places, ensure_ascii=False, indent=2)
-                print(f"✅ Converted {len(converted_places)} places to JSON with UTF-8 encoding", file=sys.stderr)
-                return json_output
-            except Exception as e:
-                print(f"❌ Failed to convert places to JSON: {e}", file=sys.stderr)
-                return None
+        print(f"✅ Converted {len(converted_places)} places to JSON with UTF-8 encoding", file=sys.stderr)
+        return converted_places
+    
+    def _calculate_name_similarity(self, name1: str, name2: str) -> float:
+        """
+        Calculate similarity between two place names using multiple methods.
         
-        return None
+        Args:
+            name1 (str): First place name
+            name2 (str): Second place name
+            
+        Returns:
+            float: Similarity score between 0 and 1
+        """
+        if not name1 or not name2:
+            return 0.0
+        
+        # Normalize names
+        name1_norm = name1.strip().lower()
+        name2_norm = name2.strip().lower()
+        
+        # Exact match
+        if name1_norm == name2_norm:
+            return 1.0
+        
+        # Contains match
+        if name1_norm in name2_norm or name2_norm in name1_norm:
+            return 0.9
+        
+        # Jaccard similarity for character overlap
+        chars1 = set(name1_norm)
+        chars2 = set(name2_norm)
+        intersection = chars1.intersection(chars2)
+        union = chars1.union(chars2)
+        
+        if union:
+            jaccard_score = len(intersection) / len(union)
+        else:
+            jaccard_score = 0.0
+        
+        # Compound name matching (for Korean compound names)
+        compound_score = 0.0
+        if len(name1_norm) > 2 and len(name2_norm) > 2:
+            # Check if parts of names match
+            name1_parts = [name1_norm[i:i+2] for i in range(len(name1_norm)-1)]
+            name2_parts = [name2_norm[i:i+2] for i in range(len(name2_norm)-1)]
+            
+            common_parts = set(name1_parts).intersection(set(name2_parts))
+            if name1_parts and name2_parts:
+                compound_score = len(common_parts) / max(len(name1_parts), len(name2_parts))
+        
+        # Partial match score
+        partial_score = 0.0
+        if len(name1_norm) >= 3 and len(name2_norm) >= 3:
+            # Check if 3+ character sequences match
+            for i in range(len(name1_norm) - 2):
+                for j in range(len(name2_norm) - 2):
+                    if name1_norm[i:i+3] == name2_norm[j:j+3]:
+                        partial_score = max(partial_score, 0.8)
+                        break
+        
+        # Combine scores with weights
+        final_score = (
+            jaccard_score * 0.4 +
+            compound_score * 0.3 +
+            partial_score * 0.3
+        )
+        
+        return final_score
     
     def _is_korean_text(self, text: str) -> bool:
         """

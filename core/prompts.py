@@ -368,7 +368,7 @@ CRITICAL REQUIREMENTS:
 - **CRITICAL: If you select fewer than 4 places, your response will be rejected**
 - **CRITICAL: If you select more than 5 places, your response will be rejected**
 - Select places suitable for {companion_type.lower()} outings
-- PRIORITIZE geographic proximity - all places must be within 800m walking distance
+- **CRITICAL: PRIORITIZE geographic proximity FIRST - all places MUST be within 800m walking distance**
 - **CRITICAL: Ensure VARIETY across different place types**
 - Copy the EXACT place names from the candidates list below
 - DO NOT create new place names - only select from the candidates provided
@@ -387,8 +387,8 @@ CONTEXT:
 
 SELECTION CRITERIA (in order of importance):
 1. **PLACE COUNT FIRST**: Select EXACTLY 4-5 places (preferably 5)
-2. **PLACE TYPE VARIETY**: Ensure diverse mix of different place types
-3. **GEOGRAPHIC PROXIMITY**: All selected places must be within 800m of each other
+2. **GEOGRAPHIC PROXIMITY FIRST**: All selected places MUST be within 800m of each other
+3. **PLACE TYPE VARIETY**: Ensure diverse mix of different place types
 4. **Companion suitability**: {', '.join(criteria['priority'])}
 5. **Avoid**: {', '.join(criteria['avoid'])}
 
@@ -411,17 +411,18 @@ PLACE COUNT REQUIREMENT:
 - **If you can't find 5 suitable places within 800m, select exactly 4**
 - **Your response will be rejected if you select fewer than 4 or more than 5 places**
 
+GEOGRAPHIC PROXIMITY REQUIREMENT (HIGHEST PRIORITY):
+- **CRITICAL: All selected places MUST be within 800m walking distance of each other**
+- **This is MORE IMPORTANT than place type variety**
+- **If places are too far apart, focus on the largest cluster near Hongdae Station**
+- **Maximum walking distance between any two places: 800m**
+- **This ensures a walkable, enjoyable itinerary**
+
 PLACE TYPE VARIETY REQUIREMENT:
 - **CRITICAL: Ensure variety across different place types**
 - **DO NOT select all places from the same category**
 - **Mix cafes, restaurants, cultural spots, entertainment, etc.**
 - **This creates a richer, more interesting experience**
-
-GEOGRAPHIC CLUSTERING REQUIREMENT:
-- You MUST prioritize places that are geographically close
-- Maximum walking distance between any two places: 800m
-- If places are too far apart, focus on the largest cluster near Hongdae Station
-- This ensures a walkable, enjoyable itinerary
 
 REQUIRED OUTPUT FORMAT (copy exactly):
 1. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
@@ -432,8 +433,8 @@ REQUIRED OUTPUT FORMAT (copy exactly):
 
 VERIFICATION CHECKLIST:
 □ I have selected EXACTLY 4-5 places (preferably 5)
-□ I have ensured VARIETY across different place types
 □ All selected places are within 800m walking distance of each other
+□ I have ensured VARIETY across different place types
 □ I used the exact format: "1. Place Name - Reason"
 □ All names match exactly with the candidates above
 □ Places are suitable for {companion_type.lower()} outings
@@ -442,15 +443,16 @@ VERIFICATION CHECKLIST:
 FINAL WARNING:
 - **You MUST select at least 4 places**
 - **You MUST NOT select more than 5 places**
-- **You MUST ensure variety across place types**
+- **You MUST ensure all places are within 800m of each other**
 - **If you select fewer than 4 or more than 5, your response will be rejected**
-- **Double-check your count and variety before submitting**
+- **If places are too far apart, your response will be rejected**
+- **Double-check your count and distances before submitting**
 
 Now select your 4-5 places from the candidates above using the exact format:
 <|end|>
 
 <|assistant|>
-I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station, prioritizing variety and geographic proximity:
+I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station, prioritizing geographic proximity and variety:
 
 """
 
