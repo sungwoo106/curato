@@ -22,6 +22,7 @@ import random
 import json
 import sys
 from typing import Tuple, List, Dict
+import re
 
 class Preferences:
     """
@@ -325,14 +326,14 @@ class Preferences:
         """
         Extract JSON content from the raw model output.
         
-        The model might output debug information, so we need to find
-        the actual JSON content within the output.
+        Since Phi cannot generate valid JSON, we now expect text-based place selection
+        and convert it to JSON format programmatically.
         
         Args:
             raw_output (str): Raw output from the Phi model
             
         Returns:
-            str: Cleaned JSON string, or None if no valid JSON found
+            str: Cleaned JSON string, or None if no valid data found
         """
         if not raw_output:
             return None
@@ -359,103 +360,127 @@ class Preferences:
         
         print(f"Cleaned output: {cleaned_output[:300]}...", file=sys.stderr)
         
-        # Simple approach: Look for the first [ and last ] to extract JSON array
-        start_idx = cleaned_output.find('[')
-        if start_idx == -1:
-            print("❌ No JSON array start found", file=sys.stderr)
+        # Try to extract place selection from text output
+        print("🔍 Attempting to extract place selection from text...", file=sys.stderr)
+        selected_places = self._extract_places_from_text(cleaned_output)
+        
+        if selected_places:
+            # Convert to JSON format
+            json_output = self._convert_places_to_json(selected_places)
+            if json_output:
+                print(f"✅ Successfully converted text selection to JSON with {len(selected_places)} places", file=sys.stderr)
+                return json_output
+        
+        print("❌ Failed to extract place selection from text", file=sys.stderr)
+        return None
+
+    def _extract_places_from_text(self, text: str) -> List[Dict]:
+        """
+        Extract place information from Phi's text-based place selection.
+        
+        Args:
+            text (str): Raw output from the Phi model
+            
+        Returns:
+            List[Dict]: List of place dictionaries, or empty if not found
+        """
+        places = []
+        lines = text.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            if line and line[0].isdigit() and '.' in line:
+                # Look for patterns like "1. Place Name - Reason"
+                parts = line.split('.', 1)
+                if len(parts) == 2:
+                    place_info = parts[1].strip()
+                    if ' - ' in place_info:
+                        place_name, reason = place_info.split(' - ', 1)
+                        places.append({
+                            "place_name": place_name.strip(),
+                            "selection_reason": reason.strip()
+                        })
+        
+        print(f"🔍 Extracted {len(places)} places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
+        return places
+    
+    def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
+        """
+        Convert text-based place selection to JSON format using the original candidates.
+        
+        Args:
+            selected_places (List[Dict]): List of places with names from Phi
+            
+        Returns:
+            str: JSON string with complete place data, or None if conversion fails
+        """
+        if not selected_places:
             return None
             
-        # Find the matching closing bracket
-        bracket_count = 0
-        end_idx = -1
+        # Get the original candidate places that were sent to Phi
+        all_candidates = self._get_all_candidates()
+        if not all_candidates:
+            print("❌ No candidate places available for conversion", file=sys.stderr)
+            return None
         
-        for i, char in enumerate(cleaned_output[start_idx:], start_idx):
-            if char == '[':
-                bracket_count += 1
-            elif char == ']':
-                bracket_count -= 1
-                if bracket_count == 0:
-                    end_idx = i + 1
+        # Match Phi's selections to actual candidate data
+        converted_places = []
+        for selected in selected_places:
+            selected_name = selected['place_name']
+            
+            # Find matching candidate by name
+            matching_candidate = None
+            for candidate in all_candidates:
+                if selected_name.lower() in candidate.get('place_name', '').lower():
+                    matching_candidate = candidate
                     break
+            
+            if matching_candidate:
+                # Create complete place entry
+                place_entry = {
+                    "place_name": matching_candidate.get('place_name', selected_name),
+                    "road_address_name": matching_candidate.get('road_address_name', ''),
+                    "place_type": matching_candidate.get('place_type', 'Unknown'),
+                    "distance": str(matching_candidate.get('distance', 0)),
+                    "place_url": matching_candidate.get('place_url', ''),
+                    "latitude": float(matching_candidate.get('y', 0)),
+                    "longitude": float(matching_candidate.get('x', 0)),
+                    "selection_reason": selected.get('selection_reason', 'Selected by Phi')
+                }
+                converted_places.append(place_entry)
+            else:
+                print(f"⚠️ Could not find candidate data for: {selected_name}", file=sys.stderr)
         
-        if end_idx == -1:
-            print("❌ No matching closing bracket found", file=sys.stderr)
-            return None
-            
-        # Extract the potential JSON
-        potential_json = cleaned_output[start_idx:end_idx]
-        print(f"🔍 Extracted potential JSON (length: {len(potential_json)}): {potential_json[:200]}...", file=sys.stderr)
-        
-        try:
-            # Validate JSON
-            parsed = json.loads(potential_json)
-            print(f"✅ Successfully parsed JSON with {len(parsed)} locations", file=sys.stderr)
-            
-            # Validate that each place has coordinates
-            for i, place in enumerate(parsed):
-                if 'latitude' not in place or 'longitude' not in place:
-                    print(f"❌ Place {i+1} missing coordinates: {place.get('place_name', 'Unknown')}", file=sys.stderr)
-                    return None
-                if place['latitude'] == 0 or place['longitude'] == 0:
-                    print(f"❌ Place {i+1} has zero coordinates: {place.get('place_name', 'Unknown')}", file=sys.stderr)
-                    return None
-                
-                # Check for schema placeholders (Phi echoing the schema instead of real data)
-                if (place.get('place_name') in ['string', 'float', 'int'] or
-                    place.get('road_address_name') in ['string', 'float', 'int'] or
-                    place.get('place_type') in ['string', 'float', 'int']):
-                    print(f"❌ Place {i+1} contains schema placeholders, not real data: {place}", file=sys.stderr)
-                    return None
-                
-                # Check for duplicate coordinates
-                for j, other_place in enumerate(parsed):
-                    if i != j and (place['latitude'] == other_place['latitude'] and 
-                                   place['longitude'] == other_place['longitude']):
-                        print(f"❌ Places {i+1} and {j+1} have duplicate coordinates: {place.get('place_name', 'Unknown')} and {other_place.get('place_name', 'Unknown')}", file=sys.stderr)
-                        return None
-            
-            print(f"✅ All {len(parsed)} places have valid, unique coordinates", file=sys.stderr)
-            return potential_json
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing failed: {e}", file=sys.stderr)
-            print(f"❌ Failed JSON content: {potential_json[:300]}...", file=sys.stderr)
-            
-            # Try partial JSON parsing for incomplete JSON
-            print("🔍 Attempting partial JSON parsing...", file=sys.stderr)
+        if converted_places:
             try:
-                from partialjson.json_parser import JSONParser
-                parser = JSONParser()
-                parsed_data = parser.parse(potential_json)
-                
-                if parsed_data and isinstance(parsed_data, list) and len(parsed_data) > 0:
-                    # Validate that we have actual place data, not schema
-                    first_place = parsed_data[0]
-                    if (isinstance(first_place.get('place_name'), str) and 
-                        first_place['place_name'] not in ['string', 'float', 'int'] and
-                        isinstance(first_place.get('latitude'), (int, float)) and
-                        isinstance(first_place.get('longitude'), (int, float))):
-                        
-                        print(f"✅ Partial JSON parsing successful with {len(parsed_data)} locations", file=sys.stderr)
-                        # Convert back to JSON string
-                        return json.dumps(parsed_data, ensure_ascii=False)
-                    else:
-                        print("❌ Partial JSON contains schema placeholders, not real data", file=sys.stderr)
-                else:
-                    print("❌ Partial JSON parsing failed or returned empty data", file=sys.stderr)
-                    
-            except ImportError:
-                print("⚠️ partialjson library not available, trying JSON reconstruction...", file=sys.stderr)
-            except Exception as partial_error:
-                print(f"❌ Partial JSON parsing failed: {partial_error}", file=sys.stderr)
-            
-            # Try to reconstruct JSON from partial content
-            print("🔍 Attempting JSON reconstruction...", file=sys.stderr)
-            reconstructed_json = self._attempt_json_reconstruction(potential_json)
-            if reconstructed_json:
-                return reconstructed_json
-            
-            return None
+                json_output = json.dumps(converted_places, ensure_ascii=False)
+                print(f"✅ Converted {len(converted_places)} places to JSON", file=sys.stderr)
+                return json_output
+            except Exception as e:
+                print(f"❌ Failed to convert places to JSON: {e}", file=sys.stderr)
+                return None
+        
+        return None
+    
+    def _get_all_candidates(self) -> List[Dict]:
+        """
+        Get all candidate places that were sent to Phi for selection.
+        
+        Returns:
+            List[Dict]: List of all candidate places
+        """
+        if hasattr(self, 'best_places') and self.best_places:
+            # Flatten the best_places dictionary into a single list
+            all_candidates = []
+            for place_type, places in self.best_places.items():
+                for place in places:
+                    # Add place_type to each place for reference
+                    place['place_type'] = place_type
+                    all_candidates.append(place)
+            return all_candidates
+        else:
+            print("⚠️ No candidate places available in self.best_places", file=sys.stderr)
+            return []
 
     def _attempt_json_reconstruction(self, partial_json: str) -> str:
         """

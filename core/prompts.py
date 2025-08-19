@@ -238,8 +238,7 @@ def build_phi_location_prompt(
     
     return f"""<|system|>
 You are a travel planner. Select 4-5 locations from 20 candidates.
-Respond ONLY with valid JSON.
-CRITICAL: Generate REAL place data, not placeholder text.
+Respond with a simple list of selected places, not JSON.
 <|end|>
 
 <|user|>
@@ -259,25 +258,22 @@ CRITERIA:
 {get_companion_specific_prompt_enhancement(companion_type, start_time, budget_level)}
 
 PROCESS:
-1. Review 20 candidates
-2. Score on companion fit, time, budget
-3. Consider geographic proximity
-4. Select top 4-5 places
-5. Order for optimal route
+1. Review 20 candidates below
+2. Select top 4-5 places based on criteria
+3. List them in order (1, 2, 3, 4, 5)
+4. Include the place name and why you chose it
 
-OUTPUT: JSON array with place_name, road_address_name, place_type, distance, place_url, latitude, longitude, selection_reason
-
-REQUIREMENTS:
-- Each place MUST have unique latitude and longitude coordinates
-- Coordinates must be different for each location
-- Generate REAL data from the candidates, not placeholder text
-- Use actual place names, addresses, and coordinates
+OUTPUT: Simple text list like:
+1. [Place Name] - [Brief reason for selection]
+2. [Place Name] - [Brief reason for selection]
+3. [Place Name] - [Brief reason for selection]
+4. [Place Name] - [Brief reason for selection]
+5. [Place Name] - [Brief reason for selection]
 
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
-IMPORTANT: Generate REAL JSON with actual place data from the candidates above.
-Do NOT use placeholder text like "string" or "float".
+IMPORTANT: Respond with a simple numbered list. Do NOT generate JSON.
 <|end|>
 
 <|assistant|>
