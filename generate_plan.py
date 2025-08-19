@@ -224,7 +224,7 @@ def main() -> None:
             # Generate the emotional itinerary text using the Qwen model
             send_progress_update(80, "Generating emotional story with Qwen model...")
             print("Generating AI-powered itinerary...", file=sys.stderr)
-            itinerary = planner.run_qwen_story()
+            itinerary = planner.run_qwen_story(route_plan_json)
             
             if itinerary:
                 send_progress_update(95, "Itinerary generated successfully")

@@ -562,7 +562,7 @@ class Preferences:
         
         return None
 
-    def run_qwen_story(self):
+    def run_qwen_story(self, route_plan_json=None):
         """
         Generate an emotional, storytelling itinerary using the Qwen model.
         
@@ -571,11 +571,16 @@ class Preferences:
         type and budget preferences. It includes fallback mechanisms to ensure
         all selected places are covered.
         
+        Args:
+            route_plan_json (str, optional): Pre-generated route plan JSON. 
+                                          If None, will call run_route_planner().
+        
         Returns:
             str: Emotional itinerary text or error message
         """
-        # Get the route plan from the route planner
-        route_plan_json = self.run_route_planner()
+        # Get the route plan - either from parameter or by calling route planner
+        if route_plan_json is None:
+            route_plan_json = self.run_route_planner()
         
         if not route_plan_json:
             return "Failed to generate route plan - cannot create itinerary"
