@@ -70,7 +70,7 @@ from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
 from preferences import Preferences
 from models.genie_runner import GenieRunner
-from core.prompts import build_phi_location_prompt, build_qwen_story_prompt
+from core.prompts import build_phi_location_prompt, build_qwen_itinerary_prompt
 
 # =============================================================================
 # AI MODEL SETUP
@@ -222,9 +222,9 @@ def main() -> None:
                 print("❌ Route plan generation failed", file=sys.stderr)
 
             # Generate the emotional itinerary text using the Qwen model
-            send_progress_update(80, "Generating emotional story with Qwen model...")
+            send_progress_update(80, "Generating comprehensive itinerary with Qwen model...")
             print("Generating AI-powered itinerary...", file=sys.stderr)
-            itinerary = planner.run_qwen_story(route_plan_json)
+            itinerary = planner.run_qwen_itinerary(route_plan_json)
             
             if itinerary:
                 send_progress_update(95, "Itinerary generated successfully")

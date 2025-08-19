@@ -630,14 +630,21 @@ class Preferences:
                     continue
                     
                 # Calculate distance between places
-                distance = self._calculate_distance(
-                    place.get('y', 0), place.get('x', 0),
-                    other_place.get('y', 0), other_place.get('x', 0)
-                )
-                
-                if distance <= max_distance_m:
-                    cluster.append(other_place)
-                    used_places.add(j)
+                try:
+                    # Ensure coordinates are floats
+                    lat1 = float(place.get('y', 0))
+                    lng1 = float(place.get('x', 0))
+                    lat2 = float(other_place.get('y', 0))
+                    lng2 = float(other_place.get('x', 0))
+                    
+                    distance = self._calculate_distance(lat1, lng1, lat2, lng2)
+                    
+                    if distance <= max_distance_m:
+                        cluster.append(other_place)
+                        used_places.add(j)
+                except (ValueError, TypeError) as e:
+                    print(f"⚠️ Skipping distance calculation for place {other_place.get('place_name', 'Unknown')}: {e}", file=sys.stderr)
+                    continue
             
             clusters.append(cluster)
         
@@ -1050,14 +1057,21 @@ class Preferences:
                     continue
                     
                 # Calculate distance between places
-                distance = self._calculate_distance(
-                    place.get('y', 0), place.get('x', 0),
-                    other_place.get('y', 0), other_place.get('x', 0)
-                )
-                
-                if distance <= max_distance_m:
-                    cluster.append(other_place)
-                    used_places.add(j)
+                try:
+                    # Ensure coordinates are floats
+                    lat1 = float(place.get('y', 0))
+                    lng1 = float(place.get('x', 0))
+                    lat2 = float(other_place.get('y', 0))
+                    lng2 = float(other_place.get('x', 0))
+                    
+                    distance = self._calculate_distance(lat1, lng1, lat2, lng2)
+                    
+                    if distance <= max_distance_m:
+                        cluster.append(other_place)
+                        used_places.add(j)
+                except (ValueError, TypeError) as e:
+                    print(f"⚠️ Skipping distance calculation for place {other_place.get('place_name', 'Unknown')}: {e}", file=sys.stderr)
+                    continue
             
             clusters.append(cluster)
         
