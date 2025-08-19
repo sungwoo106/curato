@@ -151,6 +151,8 @@ class Preferences:
         Returns:
             dict: Dictionary where keys are place types and values are lists of places
         """
+        print(f"🔍 Collecting places for types: {self.selected_types}", file=sys.stderr)
+        
         # Use progressive place selection with smart clustering
         # This ensures geographically close locations while providing variety for Phi
         optimal_places = get_progressive_place_selection_enhanced(
@@ -162,6 +164,8 @@ class Preferences:
             target_places=20                           # 20 places for Phi to choose from
         )
         
+        print(f"🔍 Found {len(optimal_places)} optimal places", file=sys.stderr)
+        
         # Group the selected places by type for compatibility with existing code
         self.best_places = {}
         for place in optimal_places:
@@ -169,6 +173,13 @@ class Preferences:
             if place_type not in self.best_places:
                 self.best_places[place_type] = []
             self.best_places[place_type].append(place)
+        
+        print(f"🔍 Grouped places by type: {list(self.best_places.keys())}", file=sys.stderr)
+        for place_type, places in self.best_places.items():
+            print(f"🔍 {place_type}: {len(places)} places", file=sys.stderr)
+            # Show first few places of each type for debugging
+            for i, place in enumerate(places[:3]):
+                print(f"🔍   {i+1}. {place.get('place_name', 'Unknown')} - {place.get('category_code', 'No code')}", file=sys.stderr)
 
     def format_recommendations(self):
         """
@@ -218,8 +229,20 @@ class Preferences:
                 # Use the largest cluster for Phi selection
                 largest_cluster = max(clustered_candidates, key=len)
                 print(f"✅ Using largest cluster with {len(largest_cluster)} places for Phi selection", file=sys.stderr)
-                # Update best_places to use only the clustered locations
-                self.best_places = {'clustered': largest_cluster}
+                
+                # Preserve original place types while using clustered locations
+                # Group clustered places by their original place types
+                clustered_by_type = {}
+                for place in largest_cluster:
+                    # Get the original place type from the place data
+                    original_type = place.get('place_type', 'Unknown')
+                    if original_type not in clustered_by_type:
+                        clustered_by_type[original_type] = []
+                    clustered_by_type[original_type].append(place)
+                
+                # Update best_places with clustered locations grouped by original types
+                self.best_places = clustered_by_type
+                print(f"✅ Preserved place types in clustering: {list(clustered_by_type.keys())}", file=sys.stderr)
             else:
                 print("⚠️ Could not create geographic clusters, using all candidates", file=sys.stderr)
             

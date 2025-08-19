@@ -24,6 +24,7 @@ import os
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 from secure.crypto_utils import get_kakao_map_api_key
+import sys
 
 # =============================================================================
 # SMART CACHING SYSTEM
@@ -627,18 +628,30 @@ def search_places_enhanced(place_type: str, lat: float, lng: float,
         >>> print(f"Found {len(results['documents'])} cafes")
         Found 15 cafes
     """
+    print(f"🔍 Searching for '{place_type}' at ({lat}, {lng}) with radius {radius}m", file=sys.stderr)
+    
     if prefer_category_search:
         # Try to get category code for the place type
         category_code = get_category_code_for_place_type(place_type)
         
         if category_code:
             # Use category search for more precise results
-            print(f"Using category search for '{place_type}' (code: {category_code})")
-            return search_places_by_category(category_code, lat, lng, radius, size)
+            print(f"🔍 Using category search for '{place_type}' (code: {category_code})", file=sys.stderr)
+            result = search_places_by_category(category_code, lat, lng, radius, size)
+            print(f"🔍 Category search returned {len(result.get('documents', []))} places", file=sys.stderr)
+            # Show first few results for debugging
+            for i, place in enumerate(result.get('documents', [])[:3]):
+                print(f"🔍   {i+1}. {place.get('place_name', 'Unknown')} - {place.get('category_name', 'No category')}", file=sys.stderr)
+            return result
     
     # Fall back to keyword search if no category code or category search disabled
-    print(f"Using keyword search for '{place_type}'")
-    return search_places(place_type, lat, lng, radius, size)
+    print(f"🔍 Using keyword search for '{place_type}'", file=sys.stderr)
+    result = search_places(place_type, lat, lng, radius, size)
+    print(f"🔍 Keyword search returned {len(result.get('documents', []))} places", file=sys.stderr)
+    # Show first few results for debugging
+    for i, place in enumerate(result.get('documents', [])[:3]):
+        print(f"🔍   {i+1}. {place.get('place_name', 'Unknown')} - {place.get('category_name', 'No category')}", file=sys.stderr)
+    return result
 
 def get_progressive_place_selection_enhanced(place_types: List[str], 
                                            start_location: Tuple[float, float],
