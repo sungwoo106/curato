@@ -21,6 +21,7 @@ from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPAN
 import random
 import json
 import sys
+from typing import Tuple, List, Dict
 
 class Preferences:
     """
@@ -249,7 +250,7 @@ class Preferences:
                     self.progress_callback(75, "Creating fallback route plan...")
                 
                 print("⚠️ JSON extraction failed, creating fallback route plan", file=sys.stderr)
-                fallback_plan = self._create_fallback_route_plan()
+                fallback_plan = self._create_fallback_route_plan(self.start_location, self.selected_types)
                 return fallback_plan
             
         except Exception as e:
@@ -261,126 +262,64 @@ class Preferences:
             try:
                 if self.progress_callback:
                     self.progress_callback(75, "Attempting fallback route plan...")
-                fallback_plan = self._create_fallback_route_plan()
+                fallback_plan = self._create_fallback_route_plan(self.start_location, self.selected_types)
                 return fallback_plan
             except Exception as fallback_error:
                 print(f"Fallback route plan also failed: {fallback_error}", file=sys.stderr)
                 return None
     
-    def _create_fallback_route_plan(self) -> str:
+    def _create_fallback_route_plan(self, start_location: Tuple[float, float], 
+                                   place_types: List[str]) -> List[Dict]:
         """
-        Create a fallback route plan when the Phi model fails.
+        Create a fallback route plan with unique coordinates when Phi fails.
         
-        This method creates a basic route plan using the collected place recommendations
-        to ensure the user gets a usable itinerary even when AI generation fails.
+        This generates a realistic route plan with unique coordinates
+        around the starting location to ensure map markers display properly.
         
+        Args:
+            start_location (Tuple[float, float]): Starting coordinates (lat, lng)
+            place_types (List[str]): List of place types to include
+            
         Returns:
-            str: JSON string with fallback route plan
+            List[Dict]: List of 5 places with unique coordinates
         """
-        try:
-            # Use the actual collected place recommendations if available
-            if hasattr(self, 'best_places') and self.best_places:
-                fallback_plan = []
-                target_locations = 5  # Aim for 5 locations
-                
-                # Get all available categories
-                available_categories = list(self.best_places.keys())
-                
-                # Distribute locations across categories to reach target
-                locations_per_category = max(1, target_locations // len(available_categories))
-                remaining_locations = target_locations % len(available_categories)
-                
-                for i, category in enumerate(available_categories):
-                    if category in self.best_places and self.best_places[category]:
-                        # Take multiple places from each category if available
-                        places_to_take = locations_per_category + (1 if i < remaining_locations else 0)
-                        places_taken = 0
-                        
-                        for place in self.best_places[category]:
-                            if places_taken >= places_to_take or len(fallback_plan) >= target_locations:
-                                break
-                                
-                            fallback_place = {
-                                "place_name": place.get('place_name', f"{category} Location"),
-                                "road_address_name": place.get('road_address_name', 'Address not available'),
-                                "place_type": category,
-                                "distance": place.get('distance', 'Distance not available'),
-                                "place_url": place.get('place_url', ''),
-                                "latitude": place.get('latitude', 37.5665),
-                                "longitude": place.get('longitude', 126.9780)
-                            }
-                            fallback_plan.append(fallback_place)
-                            places_taken += 1
-                
-                # If we still don't have enough locations, add more from the first few categories
-                if len(fallback_plan) < target_locations:
-                    for category in available_categories[:3]:  # Focus on first 3 categories
-                        if category in self.best_places and self.best_places[category]:
-                            for place in self.best_places[category][1:]:  # Skip first place (already added)
-                                if len(fallback_plan) >= target_locations:
-                                    break
-                                    
-                                fallback_place = {
-                                    "place_name": place.get('place_name', f"{category} Location"),
-                                    "road_address_name": place.get('road_address_name', 'Address not available'),
-                                    "place_type": category,
-                                    "distance": place.get('distance', 'Distance not available'),
-                                    "place_url": place.get('place_url', ''),
-                                    "latitude": place.get('latitude', 37.5665),
-                                    "longitude": place.get('longitude', 126.9780)
-                                }
-                                fallback_plan.append(fallback_place)
-                
-                if fallback_plan:
-                    print(f"✅ Created fallback route plan with {len(fallback_plan)} locations", file=sys.stderr)
-                    return json.dumps(fallback_plan, ensure_ascii=False)
+        print("⚠️ JSON extraction failed, creating fallback route plan", file=sys.stderr)
+        
+        # Generate unique coordinates around the starting location
+        # Use small offsets to create distinct markers
+        base_lat, base_lng = start_location
+        
+        # Create 5 unique locations with small coordinate offsets
+        fallback_places = []
+        for i in range(5):
+            # Generate unique coordinates with small offsets
+            # Offset by 0.001 degrees (~100 meters) in different directions
+            offset_lat = base_lat + (i * 0.0005)  # Small northward progression
+            offset_lng = base_lng + (i * 0.0003)  # Small eastward progression
             
-            # If no collected places available, use the original hardcoded fallback
-            print("⚠️ No collected places available, using hardcoded fallback", file=sys.stderr)
-            fallback_plan = [
-                {
-                    "place_name": "홍대입구역",
-                    "road_address_name": "서울 마포구 양화로 160",
-                    "place_type": "Transportation",
-                    "distance": "0km",
-                    "place_url": "https://map.kakao.com/...",
-                    "latitude": 37.5563,
-                    "longitude": 126.9237
-                },
-                {
-                    "place_name": "몰레꼴레 와이즈파크홍대점",
-                    "road_address_name": "서울 마포구 양화로 188",
-                    "place_type": "Restaurant",
-                    "distance": "0.3km",
-                    "place_url": "https://map.kakao.com/...",
-                    "latitude": 37.5570,
-                    "longitude": 126.9240
-                },
-                {
-                    "place_name": "공미학 마포홍대점",
-                    "road_address_name": "서울 마포구 양화로 200",
-                    "place_type": "Cafe",
-                    "distance": "0.5km",
-                    "place_url": "https://map.kakao.com/...",
-                    "latitude": 37.5575,
-                    "longitude": 126.9245
-                },
-                {
-                    "place_name": "트릭아이뮤지엄",
-                    "road_address_name": "서울 마포구 양화로 220",
-                    "place_type": "Museum",
-                    "distance": "0.7km",
-                    "place_url": "https://map.kakao.com/...",
-                    "latitude": 37.5580,
-                    "longitude": 126.9250
-                }
-            ]
+            # Ensure coordinates are valid for Korea
+            if offset_lat > 38.6:  # Korea's northern boundary
+                offset_lat = base_lat - (i * 0.0005)  # Go south instead
             
-            return json.dumps(fallback_plan, ensure_ascii=False)
+            place_type = place_types[i % len(place_types)] if place_types else "Unknown"
             
-        except Exception as e:
-            print(f"❌ Failed to create fallback route plan: {e}", file=sys.stderr)
-            return None
+            fallback_place = {
+                "place_name": f"Fallback Location {i+1}",
+                "road_address_name": f"Generated address {i+1}",
+                "place_type": place_type,
+                "distance": str((i + 1) * 100),  # Increasing distance
+                "place_url": "",
+                "latitude": offset_lat,
+                "longitude": offset_lng,
+                "selection_reason": f"Fallback location {i+1} for {place_type}"
+            }
+            
+            fallback_places.append(fallback_place)
+        
+        print(f"✅ Created fallback route plan with {len(fallback_places)} locations", file=sys.stderr)
+        print(f"✅ Each location has unique coordinates", file=sys.stderr)
+        
+        return fallback_places
 
     def _extract_json_from_output(self, raw_output: str) -> str:
         """
@@ -474,7 +413,66 @@ class Preferences:
         except json.JSONDecodeError as e:
             print(f"❌ JSON parsing failed: {e}", file=sys.stderr)
             print(f"❌ Failed JSON content: {potential_json[:300]}...", file=sys.stderr)
+            
+            # Try to reconstruct JSON from partial content
+            print("🔍 Attempting JSON reconstruction...", file=sys.stderr)
+            reconstructed_json = self._attempt_json_reconstruction(potential_json)
+            if reconstructed_json:
+                return reconstructed_json
+            
             return None
+
+    def _attempt_json_reconstruction(self, partial_json: str) -> str:
+        """
+        Attempt to reconstruct a JSON array from a partial or malformed JSON string.
+        
+        This is a heuristic approach to try to salvage a JSON structure
+        even if it's not fully valid. It looks for common patterns like
+        starting with '[' and ending with ']' or '}' if it's an object.
+        
+        Args:
+            partial_json (str): The partial or malformed JSON string
+            
+        Returns:
+            str: A potentially valid JSON string, or None if reconstruction fails
+        """
+        if not partial_json:
+            return None
+            
+        # Remove common Phi artifacts that might interfere with JSON parsing
+        cleaned_json = partial_json
+        artifacts_to_remove = [
+            'Using libGenie.so version',
+            '[INFO]',
+            '[PROMPT]:',
+            '<|system|>',
+            '<|user|>',
+            '<|end|>',
+            'Starting from',
+            'Available places:'
+        ]
+        for artifact in artifacts_to_remove:
+            cleaned_json = cleaned_json.replace(artifact, '')
+            
+        # Look for the first '[' and last ']' or '}'
+        start_idx = cleaned_json.find('[')
+        end_idx = -1
+        
+        if start_idx != -1:
+            bracket_count = 0
+            for i, char in enumerate(cleaned_json[start_idx:], start_idx):
+                if char == '[':
+                    bracket_count += 1
+                elif char == ']' or char == '}':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        end_idx = i + 1
+                        break
+            
+            if end_idx != -1:
+                return cleaned_json[start_idx:end_idx]
+        
+        return None
 
     def run_qwen_story(self):
         """

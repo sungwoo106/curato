@@ -273,6 +273,34 @@ REQUIREMENTS:
 - Ensure JSON is complete and properly formatted
 - Include all required fields for each place
 
+JSON SCHEMA:
+[
+  {{
+    "place_name": "string",
+    "road_address_name": "string", 
+    "place_type": "string",
+    "distance": "string",
+    "place_url": "string",
+    "latitude": float,
+    "longitude": float,
+    "selection_reason": "string"
+  }}
+]
+
+EXAMPLE OUTPUT:
+[
+  {{
+    "place_name": "홍대쌀빵",
+    "road_address_name": "서울 마포구 양화로 지하 160",
+    "place_type": "Restaurant",
+    "distance": "9",
+    "place_url": "http://place.map.kakao.com/123",
+    "latitude": 37.5568,
+    "longitude": 126.9237,
+    "selection_reason": "Perfect for couples, romantic atmosphere"
+  }}
+]
+
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
