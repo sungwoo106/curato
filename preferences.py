@@ -399,277 +399,55 @@ class Preferences:
             return None
             
         print(f"Raw Phi model output: {raw_output[:500]}...", file=sys.stderr)
+        
+        # Simple approach: Look for the first [ and last ] to extract JSON array
+        start_idx = raw_output.find('[')
+        if start_idx == -1:
+            print("❌ No JSON array start found", file=sys.stderr)
+            return None
             
-        # Look for JSON content in the output
-        # Try to find content between [ and ] or { and }
-        import re
+        # Find the matching closing bracket
+        bracket_count = 0
+        end_idx = -1
         
-        # Look for JSON array or object patterns
-        json_patterns = [
-            r'\[.*\]',  # JSON array
-            r'\{.*\}',  # JSON object
-        ]
+        for i, char in enumerate(raw_output[start_idx:], start_idx):
+            if char == '[':
+                bracket_count += 1
+            elif char == ']':
+                bracket_count -= 1
+                if bracket_count == 0:
+                    end_idx = i + 1
+                    break
         
-        # First, try to find JSON in the entire output
-        for pattern in json_patterns:
-            matches = re.findall(pattern, raw_output, re.DOTALL)
-            for match in matches:
-                try:
-                    # Validate that it's actually valid JSON
-                    json.loads(match)
-                    print(f"✅ Found valid JSON: {match[:100]}...", file=sys.stderr)
-                    return match
-                except json.JSONDecodeError:
-                    continue
+        if end_idx == -1:
+            print("❌ No matching closing bracket found", file=sys.stderr)
+            return None
+            
+        # Extract the potential JSON
+        potential_json = raw_output[start_idx:end_idx]
+        print(f"🔍 Extracted potential JSON (length: {len(potential_json)}): {potential_json[:200]}...", file=sys.stderr)
         
-        # If no JSON found, try to extract content after the last [PROMPT]: marker
-        if '[PROMPT]:' in raw_output:
-            parts = raw_output.split('[PROMPT]:')
-            if len(parts) > 1:
-                content_after_prompt = parts[-1].strip()
-                print(f"Content after [PROMPT]: {content_after_prompt[:200]}...", file=sys.stderr)
-                
-                # Look for JSON in this content
-                for pattern in json_patterns:
-                    matches = re.findall(pattern, content_after_prompt, re.DOTALL)
-                    for match in matches:
-                        try:
-                            json.loads(match)
-                            print(f"✅ Found valid JSON after prompt: {match[:100]}...", file=sys.stderr)
-                            return match
-                        except json.JSONDecodeError:
-                            continue
-        
-        # Try to find content after the last </assistant> tag
-        if '</assistant>' in raw_output:
-            parts = raw_output.split('</assistant>')
-            if len(parts) > 1:
-                content_after_assistant = parts[-1].strip()
-                print(f"Content after </assistant>: {content_after_assistant[:200]}...", file=sys.stderr)
-                
-                # Look for JSON in this content
-                for pattern in json_patterns:
-                    matches = re.findall(pattern, content_after_assistant, re.DOTALL)
-                    for match in matches:
-                        try:
-                            json.loads(match)
-                            print(f"✅ Found valid JSON after assistant tag: {match[:100]}...", file=sys.stderr)
-                            return match
-                        except json.JSONDecodeError:
-                            continue
-        
-        # Try to find content after the last <|assistant|> tag
-        if '<|assistant|>' in raw_output:
-            parts = raw_output.split('<|assistant|>')
-            if len(parts) > 1:
-                content_after_assistant = parts[-1].strip()
-                print(f"Content after <|assistant|>: {content_after_assistant[:200]}...", file=sys.stderr)
-                
-                # Look for JSON in this content
-                for pattern in json_patterns:
-                    matches = re.findall(pattern, content_after_assistant, re.DOTALL)
-                    for match in matches:
-                        try:
-                            json.loads(match)
-                            print(f"✅ Found valid JSON after <|assistant|> tag: {match[:100]}...", file=sys.stderr)
-                            return match
-                        except json.JSONDecodeError:
-                            continue
-        
-        # If still no JSON, try to find any content that looks like a response
-        # Look for lines that might contain location information
-        lines = raw_output.split('\n')
-        for line in lines:
-            line = line.strip()
-            # Skip empty lines, debug info, and prompt content
-            if (line and 
-                not line.startswith('Using libGenie.so') and
-                not line.startswith('[INFO]') and
-                not line.startswith('[PROMPT]:') and
-                not line.startswith('<|system|>') and
-                not line.startswith('<|user|>') and
-                not line.startswith('<|assistant|>') and
-                not line.startswith('<|end|>') and
-                not line.startswith('Starting from') and
-                not line.startswith('Available places:')):
-                
-                # Check if this line might contain JSON-like content
-                if ('[' in line and ']' in line) or ('{' in line and '}' in line):
-                    try:
-                        json.loads(line)
-                        print(f"✅ Found JSON in line: {line[:100]}...", file=sys.stderr)
-                        return line
-                    except json.JSONDecodeError:
-                        continue
-        
-        # Last resort: try to find any text that looks like it might be a response
-        # Look for lines that contain location-related keywords
-        location_keywords = ['place_name', 'road_address_name', 'place_type', 'distance', 'latitude', 'longitude']
-        for line in lines:
-            line = line.strip()
-            if any(keyword in line for keyword in location_keywords):
-                print(f"🔍 Found potential location data line: {line[:100]}...", file=sys.stderr)
-                # Try to extract JSON from this line
-                for pattern in json_patterns:
-                    matches = re.findall(pattern, line, re.DOTALL)
-                    for match in matches:
-                        try:
-                            json.loads(match)
-                            print(f"✅ Found valid JSON in location line: {match[:100]}...", file=sys.stderr)
-                            return match
-                        except json.JSONDecodeError:
-                            continue
-        
-        # Special case: Look for lines that start with [ and contain location data
-        # This handles cases where the model outputs partial JSON or malformed JSON
-        for line in lines:
-            line = line.strip()
-            if line.startswith('[') and any(keyword in line for keyword in location_keywords):
-                print(f"🔍 Found potential JSON array start: {line[:100]}...", file=sys.stderr)
-                # Try to find the complete JSON array by looking for the closing ]
-                start_idx = raw_output.find(line)
-                if start_idx != -1:
-                    # Look for the next closing bracket
-                    remaining_text = raw_output[start_idx:]
-                    bracket_count = 0
-                    end_idx = -1
-                    
-                    for i, char in enumerate(remaining_text):
-                        if char == '[':
-                            bracket_count += 1
-                        elif char == ']':
-                            bracket_count -= 1
-                            if bracket_count == 0:
-                                end_idx = i + 1
-                                break
-                    
-                    if end_idx != -1:
-                        potential_json = remaining_text[:end_idx]
-                        try:
-                            json.loads(potential_json)
-                            print(f"✅ Found complete JSON array: {potential_json[:100]}...", file=sys.stderr)
-                            return potential_json
-                        except json.JSONDecodeError:
-                            print(f"❌ Incomplete JSON array: {potential_json[:100]}...", file=sys.stderr)
-                            continue
-        
-        # New approach: Look for JSON content that spans multiple lines
-        # This handles cases where the model outputs JSON across several lines
-        print("🔍 Trying multi-line JSON extraction...", file=sys.stderr)
-        
-        # Look for the start of a JSON array
-        start_markers = ['[', '[{', '[{"', '[{"place_name"']
-        for marker in start_markers:
-            if marker in raw_output:
-                start_idx = raw_output.find(marker)
-                if start_idx != -1:
-                    print(f"🔍 Found JSON start marker '{marker}' at position {start_idx}", file=sys.stderr)
-                    
-                    # Look for the complete JSON by counting brackets
-                    remaining_text = raw_output[start_idx:]
-                    bracket_count = 0
-                    end_idx = -1
-                    
-                    for i, char in enumerate(remaining_text):
-                        if char == '[':
-                            bracket_count += 1
-                        elif char == ']':
-                            bracket_count -= 1
-                            if bracket_count == 0:
-                                end_idx = i + 1
-                                break
-                    
-                    if end_idx != -1:
-                        potential_json = remaining_text[:end_idx]
-                        print(f"🔍 Extracted potential JSON (length: {len(potential_json)}): {potential_json[:200]}...", file=sys.stderr)
-                        
-                        try:
-                            # Validate JSON
-                            parsed = json.loads(potential_json)
-                            print(f"✅ Successfully parsed JSON with {len(parsed)} locations", file=sys.stderr)
-                            return potential_json
-                        except json.JSONDecodeError as e:
-                            print(f"❌ JSON parsing failed: {e}", file=sys.stderr)
-                            print(f"❌ Failed JSON content: {potential_json[:300]}...", file=sys.stderr)
-                            continue
-        
-        # Last resort: Try to reconstruct JSON from individual location lines
-        print("🔍 Trying to reconstruct JSON from location lines...", file=sys.stderr)
-        location_entries = []
-        current_entry = {}
-        
-        for line in lines:
-            line = line.strip()
-            if line.startswith('"place_name"'):
-                # Start of a new location entry
-                if current_entry:
-                    location_entries.append(current_entry)
-                current_entry = {}
-                
-                # Extract place_name
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['place_name'] = value
-                except:
-                    continue
-                    
-            elif line.startswith('"road_address_name"'):
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['road_address_name'] = value
-                except:
-                    continue
-                    
-            elif line.startswith('"place_type"'):
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['place_type'] = value
-                except:
-                    continue
-                    
-            elif line.startswith('"distance"'):
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['distance'] = value
-                except:
-                    continue
-                    
-            elif line.startswith('"place_url"'):
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['place_url'] = value
-                except:
-                    continue
-                    
-            elif line.startswith('"latitude"'):
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['latitude'] = float(value)
-                except:
-                    continue
-                    
-            elif line.startswith('"longitude"'):
-                try:
-                    value = line.split(':', 1)[1].strip().rstrip(',').strip('"')
-                    current_entry['longitude'] = float(value)
-                except:
-                    continue
-        
-        # Add the last entry
-        if current_entry:
-            location_entries.append(current_entry)
-        
-        if location_entries:
-            print(f"🔍 Reconstructed {len(location_entries)} location entries from individual lines", file=sys.stderr)
-            try:
-                reconstructed_json = json.dumps(location_entries, ensure_ascii=False)
-                print(f"✅ Successfully reconstructed JSON: {reconstructed_json[:200]}...", file=sys.stderr)
-                return reconstructed_json
-            except Exception as e:
-                print(f"❌ Failed to reconstruct JSON: {e}", file=sys.stderr)
-        
-        print(f"❌ No valid JSON found in Phi model output", file=sys.stderr)
-        return None
+        try:
+            # Validate JSON
+            parsed = json.loads(potential_json)
+            print(f"✅ Successfully parsed JSON with {len(parsed)} locations", file=sys.stderr)
+            
+            # Validate that each place has coordinates
+            for i, place in enumerate(parsed):
+                if 'latitude' not in place or 'longitude' not in place:
+                    print(f"❌ Place {i+1} missing coordinates: {place.get('place_name', 'Unknown')}", file=sys.stderr)
+                    return None
+                if place['latitude'] == 0 or place['longitude'] == 0:
+                    print(f"❌ Place {i+1} has zero coordinates: {place.get('place_name', 'Unknown')}", file=sys.stderr)
+                    return None
+            
+            print(f"✅ All {len(parsed)} places have valid coordinates", file=sys.stderr)
+            return potential_json
+            
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON parsing failed: {e}", file=sys.stderr)
+            print(f"❌ Failed JSON content: {potential_json[:300]}...", file=sys.stderr)
+            return None
 
     def run_qwen_story(self):
         """

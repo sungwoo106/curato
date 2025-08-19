@@ -239,6 +239,7 @@ def build_phi_location_prompt(
     return f"""<|system|>
 You are a travel planner. Select 4-5 locations from 20 candidates.
 Respond ONLY with valid JSON.
+CRITICAL: Ensure your JSON is complete and includes ALL coordinates for each place.
 <|end|>
 
 <|user|>
@@ -265,6 +266,12 @@ PROCESS:
 5. Order for optimal route
 
 OUTPUT: JSON array with place_name, road_address_name, place_type, distance, place_url, latitude, longitude, selection_reason
+
+REQUIREMENTS:
+- Each place MUST have unique latitude and longitude coordinates
+- Coordinates must be different for each location
+- Ensure JSON is complete and properly formatted
+- Include all required fields for each place
 
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
