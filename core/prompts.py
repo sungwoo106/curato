@@ -361,8 +361,8 @@ CRITICAL: Select EXACTLY 4-5 places, no more, no less.
 <|end|>
 
 <|user|>
-Select 4-5 places for a {companion_type.lower()} outing near Hongdae Station.
-Choose places that are close together (within 800m) and suitable for {companion_type.lower()}s.
+Select 4-5 places for a couple outing near Hongdae Station.
+Choose places that are close together (within 800m) and suitable for couples.
 
 Available places:
 {formatted_recommendations}
@@ -428,28 +428,49 @@ def build_qwen_itinerary_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Simplified, direct prompt for better place coverage
+    # Enhanced prompt with specific guidance and examples
     prompt = f"""<|im_start|>system
-You are a master storyteller. Create a {tone_style['tone']} itinerary covering ALL {len(locations)} locations.
-Each location must have its own detailed section. Do not skip any location.
+You are a master storyteller creating romantic travel itineraries for couples.
+Your task: Write a detailed, romantic itinerary covering ALL {len(locations)} locations.
+Each location must have its own complete section with rich descriptions.
+
+CRITICAL: You MUST cover every single location listed below.
 <|im_end|>
 
 <|im_start|>user
-Write a romantic itinerary for a couple visiting these places near Hongdae Station:
+Create a romantic, poetic itinerary for a couple visiting these places near Hongdae Station:
 
 {locs_text}
 
 REQUIREMENTS:
-- Cover ALL {len(locations)} locations (one section each)
-- Use romantic, poetic language
-- Include activities: {', '.join(selected_activities)}
-- Time: {time_context}
-- Budget: {budget_level}
+- Cover ALL {len(locations)} locations with equal attention
+- Each location gets its own detailed paragraph (at least 3-4 sentences)
+- Use romantic, poetic language with emotional depth
+- Include suggested activities: {', '.join(selected_activities)}
+- Time context: {time_context}
+- Budget level: {budget_level}
 
-STRUCTURE (follow exactly):
+MANDATORY STRUCTURE (follow exactly):
 {chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
 
-Write a detailed paragraph for each location. End with [END].
+WRITING GUIDELINES:
+- Start each location section with the exact format above
+- Write 3-4 detailed sentences per location
+- Include sensory details (sights, sounds, smells, feelings)
+- Describe romantic moments and shared experiences
+- Connect locations emotionally and narratively
+- End the entire itinerary with [END]
+
+EXAMPLE FORMAT:
+1. LOCATION 1: [Place Name]
+   [3-4 detailed sentences about the experience, atmosphere, and romantic moments]
+
+2. LOCATION 2: [Place Name]
+   [3-4 detailed sentences about the experience, atmosphere, and romantic moments]
+
+[Continue for all locations...]
+
+Now write your romantic itinerary covering all {len(locations)} locations:
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -509,9 +530,11 @@ def build_qwen_story_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Simplified fallback prompt for better coverage
+    # Enhanced fallback prompt with specific guidance
     prompt = f"""<|im_start|>system
-You are a storyteller. Write a {tone_style['tone']} itinerary covering ALL {len(locations)} locations.
+You are a storyteller creating romantic itineraries for couples.
+Write a detailed itinerary covering ALL {len(locations)} locations.
+Each location must have its own complete section.
 <|im_end|>
 
 <|im_start|>user
@@ -519,9 +542,17 @@ Create a romantic itinerary for a couple visiting these places:
 
 {locs_text}
 
-Write a detailed section for each location. Cover ALL {len(locations)} places.
-Use romantic language and include activities: {', '.join(selected_activities)}.
-End with [END].
+REQUIREMENTS:
+- Cover ALL {len(locations)} locations with detailed descriptions
+- Each location gets its own paragraph (at least 2-3 sentences)
+- Use romantic, emotional language
+- Include activities: {', '.join(selected_activities)}
+- Connect locations with a flowing narrative
+
+STRUCTURE:
+{chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
+
+Write a detailed paragraph for each location. End with [END].
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -608,6 +639,98 @@ def extract_and_validate_place_names(phi_output: str, candidate_places: list) ->
                 break
     
     return validated_names
+
+def validate_prompt_effectiveness(prompt_text: str, model_output: str, expected_locations: list) -> dict:
+    """
+    Validate the effectiveness of a prompt by analyzing the model output.
+    
+    Args:
+        prompt_text (str): The prompt that was used
+        model_output (str): The output from the model
+        expected_locations (list): List of locations that should be covered
+        
+    Returns:
+        dict: Validation results with effectiveness metrics
+    """
+    validation = {
+        "prompt_length": len(prompt_text),
+        "output_length": len(model_output),
+        "output_quality": "unknown",
+        "location_coverage": 0,
+        "structure_compliance": False,
+        "completion_signal": False,
+        "suggestions": []
+    }
+    
+    # Check output length
+    if len(model_output) < 100:
+        validation["output_quality"] = "poor"
+        validation["suggestions"].append("Output too short - prompt may need more specific guidance")
+    elif len(model_output) < 500:
+        validation["output_quality"] = "moderate"
+        validation["suggestions"].append("Output could be longer - consider adding length requirements")
+    else:
+        validation["output_quality"] = "good"
+    
+    # Check location coverage
+    covered_count = 0
+    for location in expected_locations:
+        place_name = location.get('place_name', '')
+        if place_name and place_name in model_output:
+            covered_count += 1
+    
+    validation["location_coverage"] = (covered_count / len(expected_locations)) * 100 if expected_locations else 0
+    
+    if validation["location_coverage"] < 100:
+        validation["suggestions"].append(
+            f"Missing {len(expected_locations) - covered_count} locations - "
+            "prompt needs stronger coverage requirements"
+        )
+    
+    # Check structure compliance
+    if "LOCATION 1:" in model_output and "LOCATION 2:" in model_output:
+        validation["structure_compliance"] = True
+    else:
+        validation["suggestions"].append("Structure not followed - add clearer formatting requirements")
+    
+    # Check completion signal
+    if "[END]" in model_output:
+        validation["completion_signal"] = True
+    else:
+        validation["suggestions"].append("Missing completion signal - add [END] requirement")
+    
+    return validation
+
+def generate_debug_prompt(original_prompt: str, validation_results: dict) -> str:
+    """
+    Generate a debug version of a prompt based on validation results.
+    
+    Args:
+        original_prompt (str): The original prompt that had issues
+        validation_results (dict): Results from prompt validation
+        
+    Returns:
+        str: Enhanced prompt with debugging improvements
+    """
+    debug_prompt = original_prompt
+    
+    # Add length requirements if output was too short
+    if validation_results["output_quality"] == "poor":
+        debug_prompt += "\n\nLENGTH REQUIREMENT: Write at least 500 characters total."
+    
+    # Add stronger coverage requirements if locations were missed
+    if validation_results["location_coverage"] < 100:
+        debug_prompt += "\n\nCOVERAGE REQUIREMENT: You MUST mention every single location listed above."
+    
+    # Add structure requirements if not followed
+    if not validation_results["structure_compliance"]:
+        debug_prompt += "\n\nSTRUCTURE REQUIREMENT: Use exactly the format 'LOCATION X: [Place Name]' for each location."
+    
+    # Add completion signal if missing
+    if not validation_results["completion_signal"]:
+        debug_prompt += "\n\nCOMPLETION REQUIREMENT: End your response with [END]."
+    
+    return debug_prompt
 
 def create_fallback_route_plan(candidate_places: list, companion_type: str, max_places: int = 4) -> list:
     """
