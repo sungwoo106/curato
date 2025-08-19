@@ -210,10 +210,19 @@ def format_recommendations_for_phi(recommendations_json: json) -> str:
     # Combine all sections
     formatted_output = "".join(formatted_sections)
     
-    # Add summary at the end
+    # Add enhanced summary with geographic guidance
     total_places = len(recommendations_json)
-    formatted_output += f"\nSUMMARY: {total_places} total places across {len(places_by_type)} categories\n"
-    formatted_output += "Choose 4-5 places for best experience.\n"
+    formatted_output += f"\nGEOGRAPHIC SELECTION GUIDANCE:\n"
+    formatted_output += f"- Total available places: {total_places}\n"
+    formatted_output += f"- You MUST select EXACTLY 4-5 places (preferably 5)\n"
+    formatted_output += f"- All selected places must be within 800m walking distance\n"
+    formatted_output += f"- Focus on the largest cluster of nearby places\n"
+    formatted_output += f"- This ensures a walkable, enjoyable itinerary\n"
+    formatted_output += f"\nSELECTION REQUIREMENTS:\n"
+    formatted_output += f"□ Select EXACTLY 4-5 places (aim for 5)\n"
+    formatted_output += f"□ All places within 800m of each other\n"
+    formatted_output += f"□ Mix of cafes and restaurants for variety\n"
+    formatted_output += f"□ Suitable for the specified companion type\n"
     
     return formatted_output
 
@@ -354,9 +363,10 @@ Your expertise: Selecting optimal locations for {companion_type.lower()} experie
 TASK: Select EXACTLY 4-5 locations from the candidates below for a {companion_type.lower()} outing near Hongdae Station.
 
 CRITICAL REQUIREMENTS:
-- Choose EXACTLY 4-5 places (no more, no less)
+- Choose EXACTLY 4-5 places (no more, no less) - PREFER 5 PLACES
+- **MINIMUM REQUIREMENT: You MUST select at least 4 places**
 - Select places suitable for {companion_type.lower()} outings
-- Ensure all selected places are within 800m walking distance of each other
+- PRIORITIZE geographic proximity - all places must be within 800m walking distance
 - Copy the EXACT place names from the candidates list below
 - DO NOT create new place names - only select from the candidates provided
 - Use the EXACT format specified below
@@ -372,21 +382,34 @@ CONTEXT:
 - Categories: Cafe, Restaurant
 - Location: Hongdae Station (Line 2)
 
-SELECTION CRITERIA:
-1. {', '.join(criteria['priority'])}
-2. Suitable for {companion_type.lower()} (not {', '.join(criteria['avoid'])})
-3. Within 800m walking distance of each other
-4. Mix of cafes and restaurants for variety
+SELECTION CRITERIA (in order of importance):
+1. **GEOGRAPHIC PROXIMITY FIRST**: All selected places must be within 800m of each other
+2. **PLACE COUNT**: Select EXACTLY 4-5 places (aim for 5 for better experience)
+3. **Companion suitability**: {', '.join(criteria['priority'])}
+4. **Variety**: Mix of cafes and restaurants for diverse experience
+5. **Avoid**: {', '.join(criteria['avoid'])}
 
 AVAILABLE CANDIDATES:
 {formatted_recommendations}
 
 STEP-BY-STEP PROCESS:
-1. Read through all candidate places above
-2. Identify places that match the {companion_type.lower()} criteria
-3. Check that selected places are geographically close (within 800m)
-4. Select EXACTLY 4-5 places total
-5. Format each selection using the EXACT format below
+1. **FIRST**: Analyze geographic distances between all candidates
+2. **SECOND**: Identify clusters of places within 800m of each other
+3. **THIRD**: From the largest cluster, select 4-5 places that match companion criteria
+4. **FOURTH**: Ensure you have EXACTLY 4-5 places total
+5. **FIFTH**: Format each selection using the EXACT format below
+
+GEOGRAPHIC CLUSTERING REQUIREMENT:
+- You MUST prioritize places that are geographically close
+- Maximum walking distance between any two places: 800m
+- If places are too far apart, focus on the largest cluster near Hongdae Station
+- This ensures a walkable, enjoyable itinerary
+
+PLACE COUNT REQUIREMENT:
+- **ABSOLUTE MINIMUM: 4 places**
+- **TARGET: 5 places for optimal experience**
+- **NEVER select fewer than 4 places**
+- If you can't find 5 suitable places within 800m, select exactly 4
 
 REQUIRED OUTPUT FORMAT (copy exactly):
 1. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
@@ -395,18 +418,19 @@ REQUIRED OUTPUT FORMAT (copy exactly):
 4. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings]
 5. [Exact place name from candidates] - [Brief reason why this place is perfect for {companion_type.lower()} outings] (if selecting 5)
 
-VERIFICATION:
-- Count your selections: you must have exactly 4 or 5 places
-- Ensure all names match exactly with the candidates above
-- Confirm all places are suitable for {companion_type.lower()} outings
-- DO NOT invent new places - only select from the provided list
-- Use the exact format: "1. Place Name - Reason"
+VERIFICATION CHECKLIST:
+□ I have selected EXACTLY 4-5 places (preferably 5)
+□ All selected places are within 800m walking distance of each other
+□ I used the exact format: "1. Place Name - Reason"
+□ All names match exactly with the candidates above
+□ Places are suitable for {companion_type.lower()} outings
+□ I prioritized geographic proximity for walkability
 
 Now select your 4-5 places from the candidates above using the exact format:
 <|end|>
 
 <|assistant|>
-I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station:
+I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station, prioritizing geographic proximity:
 
 """
 
