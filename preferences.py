@@ -99,8 +99,9 @@ class Preferences:
         
         This method intelligently combines:
         1. User manually selected types (highest priority)
-        2. Companion-specific recommendations (limited selection)
-        3. Ensures variety while respecting user choices
+        2. Companion-specific recommendations (expanded selection)
+        3. Additional variety types for rich experience
+        4. Ensures variety while respecting user choices
         
         Args:
             user_selected_types (list, optional): User's manually selected place types
@@ -115,11 +116,11 @@ class Preferences:
         # Get companion-specific place type recommendations
         companion_places = COMPANION_PLACE_TYPES.get(self.companion_type.lower(), [])
         
-        # Only add 1-2 companion-specific types to maintain variety
-        # This prevents overwhelming the search with too many types
-        max_companion_types = 2
+        # Expand to use more place types for better variety
+        # This creates a richer pool for Phi to choose from
+        max_companion_types = 4  # Increased from 2 to 4 for better variety
         if len(companion_places) > 0:
-            # Randomly select 1-2 companion types that complement user selections
+            # Randomly select 3-4 companion types that complement user selections
             available_companion_types = [t for t in companion_places if t not in self.selected_types]
             if available_companion_types:
                 num_to_add = min(max_companion_types, len(available_companion_types))
@@ -127,27 +128,44 @@ class Preferences:
                 self.selected_types.extend(additional_types)
                 print(f"🔍 Added {len(additional_types)} companion-specific types: {additional_types}", file=sys.stderr)
         
-        # Ensure we have at least 2 types for variety
-        if len(self.selected_types) < 2:
+        # Add additional variety types for rich experience
+        # These provide more options for Phi to create diverse itineraries
+        variety_types = [
+            "테마카페",      # Theme cafes
+            "문화시설",      # Cultural facilities
+            "관광명소",      # Tourist attractions
+            "공원",         # Parks
+            "쇼핑",         # Shopping
+            "엔터테인먼트"   # Entertainment
+        ]
+        
+        # Add 1-2 variety types that aren't already selected
+        available_variety = [t for t in variety_types if t not in self.selected_types]
+        if available_variety:
+            num_variety = min(2, len(available_variety))
+            selected_variety = random.sample(available_variety, num_variety)
+            self.selected_types.extend(selected_variety)
+            print(f"🔍 Added {len(selected_variety)} variety types: {selected_variety}", file=sys.stderr)
+        
+        # Ensure we have at least 6 types for rich variety
+        if len(self.selected_types) < 6:
             # Add default types if we don't have enough
-            default_types = ['Cafe', 'Restaurant']
+            default_types = ['Cafe', 'Restaurant', '문화시설', '관광명소']
             for default_type in default_types:
-                if default_type not in self.selected_types:
+                if default_type not in self.selected_types and len(self.selected_types) < 6:
                     self.selected_types.append(default_type)
-                    if len(self.selected_types) >= 2:
-                        break
             print(f"🔍 Added default types to ensure minimum variety: {self.selected_types}", file=sys.stderr)
         
         # Limit total types to prevent overwhelming the search
-        if len(self.selected_types) > 4:
-            # Keep user-selected types and limit companion types
+        if len(self.selected_types) > 8:
+            # Keep user-selected types and limit companion/variety types
             user_types = [t for t in self.selected_types if t in (user_selected_types or [])]
-            companion_types = [t for t in self.selected_types if t not in user_types]
-            # Keep all user types + max 2 companion types
-            self.selected_types = user_types + companion_types[:2]
+            other_types = [t for t in self.selected_types if t not in user_types]
+            # Keep all user types + max 5 other types
+            self.selected_types = user_types + other_types[:5]
             print(f"🔍 Limited total types to prevent search overload: {self.selected_types}", file=sys.stderr)
         
-        print(f"🔍 Final selected place types: {self.selected_types}", file=sys.stderr)
+        print(f"🔍 Final selected place types: {self.selected_types} (Total: {len(self.selected_types)})", file=sys.stderr)
 
     # =============================================================================
     # PLACE RECOMMENDATION COLLECTION
@@ -178,9 +196,9 @@ class Preferences:
             self.selected_types,                       # List of place types to search for
             self.start_location,                       # Starting coordinates
             int(self.max_distance_km * 1000),          # Distance in meters
-            places_per_type=15,                        # Increased to 15 per type for variety
+            places_per_type=20,                        # Increased from 15 to 20 per type for maximum variety
             max_cluster_distance=300,                  # 300m clustering for tight walkable coherence
-            target_places=20                           # 20 places for Phi to choose from
+            target_places=30                           # Increased from 20 to 30 for Phi to choose from
         )
         
         print(f"🔍 Found {len(optimal_places)} optimal places", file=sys.stderr)

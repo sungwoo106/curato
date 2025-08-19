@@ -366,8 +366,10 @@ CRITICAL REQUIREMENTS:
 - Choose EXACTLY 4-5 places (no more, no less) - PREFER 5 PLACES
 - **ABSOLUTE MINIMUM: You MUST select at least 4 places**
 - **CRITICAL: If you select fewer than 4 places, your response will be rejected**
+- **CRITICAL: If you select more than 5 places, your response will be rejected**
 - Select places suitable for {companion_type.lower()} outings
 - PRIORITIZE geographic proximity - all places must be within 800m walking distance
+- **CRITICAL: Ensure VARIETY across different place types**
 - Copy the EXACT place names from the candidates list below
 - DO NOT create new place names - only select from the candidates provided
 - Use the EXACT format specified below
@@ -385,9 +387,9 @@ CONTEXT:
 
 SELECTION CRITERIA (in order of importance):
 1. **PLACE COUNT FIRST**: Select EXACTLY 4-5 places (preferably 5)
-2. **GEOGRAPHIC PROXIMITY**: All selected places must be within 800m of each other
-3. **Companion suitability**: {', '.join(criteria['priority'])}
-4. **Variety**: Mix of cafes and restaurants for diverse experience
+2. **PLACE TYPE VARIETY**: Ensure diverse mix of different place types
+3. **GEOGRAPHIC PROXIMITY**: All selected places must be within 800m of each other
+4. **Companion suitability**: {', '.join(criteria['priority'])}
 5. **Avoid**: {', '.join(criteria['avoid'])}
 
 AVAILABLE CANDIDATES:
@@ -397,7 +399,7 @@ STEP-BY-STEP PROCESS:
 1. **FIRST**: Count the total available candidates
 2. **SECOND**: Analyze geographic distances between all candidates
 3. **THIRD**: Identify clusters of places within 800m of each other
-4. **FOURTH**: From the largest cluster, select 4-5 places that match companion criteria
+4. **FOURTH**: From the largest cluster, select 4-5 places ensuring VARIETY
 5. **FIFTH**: Ensure you have EXACTLY 4-5 places total
 6. **SIXTH**: Format each selection using the EXACT format below
 
@@ -405,8 +407,15 @@ PLACE COUNT REQUIREMENT:
 - **ABSOLUTE MINIMUM: 4 places**
 - **TARGET: 5 places for optimal experience**
 - **NEVER select fewer than 4 places**
+- **NEVER select more than 5 places**
 - **If you can't find 5 suitable places within 800m, select exactly 4**
-- **Your response will be rejected if you select fewer than 4 places**
+- **Your response will be rejected if you select fewer than 4 or more than 5 places**
+
+PLACE TYPE VARIETY REQUIREMENT:
+- **CRITICAL: Ensure variety across different place types**
+- **DO NOT select all places from the same category**
+- **Mix cafes, restaurants, cultural spots, entertainment, etc.**
+- **This creates a richer, more interesting experience**
 
 GEOGRAPHIC CLUSTERING REQUIREMENT:
 - You MUST prioritize places that are geographically close
@@ -423,6 +432,7 @@ REQUIRED OUTPUT FORMAT (copy exactly):
 
 VERIFICATION CHECKLIST:
 □ I have selected EXACTLY 4-5 places (preferably 5)
+□ I have ensured VARIETY across different place types
 □ All selected places are within 800m walking distance of each other
 □ I used the exact format: "1. Place Name - Reason"
 □ All names match exactly with the candidates above
@@ -431,14 +441,16 @@ VERIFICATION CHECKLIST:
 
 FINAL WARNING:
 - **You MUST select at least 4 places**
-- **If you select fewer than 4, your response will be rejected**
-- **Double-check your count before submitting**
+- **You MUST NOT select more than 5 places**
+- **You MUST ensure variety across place types**
+- **If you select fewer than 4 or more than 5, your response will be rejected**
+- **Double-check your count and variety before submitting**
 
 Now select your 4-5 places from the candidates above using the exact format:
 <|end|>
 
 <|assistant|>
-I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station, prioritizing geographic proximity:
+I'll select 4-5 places suitable for a {companion_type.lower()} outing near Hongdae Station, prioritizing variety and geographic proximity:
 
 """
 
