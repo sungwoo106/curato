@@ -384,7 +384,9 @@ class Preferences:
         
         if selected_places:
             # Ensure we have minimum required locations for map functionality
+            print(f"🔍 Before supplementation: {len(selected_places)} places", file=sys.stderr)
             selected_places = self._ensure_minimum_locations(selected_places, min_locations=4)
+            print(f"🔍 After supplementation: {len(selected_places)} places", file=sys.stderr)
             
             # Convert to JSON format
             json_output = self._convert_places_to_json(selected_places)
@@ -419,9 +421,13 @@ class Preferences:
                         place_name, reason = place_info.split(' - ', 1)
                         place_name = place_name.strip()
                         
-                        # Filter out generic place names
+                        # Filter out generic place names and placeholder text
                         if (place_name and 
                             place_name.lower() not in ['place name', 'location', 'venue', 'spot', 'place'] and
+                            '[' not in place_name and  # Filter out [Copy exact name from candidates]
+                            ']' not in place_name and  # Filter out placeholder brackets
+                            'exact' not in place_name.lower() and  # Filter out "exact" references
+                            'candidates' not in place_name.lower() and  # Filter out "candidates" references
                             len(place_name) > 2 and  # Must be longer than 2 characters
                             not place_name.isdigit()):  # Must not be just numbers
                             
@@ -430,7 +436,7 @@ class Preferences:
                                 "selection_reason": reason.strip()
                             })
                         else:
-                            print(f"⚠️ Filtered out generic place name: '{place_name}'", file=sys.stderr)
+                            print(f"⚠️ Filtered out invalid place name: '{place_name}'", file=sys.stderr)
         
         print(f"🔍 Extracted {len(places)} valid places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
         return places
