@@ -82,6 +82,75 @@ PLACE_TYPE_CATEGORY_MAPPINGS = {
     "중개업소": "AG2",
     "공공기관": "PO3",
     
+    # Specific place type mappings (using valid category codes)
+    "테마카페": "CE7",
+    "디저트카페": "CE7",
+    "힐링카페": "CE7",
+    "키즈카페": "CE7",
+    "게임카페": "CT1",  # Cultural facility
+    "방탈출카페": "CT1", # Cultural facility
+    "보드게임카페": "CT1", # Cultural facility
+    "만화카페": "CT1",   # Cultural facility
+    "스터디카페": "AC5",  # Academy
+    "독립서점": "AC5",    # Academy
+    "독서실": "AC5",      # Academy
+    "도서관": "CT1",      # Cultural facility
+    "박물관": "CT1",
+    "과학관": "CT1",
+    "수족관": "CT1",
+    "동물원": "CT1",
+    "놀이공원": "AT4",
+    "워터파크": "AT4",    # Tourist attraction
+    "식물원": "AT4",
+    "천문대": "AT4",
+    "동물농장": "AT4",
+    "놀이터": "AT4",
+    "체험학습장": "AC5",   # Academy
+    "가족영화관": "CT1",   # Cultural facility
+    "재래시장": "MT1",     # Supermarket
+    "아이스크림가게": "FD6", # Restaurant
+    "전통문화체험관": "CT1", # Cultural facility
+    "자연사박물관": "CT1",   # Cultural facility
+    "로맨틱레스토랑": "FD6",
+    "와인바": "FD6",
+    "칵테일바": "FD6",
+    "분위기좋은카페": "CE7",
+    "분위기좋은식당": "FD6",
+    "분위기좋은술집": "FD6",
+    "사진관": "CT1",      # Cultural facility
+    "영화관": "CT1",      # Cultural facility
+    "공연장": "CT1",      # Cultural facility
+    "콘서트홀": "CT1",    # Cultural facility
+    "문화센터": "CT1",
+    "산책길": "AT4",      # Tourist attraction
+    "조용한카페": "CE7",
+    "명상숲": "AT4",      # Tourist attraction
+    "힐링센터": "CT1",    # Cultural facility
+    "요가센터": "CT1",    # Cultural facility
+    "필라테스": "CT1",    # Cultural facility
+    "탁구장": "CT1",      # Cultural facility
+    "테니스장": "CT1",    # Cultural facility
+    "골프연습장": "CT1",  # Cultural facility
+    "등산로": "AT4",      # Tourist attraction
+    "자전거도로": "AT4",  # Tourist attraction
+    "조깅코스": "AT4",    # Tourist attraction
+    "볼링장": "CT1",      # Cultural facility
+    "당구장": "CT1",      # Cultural facility
+    "다트바": "FD6",      # Restaurant
+    "퀴즈카페": "CT1",    # Cultural facility
+    "마술카페": "CT1",    # Cultural facility
+    "포토존": "CT1",      # Cultural facility
+    "팝업스토어": "MT1",  # Supermarket
+    "플리마켓": "MT1",    # Supermarket
+    "코인노래방": "CT1",  # Cultural facility
+    "펍": "FD6",
+    "전시회": "CT1",      # Cultural facility
+    "야경좋은곳": "AT4",  # Tourist attraction
+    "데이트스팟": "AT4",  # Tourist attraction
+    "패밀리레스토랑": "FD6",
+    "쇼핑": "MT1",        # Supermarket
+    "엔터테인먼트": "CT1", # Cultural facility
+    
     # English mappings
     "cafe": "CE7",
     "restaurant": "FD6",
@@ -107,8 +176,7 @@ PLACE_TYPE_CATEGORY_MAPPINGS = {
     "accommodation": "AD5",
     "hotel": "AD5",
     "real estate": "AG2",
-    "public": "PO3",
-    "government": "PO3",
+    "public": "PO3"
 }
 
 # =============================================================================
@@ -128,22 +196,65 @@ USER_SELECTABLE_PLACE_TYPES = [
 # Korean names are used for better local context and API compatibility
 COMPANION_PLACE_TYPES = {
     "family": [
-        "박물관", "놀이공원", "동물원", "수족관", "과학관", "패밀리 레스토랑", "재래시장"
-        # Museum, Amusement Park, Zoo, Aquarium, Science Center, Family Restaurant, Traditional Market
+        "박물관", "놀이공원", "동물원", "수족관", "과학관", "패밀리 레스토랑", "재래시장",
+        "공원", "아이스크림 가게", "도서관", "체험학습장", "키즈카페", "가족영화관", "놀이터",
+        "전통문화체험관", "자연사박물관", "천문대", "식물원", "동물농장", "워터파크"
+        # Museum, Amusement Park, Zoo, Aquarium, Science Center, Family Restaurant, Traditional Market,
+        # Park, Ice Cream Shop, Library, Experience Learning Center, Kids Cafe, Family Cinema, Playground,
+        # Traditional Culture Experience Center, Natural History Museum, Observatory, Botanical Garden, Animal Farm, Water Park
     ],
     "friends": [
-        "게임카페", "방탈출 카페", "코인노래방", "보드게임카페", "펍", "테마카페"
-        # Game Cafe, Escape Room Cafe, Coin Karaoke, Board Game Cafe, Pub, Theme Cafe
+        "게임카페", "방탈출 카페", "코인노래방", "보드게임카페", "펍", "테마카페",
+        "노래방", "PC방", "만화카페", "보드게임방", "VR체험관", "실내운동시설", "볼링장",
+        "당구장", "다트바", "퀴즈카페", "마술카페", "포토존", "팝업스토어", "플리마켓"
+        # Game Cafe, Escape Room Cafe, Coin Karaoke, Board Game Cafe, Pub, Theme Cafe,
+        # Karaoke, PC Room, Comic Cafe, Board Game Room, VR Experience Center, Indoor Sports Facility, Bowling Alley,
+        # Billiards Hall, Dart Bar, Quiz Cafe, Magic Cafe, Photo Zone, Pop-up Store, Flea Market
     ],
     "couple": [
-        "데이트 스팟", "야경 좋은 곳", "분위기 좋은 카페", "분위기 좋은 식당", "테마카페", "미술관", "전시회"
-        # Date Spot, Scenic Night View, Atmosphere Cafe, Atmosphere Restaurant, Theme Cafe, Art Museum, Exhibition
+        "데이트 스팟", "야경 좋은 곳", "분위기 좋은 카페", "분위기 좋은 식당", "테마카페", "미술관", "전시회",
+        "로맨틱 레스토랑", "와인바", "칵테일바", "디저트카페", "스파", "마사지샵", "한복체험관",
+        "사진관", "영화관", "공연장", "콘서트홀", "갤러리", "문화센터", "힐링카페", "분위기 좋은 술집"
+        # Date Spot, Scenic Night View, Atmosphere Cafe, Atmosphere Restaurant, Theme Cafe, Art Museum, Exhibition,
+        # Romantic Restaurant, Wine Bar, Cocktail Bar, Dessert Cafe, Spa, Massage Shop, Hanbok Experience Center,
+        # Photo Studio, Cinema, Performance Hall, Concert Hall, Gallery, Culture Center, Healing Cafe, Atmosphere Bar
     ],
     "solo": [
-        "산책길", "조용한 카페", "독립서점", "명상센터", "사진 전시회", "한적한 공원", "미술관", "전시회"
-        # Walking Path, Quiet Cafe, Independent Bookstore, Meditation Center, Photo Exhibition, Quiet Park, Art Museum, Exhibition
+        "산책길", "조용한 카페", "독립서점", "명상센터", "사진 전시회", "한적한 공원", "미술관", "전시회",
+        "도서관", "독서실", "스터디카페", "요가센터", "필라테스", "헬스장", "수영장", "탁구장",
+        "테니스장", "골프연습장", "등산로", "자전거도로", "조깅코스", "명상숲", "힐링센터", "아로마테라피"
+        # Walking Path, Quiet Cafe, Independent Bookstore, Meditation Center, Photo Exhibition, Quiet Park, Art Museum, Exhibition,
+        # Library, Study Room, Study Cafe, Yoga Center, Pilates, Gym, Swimming Pool, Table Tennis Court,
+        # Tennis Court, Golf Practice Range, Hiking Trail, Bicycle Path, Jogging Course, Meditation Forest, Healing Center, Aromatherapy
     ]
 }
+
+# =============================================================================
+# VARIETY PLACE TYPES FOR ENHANCED DIVERSITY
+# =============================================================================
+# Additional place types that provide variety and richness to itineraries
+# These are automatically added to create more diverse and interesting experiences
+# They complement the companion-specific types without overwhelming user selections
+VARIETY_PLACE_TYPES = [
+    "테마카페",      # Theme cafes - unique experiences
+    "문화시설",      # Cultural facilities - museums, galleries, theaters
+    "관광명소",      # Tourist attractions - landmarks, viewpoints
+    "공원",         # Parks - outdoor spaces, nature
+    "쇼핑",         # Shopping - retail, markets, boutiques
+    "엔터테인먼트"   # Entertainment - fun activities, games
+]
+
+# =============================================================================
+# DEFAULT PLACE TYPES FOR MINIMUM VARIETY
+# =============================================================================
+# Default place types used as fallbacks when minimum variety is needed
+# These ensure we always have a basic set of diverse place types
+DEFAULT_PLACE_TYPES = [
+    "Cafe",           # Basic cafe option
+    "Restaurant",     # Basic restaurant option  
+    "문화시설",        # Cultural facilities
+    "관광명소"         # Tourist attractions
+]
 
 # =============================================================================
 # COMPANION TYPE OPTIONS
