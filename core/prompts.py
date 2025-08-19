@@ -239,7 +239,7 @@ def build_phi_location_prompt(
     return f"""<|system|>
 You are a travel planner. Select 4-5 locations from 20 candidates.
 Respond ONLY with valid JSON.
-CRITICAL: Ensure your JSON is complete and includes ALL coordinates for each place.
+CRITICAL: Generate REAL place data, not placeholder text.
 <|end|>
 
 <|user|>
@@ -270,42 +270,14 @@ OUTPUT: JSON array with place_name, road_address_name, place_type, distance, pla
 REQUIREMENTS:
 - Each place MUST have unique latitude and longitude coordinates
 - Coordinates must be different for each location
-- Ensure JSON is complete and properly formatted
-- Include all required fields for each place
-
-JSON SCHEMA:
-[
-  {{
-    "place_name": "string",
-    "road_address_name": "string", 
-    "place_type": "string",
-    "distance": "string",
-    "place_url": "string",
-    "latitude": float,
-    "longitude": float,
-    "selection_reason": "string"
-  }}
-]
-
-EXAMPLE OUTPUT:
-[
-  {{
-    "place_name": "홍대쌀빵",
-    "road_address_name": "서울 마포구 양화로 지하 160",
-    "place_type": "Restaurant",
-    "distance": "9",
-    "place_url": "http://place.map.kakao.com/123",
-    "latitude": 37.5568,
-    "longitude": 126.9237,
-    "selection_reason": "Perfect for couples, romantic atmosphere"
-  }}
-]
+- Generate REAL data from the candidates, not placeholder text
+- Use actual place names, addresses, and coordinates
 
 CANDIDATES:
 {format_recommendations_for_phi(recommendations_json)}
 
-IMPORTANT: Respond with ONLY the JSON array. Do not include any other text, explanations, or the prompt content.
-CRITICAL: Start your response immediately with [ and end with ]. No other text before or after the JSON.
+IMPORTANT: Generate REAL JSON with actual place data from the candidates above.
+Do NOT use placeholder text like "string" or "float".
 <|end|>
 
 <|assistant|>

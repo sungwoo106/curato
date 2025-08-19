@@ -400,6 +400,13 @@ class Preferences:
                     print(f"❌ Place {i+1} has zero coordinates: {place.get('place_name', 'Unknown')}", file=sys.stderr)
                     return None
                 
+                # Check for schema placeholders (Phi echoing the schema instead of real data)
+                if (place.get('place_name') in ['string', 'float', 'int'] or
+                    place.get('road_address_name') in ['string', 'float', 'int'] or
+                    place.get('place_type') in ['string', 'float', 'int']):
+                    print(f"❌ Place {i+1} contains schema placeholders, not real data: {place}", file=sys.stderr)
+                    return None
+                
                 # Check for duplicate coordinates
                 for j, other_place in enumerate(parsed):
                     if i != j and (place['latitude'] == other_place['latitude'] and 
@@ -413,6 +420,34 @@ class Preferences:
         except json.JSONDecodeError as e:
             print(f"❌ JSON parsing failed: {e}", file=sys.stderr)
             print(f"❌ Failed JSON content: {potential_json[:300]}...", file=sys.stderr)
+            
+            # Try partial JSON parsing for incomplete JSON
+            print("🔍 Attempting partial JSON parsing...", file=sys.stderr)
+            try:
+                from partialjson.json_parser import JSONParser
+                parser = JSONParser()
+                parsed_data = parser.parse(potential_json)
+                
+                if parsed_data and isinstance(parsed_data, list) and len(parsed_data) > 0:
+                    # Validate that we have actual place data, not schema
+                    first_place = parsed_data[0]
+                    if (isinstance(first_place.get('place_name'), str) and 
+                        first_place['place_name'] not in ['string', 'float', 'int'] and
+                        isinstance(first_place.get('latitude'), (int, float)) and
+                        isinstance(first_place.get('longitude'), (int, float))):
+                        
+                        print(f"✅ Partial JSON parsing successful with {len(parsed_data)} locations", file=sys.stderr)
+                        # Convert back to JSON string
+                        return json.dumps(parsed_data, ensure_ascii=False)
+                    else:
+                        print("❌ Partial JSON contains schema placeholders, not real data", file=sys.stderr)
+                else:
+                    print("❌ Partial JSON parsing failed or returned empty data", file=sys.stderr)
+                    
+            except ImportError:
+                print("⚠️ partialjson library not available, trying JSON reconstruction...", file=sys.stderr)
+            except Exception as partial_error:
+                print(f"❌ Partial JSON parsing failed: {partial_error}", file=sys.stderr)
             
             # Try to reconstruct JSON from partial content
             print("🔍 Attempting JSON reconstruction...", file=sys.stderr)
