@@ -383,6 +383,9 @@ class Preferences:
         selected_places = self._extract_places_from_text(cleaned_output)
         
         if selected_places:
+            # Clean up Phi's output by removing duplicates
+            selected_places = self._clean_phi_output(selected_places)
+            
             # Validate Phi's output meets our 4-5 place requirement
             self._validate_phi_output(selected_places)
             
@@ -452,6 +455,36 @@ class Preferences:
         
         print(f"🔍 Extracted {len(places)} valid places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
         return places
+    
+    def _clean_phi_output(self, selected_places: List[Dict]) -> List[Dict]:
+        """
+        Clean Phi's output by removing duplicates and ensuring unique places.
+        
+        Args:
+            selected_places (List[Dict]): List of places from Phi output
+            
+        Returns:
+            List[Dict]: Cleaned list with duplicates removed
+        """
+        if not selected_places:
+            return selected_places
+        
+        # Remove duplicates while preserving order
+        seen_names = set()
+        cleaned_places = []
+        
+        for place in selected_places:
+            place_name = place['place_name'].lower()
+            if place_name not in seen_names:
+                seen_names.add(place_name)
+                cleaned_places.append(place)
+            else:
+                print(f"🧹 Removed duplicate place: {place['place_name']}", file=sys.stderr)
+        
+        if len(cleaned_places) != len(selected_places):
+            print(f"🧹 Cleaned Phi output: {len(selected_places)} -> {len(cleaned_places)} unique places", file=sys.stderr)
+        
+        return cleaned_places
     
     def _validate_phi_output(self, selected_places: List[Dict]) -> None:
         """
@@ -607,8 +640,16 @@ class Preferences:
         
         # Match Phi's selections to actual candidate data
         converted_places = []
+        seen_place_names = set()  # Track duplicates
+        
         for selected in selected_places:
             selected_name = selected['place_name']
+            
+            # Skip duplicates
+            if selected_name.lower() in seen_place_names:
+                print(f"⚠️ Skipping duplicate place: {selected_name}", file=sys.stderr)
+                continue
+            seen_place_names.add(selected_name.lower())
             
             # Find matching candidate by name using multiple matching strategies
             matching_candidate = None
@@ -636,6 +677,21 @@ class Preferences:
                         selected_name.lower().replace('_', '') == candidate_name.replace('_', '')):
                         matching_candidate = candidate
                         break
+            
+            # Strategy 4: Partial word matching for compound names
+            if not matching_candidate:
+                for candidate in all_candidates:
+                    candidate_name = candidate.get('place_name', '').lower()
+                    # Split into words and check for partial matches
+                    selected_words = selected_name.lower().split()
+                    candidate_words = candidate_name.split()
+                    
+                    # Check if most words match
+                    if len(selected_words) > 1 and len(candidate_words) > 1:
+                        matching_words = sum(1 for word in selected_words if any(word in cw for cw in candidate_words))
+                        if matching_words >= len(selected_words) * 0.7:  # 70% word match
+                            matching_candidate = candidate
+                            break
             
             if matching_candidate:
                 # Create complete place entry
