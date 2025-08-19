@@ -351,26 +351,64 @@ def build_phi_location_prompt(
     # Get geographic clustering information
     clustering_info = get_geographic_clustering_info(recommendations_json)
     
-    # Simplified, direct prompt for better Phi extraction
+    # Enhanced prompt with specific guidance and examples
     prompt = f"""<|system|>
-You are a travel planner. Select EXACTLY 4-5 locations from the candidates below.
-Respond with ONLY the exact place names, one per line.
-Do not add explanations, just list the names.
+You are a professional travel planner specializing in romantic couple outings in Seoul.
+Your expertise: Selecting optimal locations for romantic experiences, ensuring walkability, and creating memorable date itineraries.
 
-CRITICAL: Select EXACTLY 4-5 places, no more, no less.
+TASK: Select EXACTLY 4-5 locations from the candidates below for a couple's romantic outing near Hongdae Station.
+
+CRITICAL REQUIREMENTS:
+- Choose EXACTLY 4-5 places (no more, no less)
+- Select places suitable for couples (romantic atmosphere, intimate settings)
+- Ensure all selected places are within 800m walking distance of each other
+- Copy the EXACT place names from the candidates list below
 <|end|>
 
 <|user|>
-Select 4-5 places for a couple outing near Hongdae Station.
-Choose places that are close together (within 800m) and suitable for couples.
+I need you to select 4-5 places for a couple's romantic outing near Hongdae Station.
 
-Available places:
+CONTEXT:
+- Companion Type: {companion_type}
+- Budget Level: {budget_level}
+- Start Time: {start_time}:00
+- Categories: Cafe, Restaurant
+- Location: Hongdae Station (Line 2)
+
+SELECTION CRITERIA:
+1. Romantic atmosphere and intimate settings
+2. Suitable for couples (not family-oriented or solo-focused)
+3. Within 800m walking distance of each other
+4. Mix of cafes and restaurants for variety
+
+AVAILABLE CANDIDATES:
 {formatted_recommendations}
 
-List exactly 4-5 place names:
+STEP-BY-STEP PROCESS:
+1. Read through all candidate places above
+2. Identify places that match the romantic couple criteria
+3. Check that selected places are geographically close (within 800m)
+4. Select EXACTLY 4-5 places total
+5. List them one per line using the exact names from the candidates
+
+REQUIRED OUTPUT FORMAT:
+[Exact place name from candidates]
+[Exact place name from candidates]
+[Exact place name from candidates]
+[Exact place name from candidates]
+[Exact place name from candidates] (if selecting 5)
+
+VERIFICATION:
+- Count your selections: you must have exactly 4 or 5 places
+- Ensure all names match exactly with the candidates above
+- Confirm all places are suitable for romantic couple outings
+
+Now select your 4-5 places:
 <|end|>
 
 <|assistant|>
+I'll select 4-5 romantic places for a couple's outing near Hongdae Station:
+
 """
 
     return prompt
@@ -428,13 +466,14 @@ def build_qwen_itinerary_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Enhanced prompt with specific guidance and examples
+    # Focused prompt for comprehensive itinerary creation
     prompt = f"""<|im_start|>system
-You are a master storyteller creating romantic travel itineraries for couples.
-Your task: Write a detailed, romantic itinerary covering ALL {len(locations)} locations.
-Each location must have its own complete section with rich descriptions.
+You are a professional travel writer specializing in romantic couple itineraries in Seoul.
+Your expertise: Creating detailed, emotional, and engaging travel narratives that capture the essence of romantic experiences.
 
-CRITICAL: You MUST cover every single location listed below.
+TASK: Create a comprehensive romantic itinerary covering ALL {len(locations)} locations selected by the travel planner.
+
+CRITICAL REQUIREMENT: You MUST cover every single location listed below with detailed, romantic descriptions.
 <|im_end|>
 
 <|im_start|>user
@@ -442,35 +481,48 @@ Create a romantic, poetic itinerary for a couple visiting these places near Hong
 
 {locs_text}
 
-REQUIREMENTS:
-- Cover ALL {len(locations)} locations with equal attention
-- Each location gets its own detailed paragraph (at least 3-4 sentences)
-- Use romantic, poetic language with emotional depth
-- Include suggested activities: {', '.join(selected_activities)}
-- Time context: {time_context}
-- Budget level: {budget_level}
+USER PREFERENCES & CONTEXT:
+- Companion Type: {companion_type}
+- Budget Level: {budget_level}
+- Start Time: {start_time}:00
+- Suggested Activities: {', '.join(selected_activities)}
+- Time Atmosphere: {time_context}
+- Location: Hongdae Station (Line 2)
 
-MANDATORY STRUCTURE (follow exactly):
+ITINERARY REQUIREMENTS:
+1. **Complete Coverage**: Write about ALL {len(locations)} locations
+2. **Romantic Tone**: Use romantic, poetic language throughout
+3. **Detailed Descriptions**: Each location gets 3-4 detailed sentences
+4. **Sensory Experience**: Include sights, sounds, smells, and feelings
+5. **Emotional Connection**: Connect locations with romantic narrative flow
+6. **User Preferences**: Incorporate the couple's preferences and budget level
+
+REQUIRED STRUCTURE (copy exactly):
 {chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
 
-WRITING GUIDELINES:
-- Start each location section with the exact format above
-- Write 3-4 detailed sentences per location
-- Include sensory details (sights, sounds, smells, feelings)
-- Describe romantic moments and shared experiences
-- Connect locations emotionally and narratively
-- End the entire itinerary with [END]
+WRITING GUIDELINES FOR EACH LOCATION:
+- Start with the exact format above
+- Write 3-4 detailed, romantic sentences
+- Include: atmosphere, romantic moments, sensory details
+- Connect emotionally to the next location
+- Make it engaging and memorable for couples
 
-EXAMPLE FORMAT:
+EXAMPLE OF EXPECTED OUTPUT:
 1. LOCATION 1: [Place Name]
-   [3-4 detailed sentences about the experience, atmosphere, and romantic moments]
+   As the couple steps into this charming venue, they're immediately enveloped in a warm, intimate atmosphere. The soft lighting casts gentle shadows across the cozy seating areas, perfect for intimate conversations. They can feel the romantic energy in the air as they settle into their seats, their hands naturally finding each other's. The gentle background music and the aroma of freshly brewed coffee create the perfect backdrop for their romantic afternoon together.
 
 2. LOCATION 2: [Place Name]
-   [3-4 detailed sentences about the experience, atmosphere, and romantic moments]
+   [Continue with similar detailed, romantic descriptions for each location...]
 
-[Continue for all locations...]
+VERIFICATION CHECKLIST:
+□ I have written about ALL {len(locations)} locations
+□ Each location has 3-4 detailed sentences
+□ I used romantic, poetic language throughout
+□ I included sensory details and emotional connections
+□ I incorporated user preferences and budget level
+□ I ended with [END]
 
-Now write your romantic itinerary covering all {len(locations)} locations:
+Now create your complete romantic itinerary covering all {len(locations)} locations:
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -530,11 +582,12 @@ def build_qwen_story_prompt(
     else:
         time_context = "golden hour magic, evening enchantment, soft lighting"
     
-    # Enhanced fallback prompt with specific guidance
+    # Focused fallback prompt for comprehensive coverage
     prompt = f"""<|im_start|>system
-You are a storyteller creating romantic itineraries for couples.
-Write a detailed itinerary covering ALL {len(locations)} locations.
-Each location must have its own complete section.
+You are a travel writer specializing in romantic couple itineraries.
+Your task: Create a detailed itinerary covering ALL {len(locations)} locations selected by the travel planner.
+
+CRITICAL: You MUST cover every single location listed below with romantic descriptions.
 <|im_end|>
 
 <|im_start|>user
@@ -542,17 +595,40 @@ Create a romantic itinerary for a couple visiting these places:
 
 {locs_text}
 
-REQUIREMENTS:
-- Cover ALL {len(locations)} locations with detailed descriptions
-- Each location gets its own paragraph (at least 2-3 sentences)
-- Use romantic, emotional language
-- Include activities: {', '.join(selected_activities)}
-- Connect locations with a flowing narrative
+USER PREFERENCES:
+- Companion Type: {companion_type}
+- Budget Level: {budget_level}
+- Suggested Activities: {', '.join(selected_activities)}
 
-STRUCTURE:
+ITINERARY REQUIREMENTS:
+1. **Complete Coverage**: Write about ALL {len(locations)} locations
+2. **Romantic Tone**: Use romantic, emotional language throughout
+3. **Detailed Descriptions**: Each location gets 2-3 detailed sentences
+4. **Sensory Experience**: Include atmosphere, romantic moments, sensory details
+5. **User Preferences**: Incorporate the couple's preferences and budget level
+
+REQUIRED STRUCTURE (copy exactly):
 {chr(10).join([f"{i+1}. LOCATION {i+1}: {locations[i]['place_name']}" for i in range(len(locations))])}
 
-Write a detailed paragraph for each location. End with [END].
+WRITING GUIDELINES FOR EACH LOCATION:
+- Start with the exact format above
+- Write 2-3 detailed, romantic sentences
+- Include: atmosphere, romantic moments, sensory details
+- Make it engaging and memorable for couples
+
+EXAMPLE OF EXPECTED OUTPUT:
+1. LOCATION 1: [Place Name]
+   The couple enters this charming venue and immediately feels the romantic atmosphere. Soft lighting and cozy seating create the perfect setting for intimate conversations. They can sense the romantic energy as they settle in together.
+
+VERIFICATION CHECKLIST:
+□ I have written about ALL {len(locations)} locations
+□ Each location has 2-3 detailed sentences
+□ I used romantic, emotional language throughout
+□ I included sensory details and romantic moments
+□ I incorporated user preferences and budget level
+□ I ended with [END]
+
+Now create your complete romantic itinerary covering all {len(locations)} locations:
 <|im_end|>
 
 <|im_start|>assistant"""
@@ -700,6 +776,79 @@ def validate_prompt_effectiveness(prompt_text: str, model_output: str, expected_
         validation["suggestions"].append("Missing completion signal - add [END] requirement")
     
     return validation
+
+def test_prompt_effectiveness(prompt_text: str, test_scenario: str = "default") -> dict:
+    """
+    Test the effectiveness of a prompt by analyzing its structure and content.
+    
+    Args:
+        prompt_text (str): The prompt to test
+        test_scenario (str): The scenario being tested
+        
+    Returns:
+        dict: Analysis results with improvement suggestions
+    """
+    analysis = {
+        "prompt_length": len(prompt_text),
+        "clarity_score": 0,
+        "structure_score": 0,
+        "example_score": 0,
+        "verification_score": 0,
+        "suggestions": []
+    }
+    
+    # Check prompt length
+    if len(prompt_text) < 200:
+        analysis["suggestions"].append("Prompt may be too short - consider adding more context")
+    elif len(prompt_text) > 1000:
+        analysis["suggestions"].append("Prompt may be too long - consider simplifying")
+    
+    # Check for clarity indicators
+    clarity_indicators = ["TASK:", "CRITICAL:", "REQUIREMENTS:", "INSTRUCTIONS:"]
+    clarity_count = sum(1 for indicator in clarity_indicators if indicator in prompt_text)
+    analysis["clarity_score"] = (clarity_count / len(clarity_indicators)) * 100
+    
+    if analysis["clarity_score"] < 50:
+        analysis["suggestions"].append("Add more clarity indicators (TASK:, CRITICAL:, etc.)")
+    
+    # Check for structure guidance
+    structure_indicators = ["STRUCTURE:", "FORMAT:", "REQUIRED STRUCTURE:"]
+    structure_count = sum(1 for indicator in structure_indicators if indicator in prompt_text)
+    analysis["structure_score"] = (structure_count / len(structure_indicators)) * 100
+    
+    if analysis["structure_score"] < 50:
+        analysis["suggestions"].append("Add clear structure and format requirements")
+    
+    # Check for examples
+    example_indicators = ["EXAMPLE:", "EXAMPLE OF WHAT TO WRITE:", "SAMPLE:"]
+    example_count = sum(1 for indicator in example_indicators if indicator in prompt_text)
+    analysis["example_score"] = (example_count / len(example_indicators)) * 100
+    
+    if analysis["example_score"] < 50:
+        analysis["suggestions"].append("Include concrete examples of expected output")
+    
+    # Check for verification steps
+    verification_indicators = ["VERIFICATION:", "CHECKLIST:", "VERIFY:"]
+    verification_count = sum(1 for indicator in verification_indicators if indicator in prompt_text)
+    analysis["verification_score"] = (verification_count / len(verification_indicators)) * 100
+    
+    if analysis["verification_score"] < 50:
+        analysis["suggestions"].append("Add verification steps or checklists")
+    
+    # Overall assessment
+    overall_score = (analysis["clarity_score"] + analysis["structure_score"] + 
+                    analysis["example_score"] + analysis["verification_score"]) / 4
+    
+    if overall_score >= 80:
+        analysis["overall_quality"] = "excellent"
+    elif overall_score >= 60:
+        analysis["overall_quality"] = "good"
+    elif overall_score >= 40:
+        analysis["overall_quality"] = "moderate"
+    else:
+        analysis["overall_quality"] = "needs_improvement"
+    
+    return analysis
 
 def generate_debug_prompt(original_prompt: str, validation_results: dict) -> str:
     """
