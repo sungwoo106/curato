@@ -50,42 +50,24 @@ def build_phi_location_prompt(
         places_text += f"{i}. {place_name} ({place_type})\n"
     
     prompt = f"""<|system|>
-You are a travel planning assistant helping to create itineraries for {companion_type.lower()} outings in {location_name}.
+You are a travel planner. Select exactly 4-5 places from the list below. Do not repeat places.
 <|end|>
 
 <|user|>
-I need you to select exactly 4-5 places from the candidate list below for a {companion_type.lower()} outing.
+Select exactly 4-5 places from this list for a {companion_type.lower()} outing:
 
-Context:
-- Location: {location_name}
-- Companion Type: {companion_type}
-- Budget: {budget_level}
-- Start Time: {start_time}:00
-
-Task:
-Randomly select exactly 4-5 places from the candidates below. Ensure variety in place types.
-
-Available Candidates:
 {places_text}
 
-Requirements:
-- Select EXACTLY 4-5 places (no more, no less)
-- Choose randomly from the list above
-- Ensure variety across different place types
-- Copy the exact place names
+Rules:
+- Pick exactly 4-5 places (no more, no less)
+- Choose randomly for variety
+- Do not repeat any place
+- Use this format: 1. [Place Name] - [Brief reason]
 
-Output Format:
-1. [Place Name] - [Brief reason for selection]
-2. [Place Name] - [Brief reason for selection]
-3. [Place Name] - [Brief reason for selection]
-4. [Place Name] - [Brief reason for selection]
-5. [Place Name] - [Brief reason for selection] (if selecting 5)
-
-Remember: You must select exactly 4-5 places from the candidates above.
 <|end|>
 
 <|assistant|>
-I'll help you select 4-5 places for your {companion_type.lower()} outing in {location_name}. Let me randomly choose from the candidates while ensuring variety:
+I'll select 4-5 places for your {companion_type.lower()} outing:
 
 """
 
@@ -122,43 +104,19 @@ def build_qwen_itinerary_prompt(
         places_text += f"{i}. {place_name} - {place_type}\n"
     
     prompt = f"""<|im_start|>system
-You are a professional travel writer creating detailed itineraries for {companion_type.lower()} outings in Seoul.
+You are a professional travel writer. Generate ONLY the itinerary content without repeating instructions or prompts.
 <|im_end|>
 
 <|im_start|>user
-Create a comprehensive itinerary for a {companion_type.lower()} outing starting at {start_time}:00.
+Create a detailed itinerary for a {companion_type.lower()} outing in Seoul starting at {start_time}:00.
 
-IMPORTANT: You MUST cover ALL {len(selected_places)} locations below. Do not stop until you have described every single place.
-
-Context:
-- Companion Type: {companion_type}
-- Budget Level: {budget_level}
-- Start Time: {start_time}:00
-- Total Locations: {len(selected_places)}
-
-Selected Locations:
+Cover these {len(selected_places)} locations:
 {places_text}
 
-Requirements:
-- Cover ALL {len(selected_places)} locations completely
-- Write 3-4 detailed sentences for each location
-- Make it engaging and suitable for {companion_type.lower()} outings
-- Consider the budget level: {budget_level}
-- Only finish your story after covering ALL locations
-
-Output Format:
-1. [Place Name] - [Place Type]
-   [3-4 detailed sentences about the experience, atmosphere, and activities]
-
-2. [Place Name] - [Place Type]
-   [3-4 detailed sentences about the experience, atmosphere, and activities]
-
-Continue this format for all {len(selected_places)} locations. Do not stop early or truncate your response.
+Write 3-4 engaging sentences for each place, suitable for {companion_type.lower()} outings with {budget_level} budget.
 <|im_end|>
 
 <|im_start|>assistant
-I'll create a comprehensive itinerary for your {companion_type.lower()} outing in Seoul, covering all {len(selected_places)} locations:
-
 """
     
     return prompt

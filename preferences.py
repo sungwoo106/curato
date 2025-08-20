@@ -845,6 +845,9 @@ class Preferences:
                     self.progress_callback(75, "No places found")
                 return None
             
+            # Log the expected behavior
+            print(f"🔍 Expected: Phi should select 4-5 unique places from {len(self.best_places)} total candidates", file=sys.stderr)
+            
             if self.progress_callback:
                 self.progress_callback(65, "Building route planning prompt...")
             
@@ -958,25 +961,37 @@ class Preferences:
             line = line.strip()
             if line and line[0].isdigit() and '.' in line:
                 try:
-                    # Look for patterns like "1. Place Name - Reason"
+                    # Look for patterns like "1. Place Name - Reason" or "1. Place Name (Type)"
                     parts = line.split('.', 1)
                     if len(parts) == 2:
                         place_info = parts[1].strip()
+                        
+                        # Handle both formats: "Place Name - Reason" and "Place Name (Type)"
                         if ' - ' in place_info:
+                            # Format: "Place Name - Reason"
                             place_name, reason = place_info.split(' - ', 1)
                             place_name = place_name.strip()
-                            
-                            print(f"🔍 Line {line_num}: Extracted place name: '{place_name}'", file=sys.stderr)
-                            
-                            # Find the matching place in recommendations
-                            matching_place = self._find_matching_place(place_name, recommendations)
-                            if matching_place:
-                                selected_places.append(matching_place)
-                                print(f"✅ Found match: '{place_name}' -> '{matching_place.get('place_name')}'", file=sys.stderr)
-                            else:
-                                print(f"⚠️ No match found for: '{place_name}'", file=sys.stderr)
+                        elif ' (' in place_info and place_info.endswith(')'):
+                            # Format: "Place Name (Type)" - extract just the place name
+                            place_name = place_info.split(' (')[0].strip()
                         else:
-                            print(f"⚠️ Line {line_num}: No reason separator found in '{line}'", file=sys.stderr)
+                            # Try to extract place name from any other format
+                            place_name = place_info.strip()
+                        
+                        # Skip template placeholders
+                        if place_name in ['[Place Name]', 'Place Name', 'Unknown']:
+                            print(f"⚠️ Line {line_num}: Skipping template placeholder '{place_name}'", file=sys.stderr)
+                            continue
+                        
+                        print(f"🔍 Line {line_num}: Extracted place name: '{place_name}'", file=sys.stderr)
+                        
+                        # Find the matching place in recommendations
+                        matching_place = self._find_matching_place(place_name, recommendations)
+                        if matching_place:
+                            selected_places.append(matching_place)
+                            print(f"✅ Found match: '{place_name}' -> '{matching_place.get('place_name')}'", file=sys.stderr)
+                        else:
+                            print(f"⚠️ No match found for: '{place_name}'", file=sys.stderr)
                     else:
                         print(f"⚠️ Line {line_num}: Invalid format in '{line}'", file=sys.stderr)
                 except Exception as e:
@@ -987,7 +1002,14 @@ class Preferences:
         if selected_places:
             print(f"🔍 Selected place names: {[p.get('place_name', 'Unknown') for p in selected_places]}", file=sys.stderr)
         
-        return selected_places
+        # Deduplicate places to ensure only unique locations are selected
+        deduplicated_places = self._deduplicate_places(selected_places)
+        
+        print(f"🔍 After deduplication: {len(deduplicated_places)} unique places", file=sys.stderr)
+        if deduplicated_places:
+            print(f"🔍 Final unique place names: {[p.get('place_name', 'Unknown') for p in deduplicated_places]}", file=sys.stderr)
+        
+        return deduplicated_places
 
     def _find_matching_place(self, place_name: str, recommendations: List[Dict]) -> Optional[Dict]:
         """
@@ -1023,6 +1045,55 @@ class Preferences:
         
         print(f"⚠️ No match found for: '{place_name}'", file=sys.stderr)
         return None
+    
+    def _deduplicate_places(self, selected_places: List[Dict]) -> List[Dict]:
+        """
+        Remove duplicate places from the selected places list.
+        
+        Args:
+            selected_places (List[Dict]): List of selected places (may contain duplicates)
+            
+        Returns:
+            List[Dict]: List of unique places
+        """
+        if not selected_places:
+            return []
+        
+        # Use a dictionary to track unique places by place_name
+        unique_places = {}
+        duplicates_found = 0
+        
+        for place in selected_places:
+            place_name = place.get('place_name', 'Unknown')
+            
+            if place_name not in unique_places:
+                # First occurrence - add to unique places
+                unique_places[place_name] = place
+            else:
+                # Duplicate found - skip and count
+                duplicates_found += 1
+                print(f"⚠️ Duplicate place skipped: '{place_name}' (already selected)", file=sys.stderr)
+        
+        # Convert back to list
+        deduplicated_list = list(unique_places.values())
+        
+        print(f"🔍 Deduplication complete: {len(selected_places)} -> {len(deduplicated_list)} places", file=sys.stderr)
+        if duplicates_found > 0:
+            print(f"⚠️ Removed {duplicates_found} duplicate places", file=sys.stderr)
+        
+        # Ensure we don't exceed the intended number of places (4-5)
+        max_places = 5
+        if len(deduplicated_list) > max_places:
+            print(f"⚠️ Too many places ({len(deduplicated_list)}), limiting to {max_places}", file=sys.stderr)
+            deduplicated_list = deduplicated_list[:max_places]
+        
+        # Validate that we have the expected number of places
+        min_places = 4
+        if len(deduplicated_list) < min_places:
+            print(f"⚠️ Too few places ({len(deduplicated_list)}), expected {min_places}-{max_places}", file=sys.stderr)
+            # This might indicate the Phi model didn't follow instructions properly
+        
+        return deduplicated_list
 
     def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
         """
@@ -1213,6 +1284,12 @@ class Preferences:
         content = re.sub(r'\[END\]', '', content, flags=re.IGNORECASE)
         content = re.sub(r'<\|end\|>', '', content, flags=re.IGNORECASE)
         content = re.sub(r'<\|im_end\|>', '', content, flags=re.IGNORECASE)
+        content = re.sub(r'<\|im_start\|>', '', content, flags=re.IGNORECASE)
+        
+        # Remove technical markers
+        content = re.sub(r'Using libGenie\.so version \d+\.\d+\.\d+', '', content)
+        content = re.sub(r'\[PROMPT\]:.*?<\|im_end\|>', '', content, flags=re.DOTALL)
+        content = re.sub(r'\[PROMPT\]:.*?<\|end\|>', '', content, flags=re.DOTALL)
         
         # Split into lines for detailed cleaning
         lines = content.split('\n')
@@ -1281,10 +1358,15 @@ class Preferences:
             if not content_started:
                 # Look for patterns that indicate actual content has started
                 if (re.match(r'^[가-힣\w\s\-]+ - [가-힣\w\s]+$', line) or  # Korean/English place names
-                    re.match(r'^[A-Za-z\s\-]+ - [A-Za-z\s]+$', line)):  # English place names
+                    re.match(r'^[A-Za-z\s\-]+ - [A-Za-z\s]+$', line) or  # English place names
+                    re.match(r'^\d+\.\s*[가-힣\w\s\-]+ - [가-힣\w\s]+$', line) or  # Numbered Korean/English place names
+                    re.match(r'^\d+\.\s*[A-Za-z\s\-]+ - [A-Za-z\s]+$', line)):  # Numbered English place names
                     content_started = True
                 elif line.startswith('1.') or line.startswith('2.') or line.startswith('3.'):
                     # Skip numbered headers
+                    continue
+                elif line.startswith('I\'ll create a comprehensive itinerary'):
+                    # Skip the assistant's response header
                     continue
                 else:
                     # Skip until we find actual content
@@ -1303,6 +1385,66 @@ class Preferences:
         
         if cleaned_content:
             return cleaned_content
+        
+        # Fallback: try to extract content after the last prompt marker
+        fallback_content = self._extract_content_fallback(content)
+        if fallback_content:
+            return fallback_content
+        
+        return None
+    
+    def _extract_content_fallback(self, content: str) -> str:
+        """
+        Fallback method to extract content when main cleaning fails.
+        
+        Args:
+            content (str): Raw content to extract from
+            
+        Returns:
+            str: Extracted content or None
+        """
+        if not content:
+            return None
+        
+        # Look for content after the last prompt marker
+        prompt_markers = [
+            'Do not stop early or truncate your response.',
+            'Continue this format for all',
+            'I\'ll create a comprehensive itinerary',
+            'assistant'
+        ]
+        
+        # Find the last occurrence of any prompt marker
+        last_marker_pos = -1
+        for marker in prompt_markers:
+            pos = content.rfind(marker)
+            if pos > last_marker_pos:
+                last_marker_pos = pos
+        
+        if last_marker_pos > 0:
+            # Extract content after the last marker
+            content_after_marker = content[last_marker_pos + len(marker):].strip()
+            
+            # Clean up the extracted content
+            lines = content_after_marker.split('\n')
+            cleaned_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                # Skip empty lines and technical content
+                if (line and 
+                    not line.startswith('Using libGenie.so') and
+                    not line.startswith('[INFO]') and
+                    not line.startswith('[PROMPT]:') and
+                    not line.startswith('<|') and
+                    not line.startswith('Note:')):
+                    cleaned_lines.append(line)
+            
+            if cleaned_lines:
+                return '\n'.join(cleaned_lines).strip()
         
         return None
     
