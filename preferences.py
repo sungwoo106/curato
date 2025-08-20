@@ -22,6 +22,7 @@ import random
 import json
 import sys
 import time
+import re
 from typing import Tuple, List, Dict, Optional
 from collections import deque
 
@@ -196,6 +197,12 @@ class Preferences:
         
         # Initialize rate limiter for API calls
         self.rate_limiter = RateLimiter(max_calls=100, time_window=60)  # 100 calls per minute
+        
+        # Initialize reusable AI model instances for better performance
+        # These will be loaded once and reused across multiple requests
+        self._phi_runner = None
+        self._qwen_runner = None
+        self._models_initialized = False
 
     # =============================================================================
     # SETTER METHODS FOR UPDATING PREFERENCES
@@ -220,6 +227,115 @@ class Preferences:
     def set_max_distance_km(self, max_distance_km: int):
         """Update the maximum search distance in kilometers."""
         self.max_distance_km = max_distance_km
+
+    # =============================================================================
+    # AI MODEL INSTANCE MANAGEMENT
+    # =============================================================================
+    
+    def _initialize_models(self):
+        """
+        Initialize AI model instances lazily (only when first needed).
+        
+        This method creates reusable GenieRunner instances for Phi and Qwen models,
+        which eliminates the overhead of creating new instances for each request.
+        """
+        if not self._models_initialized:
+            try:
+                _logger.info("🚀 Initializing AI model instances for better performance...")
+                
+                # Create reusable model instances
+                self._phi_runner = GenieRunner(progress_callback=self.progress_callback)
+                self._qwen_runner = GenieRunner(progress_callback=self.progress_callback)
+                
+                # Validate the setup
+                if self._phi_runner.validate_setup() and self._qwen_runner.validate_setup():
+                    self._models_initialized = True
+                    _logger.success("✅ AI model instances initialized successfully")
+                    _logger.info(f"   Phi bundle: {self._phi_runner.phi_bundle_path}")
+                    _logger.info(f"   Qwen bundle: {self._qwen_runner.qwen_bundle_path}")
+                else:
+                    _logger.warning("⚠️ Some model validation failed, but continuing...")
+                    self._models_initialized = True  # Still mark as initialized to avoid repeated attempts
+                    
+            except Exception as e:
+                _logger.error(f"❌ Failed to initialize AI model instances: {e}")
+                # Fall back to creating new instances each time
+                self._models_initialized = True  # Prevent repeated initialization attempts
+                self._phi_runner = None
+                self._qwen_runner = None
+    
+    def _get_phi_runner(self):
+        """
+        Get the Phi model runner instance, initializing if necessary.
+        
+        Returns:
+            GenieRunner: Initialized Phi model runner
+        """
+        if not self._models_initialized:
+            self._initialize_models()
+        
+        if self._phi_runner is None:
+            # Fallback: create new instance if initialization failed
+            _logger.warning("⚠️ Using fallback Phi runner (new instance)")
+            return GenieRunner(progress_callback=self.progress_callback)
+        
+        return self._phi_runner
+    
+    def _get_qwen_runner(self):
+        """
+        Get the Qwen model runner instance, initializing if necessary.
+        
+        Returns:
+            GenieRunner: Initialized Qwen model runner
+        """
+        if not self._models_initialized:
+            self._initialize_models()
+        
+        if self._qwen_runner is None:
+            # Fallback: create new instance if initialization failed
+            _logger.warning("⚠️ Using fallback Qwen runner (new instance)")
+            return GenieRunner(progress_callback=self.progress_callback)
+        
+        return self._qwen_runner
+    
+    def pre_warm_models(self):
+        """
+        Pre-warm the AI models by initializing them early.
+        
+        This method can be called during app startup to eliminate
+        the first-time initialization delay when generating plans.
+        
+        Returns:
+            bool: True if models were successfully pre-warmed
+        """
+        try:
+            _logger.info("🔥 Pre-warming AI models for optimal performance...")
+            self._initialize_models()
+            
+            if self._models_initialized and self._phi_runner and self._qwen_runner:
+                _logger.success("✅ Models pre-warmed successfully")
+                return True
+            else:
+                _logger.warning("⚠️ Model pre-warming incomplete")
+                return False
+                
+        except Exception as e:
+            _logger.error(f"❌ Model pre-warming failed: {e}")
+            return False
+    
+    def get_performance_stats(self):
+        """
+        Get performance statistics for the AI model instances.
+        
+        Returns:
+            dict: Performance information including initialization status
+        """
+        return {
+            "models_initialized": self._models_initialized,
+            "phi_runner_available": self._phi_runner is not None,
+            "qwen_runner_available": self._qwen_runner is not None,
+            "optimization_enabled": self._models_initialized and self._phi_runner and self._qwen_runner
+        }
 
     # =============================================================================
     # PLACE TYPE SELECTION LOGIC
@@ -762,8 +878,8 @@ class Preferences:
             if self.progress_callback:
                 self.progress_callback(70, "Running Phi model for route planning...")
             
-            # Run the Phi model
-            runner = GenieRunner(progress_callback=self.progress_callback)
+            # Run the Phi model using reusable instance for better performance
+            runner = self._get_phi_runner()
             raw_output = runner.run_phi(prompt)
             
             # Validate Phi output
@@ -1033,12 +1149,12 @@ class Preferences:
             selected_locations,
         )
         
-        # Run the Qwen model to generate the itinerary
+        # Run the Qwen model to generate the itinerary using reusable instance for better performance
         try:
             if self.progress_callback:
                 self.progress_callback(80, "Running Qwen model for itinerary generation...")
             
-            runner = GenieRunner(progress_callback=self.progress_callback)
+            runner = self._get_qwen_runner()
             raw_output = runner.run_qwen(prompt)
             
             # Extract clean story text from the model output
@@ -1082,7 +1198,7 @@ class Preferences:
     
     def _clean_story_content(self, content: str) -> str:
         """
-        Clean story content by removing technical markers and debug information.
+        Clean story content by removing technical markers, prompt instructions, and unwanted tokens.
         
         Args:
             content (str): Raw content to clean
@@ -1093,56 +1209,161 @@ class Preferences:
         if not content:
             return None
         
-        # Remove technical markers and debug info
+        # Remove unwanted tokens and markers first
+        content = re.sub(r'\[END\]', '', content, flags=re.IGNORECASE)
+        content = re.sub(r'<\|end\|>', '', content, flags=re.IGNORECASE)
+        content = re.sub(r'<\|im_end\|>', '', content, flags=re.IGNORECASE)
+        
+        # Split into lines for detailed cleaning
         lines = content.split('\n')
         cleaned_lines = []
         
-        # Skip until we find the actual content
-        skip_until_content = True
+        # Track if we're in the actual content section
+        content_started = False
         
         for line in lines:
             line = line.strip()
+            if not line:
+                continue
             
             # Skip technical markers and debug info
-            if (line and 
-                not line.startswith('Using libGenie.so') and
-                not line.startswith('[INFO]') and
-                not line.startswith('[PROMPT]:') and
-                not line.startswith('<|system|>') and
-                not line.startswith('<|user|>') and
-                not line.startswith('<|assistant|>') and
-                not line.startswith('<|end|>') and
-                not line.startswith('<|im_start|>') and
-                not line.startswith('<|im_end|>') and
-                not line.startswith('Note:') and
-                not line.startswith('[KPIS]:') and
-                not line.startswith('Init Time:') and
-                not line.startswith('Prompt Processing Time:') and
-                not line.startswith('Token Generation Time:') and
-                not line.startswith('Prompt Processing Rate:') and
-                not line.startswith('Token Generation Rate:')):
-                
-                # Skip prompt instructions until we find actual content
-                if skip_until_content:
-                    if (line.startswith('You are a professional') or
-                        line.startswith('Create a comprehensive') or
-                        line.startswith('IMPORTANT:') or
-                        line.startswith('Context:') or
-                        line.startswith('Requirements:') or
-                        line.startswith('Output Format:') or
-                        line.startswith('I\'ll create') or
-                        line.startswith('I have now covered')):
-                        continue
-                    else:
-                        skip_until_content = False
-                
-                # Add the cleaned line
+            if (line.startswith('Using libGenie.so') or
+                line.startswith('[INFO]') or
+                line.startswith('[PROMPT]:') or
+                line.startswith('<|system|>') or
+                line.startswith('<|user|>') or
+                line.startswith('<|assistant|>') or
+                line.startswith('<|end|>') or
+                line.startswith('<|im_start|>') or
+                line.startswith('<|im_end|>') or
+                line.startswith('Note:') or
+                line.startswith('[KPIS]:') or
+                line.startswith('Init Time:') or
+                line.startswith('Prompt Processing Time:') or
+                line.startswith('Token Generation Time:') or
+                line.startswith('Prompt Processing Rate:') or
+                line.startswith('Token Generation Rate:')):
+                continue
+            
+            # Skip prompt instructions and formatting
+            if (line.startswith('You are a professional') or
+                line.startswith('Create a comprehensive') or
+                line.startswith('IMPORTANT:') or
+                line.startswith('Context:') or
+                line.startswith('Requirements:') or
+                line.startswith('Output Format:') or
+                line.startswith('I\'ll create') or
+                line.startswith('I have now covered') or
+                line.startswith('- Companion Type:') or
+                line.startswith('- Budget Level:') or
+                line.startswith('- Start Time:') or
+                line.startswith('- Total Locations:') or
+                line.startswith('- Cover ALL') or
+                line.startswith('- Write 3-4') or
+                line.startswith('- Make it engaging') or
+                line.startswith('- Consider the budget') or
+                line.startswith('- Only finish') or
+                line.startswith('Do not stop early') or
+                line.startswith('[Place Name]') or
+                line.startswith('[3-4 detailed sentences') or
+                line.startswith('Do not stop early or truncate')):
+                continue
+            
+            # Skip numbered placeholders
+            if re.match(r'^\d+\.$', line):
+                continue
+            
+            # Skip empty numbered lines
+            if re.match(r'^\d+\.\s*$', line):
+                continue
+            
+            # Check if we've found actual content (place names with descriptions)
+            if not content_started:
+                # Look for patterns that indicate actual content has started
+                if (re.match(r'^[가-힣\w\s\-]+ - [가-힣\w\s]+$', line) or  # Korean/English place names
+                    re.match(r'^[A-Za-z\s\-]+ - [A-Za-z\s]+$', line)):  # English place names
+                    content_started = True
+                elif line.startswith('1.') or line.startswith('2.') or line.startswith('3.'):
+                    # Skip numbered headers
+                    continue
+                else:
+                    # Skip until we find actual content
+                    continue
+            
+            # If we're in content section, add the line
+            if content_started:
                 cleaned_lines.append(line)
         
+        # Join the cleaned lines
         cleaned_content = '\n'.join(cleaned_lines).strip()
+        
+        # Final cleanup: remove any remaining unwanted patterns
+        cleaned_content = re.sub(r'\n\s*\n\s*\n+', '\n\n', cleaned_content)  # Remove excessive newlines
+        cleaned_content = re.sub(r'^\s*\d+\.\s*', '', cleaned_content, flags=re.MULTILINE)  # Remove leading numbers
         
         if cleaned_content:
             return cleaned_content
         
         return None
+    
+    def get_cleaning_stats(self, raw_output: str) -> dict:
+        """
+        Get statistics about what was cleaned from the output.
+        
+        Args:
+            raw_output (str): The raw output from the model
+            
+        Returns:
+            dict: Statistics about what was cleaned
+        """
+        if not raw_output:
+            return {"error": "No output provided"}
+        
+        stats = {
+            "total_lines": len(raw_output.split('\n')),
+            "cleaned_output": None,
+            "removed_lines": 0,
+            "kept_lines": 0,
+            "removed_patterns": []
+        }
+        
+        # Get cleaned output
+        cleaned = self._clean_story_content(raw_output)
+        stats["cleaned_output"] = cleaned
+        
+        if cleaned:
+            stats["kept_lines"] = len(cleaned.split('\n'))
+            stats["removed_lines"] = stats["total_lines"] - stats["kept_lines"]
+        
+        # Analyze what was removed
+        lines = raw_output.split('\n')
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Check for removed patterns
+            if (line.startswith('- Companion Type:') or
+                line.startswith('- Budget Level:') or
+                line.startswith('- Start Time:') or
+                line.startswith('- Total Locations:') or
+                line.startswith('- Cover ALL') or
+                line.startswith('- Write 3-4') or
+                line.startswith('- Make it engaging') or
+                line.startswith('- Consider the budget') or
+                line.startswith('- Only finish') or
+                line.startswith('Do not stop early') or
+                line.startswith('[Place Name]') or
+                line.startswith('[3-4 detailed sentences') or
+                line.startswith('Do not stop early or truncate') or
+                line.startswith('Using libGenie.so') or
+                line.startswith('[INFO]') or
+                line.startswith('[PROMPT]:') or
+                line.startswith('[KPIS]:') or
+                line.startswith('Init Time:') or
+                line.startswith('Token Generation Time:') or
+                '[END]' in line):
+                stats["removed_patterns"].append(line[:50] + "..." if len(line) > 50 else line)
+        
+        return stats
     
