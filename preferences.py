@@ -1280,6 +1280,9 @@ class Preferences:
         if not content:
             return None
         
+        print(f"🔍 Cleaning story content: {len(content)} characters", file=sys.stderr)
+        print(f"🔍 First 200 chars: {content[:200]}...", file=sys.stderr)
+        
         # Remove unwanted tokens first
         content = re.sub(r'\[END\]', '', content, flags=re.IGNORECASE)
         content = re.sub(r'<\|end\|>', '', content, flags=re.IGNORECASE)
@@ -1288,8 +1291,11 @@ class Preferences:
         # Extract content after <|im_start|> assistant marker
         assistant_content = self._extract_assistant_response(content)
         if assistant_content:
+            print(f"✅ Successfully extracted assistant content: {len(assistant_content)} characters", file=sys.stderr)
+            print(f"✅ First 200 chars of extracted content: {assistant_content[:200]}...", file=sys.stderr)
             return assistant_content
         
+        print(f"⚠️ Failed to extract assistant content, returning cleaned original", file=sys.stderr)
         # If no assistant marker found, return the cleaned content as fallback
         return content.strip()
     
@@ -1297,20 +1303,46 @@ class Preferences:
     
     def _extract_assistant_response(self, content: str) -> str:
         """
-        Extract content between <|im_start|> assistant and [END] markers.
+        Extract content after <|im_start|> assistant marker, stopping at technical markers.
         
         Args:
             content (str): Raw content from the model
             
         Returns:
-            str: Extracted content between markers or None if not found
+            str: Extracted content after assistant marker or None if not found
         """
-        # Look for content between <|im_start|> assistant and [END]
-        pattern = r'<\|im_start\|> assistant\s*(.*?)(?=\[END\]|$)'
+        # Look for content after <|im_start|> assistant marker
+        pattern = r'<\|im_start\|> assistant\s*(.*)'
         match = re.search(pattern, content, re.DOTALL)
         if match:
             extracted_content = match.group(1).strip()
-            print(f"✅ Extracted content between <|im_start|> assistant and [END]: {len(extracted_content)} characters", file=sys.stderr)
+            
+            # Clean up the extracted content by removing technical markers
+            # Stop at common technical markers that indicate the end of useful content
+            technical_markers = [
+                'Note: The KPIS stdout below is deprecated',
+                '[KPIS]:',
+                'Init Time:',
+                'Token Generation Time:',
+                'Prompt Processing Time:',
+                'Token Generation Rate:',
+                'Prompt Processing Rate:'
+            ]
+            
+            # Find the earliest technical marker
+            earliest_marker_pos = len(extracted_content)
+            for marker in technical_markers:
+                pos = extracted_content.find(marker)
+                if pos != -1 and pos < earliest_marker_pos:
+                    earliest_marker_pos = pos
+            
+            # Cut off at the first technical marker
+            if earliest_marker_pos < len(extracted_content):
+                extracted_content = extracted_content[:earliest_marker_pos].strip()
+                print(f"✅ Extracted content after <|im_start|> assistant (stopped at technical marker): {len(extracted_content)} characters", file=sys.stderr)
+            else:
+                print(f"✅ Extracted content after <|im_start|> assistant (no technical markers found): {len(extracted_content)} characters", file=sys.stderr)
+            
             return extracted_content
         else:
             print(f"⚠️ <|im_start|> assistant marker not found in content", file=sys.stderr)
