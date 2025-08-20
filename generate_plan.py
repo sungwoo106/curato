@@ -10,9 +10,16 @@ for launching from C#.
 Key Features:
 - Processes location queries and finds coordinates using Kakao Map API
 - Generates personalized itineraries based on companion type, budget, and preferences
-- Uses real AI models (Phi for route planning, Qwen for emotional storytelling)
+- Uses real AI models (Phi for random place selection, Qwen for comprehensive storytelling)
 - Outputs results in JSON format for easy parsing by the C# frontend
 - Supports streaming progress updates for real-time UI feedback
+
+Simplified Algorithm:
+- Collects 10-15 places from each place type within walking distance
+- Reduces to 20 candidates ensuring variety of place types
+- Phi randomly selects 4-5 places from the candidates
+- Qwen creates comprehensive itinerary covering all selected places
+- No complex clustering or geographic validation
 """
 
 import json
@@ -194,16 +201,21 @@ def main() -> None:
         # AI-POWERED ITINERARY GENERATION
         # =============================================================================
         route_plan_json = None  # Initialize route plan variable
-        
+
         try:
             # Build the Preferences instance and invoke the main workflow.
             # This creates a personalized planner based on user preferences
             send_progress_update(45, "Building personalized planner...")
+            
+            # Determine the location name to use in prompts
+            location_name = location_query if location_query else "Seoul"  # Change fallback to generic "Seoul" instead of hardcoded "Hongdae Station"
+            
             planner = Preferences(
                 companion_type=companion_type,
                 budget=budget,
                 starting_time=starting_time,
                 start_location=start_location,
+                location_name=location_name,  # Pass the location name for context
             )
             
             # Select appropriate place types based on companion type and user preferences
@@ -211,7 +223,7 @@ def main() -> None:
             send_progress_update(55, "Selecting place types...")
 
             # Generate the route plan using Phi model
-            send_progress_update(65, "Generating route plan with Phi model...")
+            send_progress_update(65, "Collecting place candidates and generating route plan...")
             route_plan_json = planner.run_route_planner()
             
             if route_plan_json:
@@ -221,7 +233,7 @@ def main() -> None:
                 send_progress_update(75, "Route plan generation failed")
                 print("❌ Route plan generation failed", file=sys.stderr)
 
-            # Generate the emotional itinerary text using the Qwen model
+            # Generate the comprehensive itinerary text using the Qwen model
             send_progress_update(80, "Generating comprehensive itinerary with Qwen model...")
             print("Generating AI-powered itinerary...", file=sys.stderr)
             itinerary = planner.run_qwen_itinerary(route_plan_json)

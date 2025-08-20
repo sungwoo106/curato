@@ -79,7 +79,11 @@ def fetch_and_save(path: str = "mock_kakao_output.json") -> None:
         print(f"Location fetch failed: {exc}. Using default coordinates.")
         start_location = LOCATION
 
-    prefs = Preferences(companion_type="Couple", start_location=start_location)
+    prefs = Preferences(
+        companion_type="Couple", 
+        start_location=start_location,
+        location_name=LOCATION_QUERY  # Add location name for context
+    )
     prefs.select_place_types(CATEGORIES)
 
     results: Dict[str, Any] = {}

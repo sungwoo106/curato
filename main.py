@@ -31,8 +31,9 @@ import json
 # Get user input for starting location
 # Users can enter any location name (e.g., "홍대입구", "Gangnam Station")
 # The system will search for coordinates using the Kakao Map API
-start_location = input("원하는 장소의 위치를 입력하세요 (기본값: 홍대입구): ")
-start_location = get_location_coordinates(start_location) if start_location else LOCATION
+location_input = input("원하는 장소의 위치를 입력하세요 (기본값: 홍대입구): ")
+location_input = location_input if location_input else "홍대입구"
+start_location = get_location_coordinates(location_input) if location_input else LOCATION
 
 # =============================================================================
 # COMPANION TYPE SELECTION
@@ -133,7 +134,8 @@ planner = Preferences(
     companion_type=companion_type,      # Selected companion type
     budget=budget,                      # Selected budget level
     starting_time=starting_time,        # Selected starting time
-    start_location=start_location       # Resolved location coordinates
+    start_location=start_location,       # Resolved location coordinates
+    location_name=location_input        # User's input location name
 )
 
 # Select appropriate place types based on companion type and user preferences

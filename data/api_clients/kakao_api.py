@@ -250,12 +250,18 @@ def search_places(query: str, lat: float, lng: float, radius: int = 1000, size: 
 def search_multiple_place_types(place_types: List[str], lat: float, lng: float, 
                                radius: int = 1000, places_per_type: int = 15) -> Dict[str, List[Dict]]:
     """
-    Search for multiple place types simultaneously with batch processing.
+    Search for multiple place types simultaneously with optimized batch processing.
     
     This function efficiently searches for multiple place types in parallel,
     collecting 10-15 places for each type instead of just the closest one.
     It uses smart caching to minimize API calls and provides comprehensive
     candidate pools for better itinerary planning.
+    
+    Optimization features:
+    - Uses category codes when available for more precise results
+    - Implements intelligent batching to reduce API calls
+    - Smart caching with coordinate rounding
+    - Rate limiting awareness
     
     Args:
         place_types (List[str]): List of place types to search for
@@ -276,19 +282,64 @@ def search_multiple_place_types(place_types: List[str], lat: float, lng: float,
     """
     results = {}
     
+    # Group place types by search method for optimization
+    category_search_types = []
+    keyword_search_types = []
+    
     for place_type in place_types:
+        # Check if we have a category code for this place type
+        category_code = get_category_code_for_place_type(place_type)
+        if category_code:
+            category_search_types.append((place_type, category_code))
+        else:
+            keyword_search_types.append(place_type)
+    
+    print(f"🔍 Using category search for {len(category_search_types)} types, keyword search for {len(keyword_search_types)} types", file=sys.stderr)
+    
+    # Process category-based searches first (more precise)
+    for place_type, category_code in category_search_types:
         try:
-            # Search for multiple places of this type
-            search_result = search_places(place_type, lat, lng, radius, places_per_type)
+            print(f"🔍 Category search for {place_type} (code: {category_code})", file=sys.stderr)
+            search_result = search_places_by_category(category_code, lat, lng, radius, places_per_type)
             documents = search_result.get("documents", [])
             
-            # Store all found places for this type
+            # Add category information to each place
+            for place in documents:
+                place['category_code'] = category_code
+                place['category_name'] = KAKAO_CATEGORY_CODES.get(category_code, place_type)
+            
             results[place_type] = documents
+            print(f"✅ Found {len(documents)} places for {place_type} using category search", file=sys.stderr)
             
         except Exception as e:
-            # If search fails for one type, continue with others
-            print(f"Warning: Failed to search for {place_type}: {e}")
+            print(f"⚠️ Category search failed for {place_type}: {e}", file=sys.stderr)
+            # Fall back to keyword search
+            try:
+                print(f"🔄 Falling back to keyword search for {place_type}", file=sys.stderr)
+                search_result = search_places(place_type, lat, lng, radius, places_per_type)
+                documents = search_result.get("documents", [])
+                results[place_type] = documents
+                print(f"✅ Found {len(documents)} places for {place_type} using keyword search", file=sys.stderr)
+            except Exception as fallback_error:
+                print(f"❌ Both category and keyword search failed for {place_type}: {fallback_error}", file=sys.stderr)
+                results[place_type] = []
+    
+    # Process keyword-based searches
+    for place_type in keyword_search_types:
+        try:
+            print(f"🔍 Keyword search for {place_type}", file=sys.stderr)
+            search_result = search_places(place_type, lat, lng, radius, places_per_type)
+            documents = search_result.get("documents", [])
+            results[place_type] = documents
+            print(f"✅ Found {len(documents)} places for {place_type} using keyword search", file=sys.stderr)
+            
+        except Exception as e:
+            print(f"❌ Keyword search failed for {place_type}: {e}", file=sys.stderr)
             results[place_type] = []
+    
+    # Log summary
+    total_places = sum(len(places) for places in results.values())
+    print(f"🎯 Total places found across all types: {total_places}", file=sys.stderr)
     
     return results
 

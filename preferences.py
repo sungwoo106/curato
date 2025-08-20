@@ -16,13 +16,87 @@ AI models and external services.
 
 from core.prompts import build_phi_location_prompt, build_qwen_itinerary_prompt
 from models.genie_runner import GenieRunner
-from data.api_clients.kakao_api import format_kakao_places_for_prompt, get_progressive_place_selection_enhanced
+from data.api_clients.kakao_api import format_kakao_places_for_prompt, search_multiple_place_types
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, MAX_DISTANCE_KM, STARTING_TIME
 import random
 import json
 import sys
-from typing import Tuple, List, Dict
-import re
+import time
+from typing import Tuple, List, Dict, Optional
+from collections import deque
+
+class RateLimiter:
+    """
+    Rate limiter to prevent excessive API calls and respect Kakao API rate limits.
+    
+    Kakao API limits:
+    - Daily: 100,000 requests
+    - Monthly: 3,000,000 requests
+    - Recommended: Max 100 requests per minute
+    """
+    
+    def __init__(self, max_calls: int = 100, time_window: int = 60):
+        """
+        Initialize rate limiter.
+        
+        Args:
+            max_calls (int): Maximum calls allowed in the time window
+            time_window (int): Time window in seconds
+        """
+        self.max_calls = max_calls
+        self.time_window = time_window
+        self.calls = deque()
+    
+    def can_call(self) -> bool:
+        """
+        Check if an API call can be made.
+        
+        Returns:
+            bool: True if call is allowed, False otherwise
+        """
+        now = time.time()
+        
+        # Remove old calls outside the time window
+        while self.calls and now - self.calls[0] > self.time_window:
+            self.calls.popleft()
+        
+        # Check if we can make another call
+        if len(self.calls) < self.max_calls:
+            self.calls.append(now)
+            return True
+        
+        return False
+    
+    def wait_if_needed(self):
+        """
+        Wait if necessary to respect rate limits.
+        """
+        if not self.can_call():
+            # Calculate how long to wait
+            oldest_call = self.calls[0]
+            wait_time = self.time_window - (time.time() - oldest_call)
+            if wait_time > 0:
+                print(f"⏳ Rate limit reached, waiting {wait_time:.1f} seconds...", file=sys.stderr)
+                time.sleep(wait_time)
+    
+    def get_status(self) -> dict:
+        """
+        Get current rate limiter status.
+        
+        Returns:
+            dict: Status information
+        """
+        now = time.time()
+        # Remove old calls
+        while self.calls and now - self.calls[0] > self.time_window:
+            self.calls.popleft()
+        
+        return {
+            "current_calls": len(self.calls),
+            "max_calls": self.max_calls,
+            "time_window": self.time_window,
+            "calls_remaining": max(0, self.max_calls - len(self.calls))
+        }
 
 class Preferences:
     """
@@ -40,6 +114,7 @@ class Preferences:
                  starting_time=STARTING_TIME,
                  max_distance_km=MAX_DISTANCE_KM,
                  start_location=LOCATION,
+                 location_name="Seoul",
                  progress_callback=None):
         """
         Initialize a new Preferences instance with user preferences.
@@ -50,6 +125,7 @@ class Preferences:
             starting_time (int): Starting time in 24-hour format (0-23)
             max_distance_km (int): Maximum search radius in kilometers
             start_location (tuple): Starting coordinates (latitude, longitude)
+            location_name (str): Human-readable location name (e.g., "Seongsu", "Gangnam", "Seoul")
             progress_callback (callable): Optional callback for progress updates
         """
         # Core user preferences
@@ -58,12 +134,16 @@ class Preferences:
         self.starting_time = starting_time
         self.max_distance_km = max_distance_km
         self.start_location = start_location
+        self.location_name = location_name
         self.progress_callback = progress_callback
         
         # Generated data and recommendations
         self.selected_types = []        # Place types selected for this itinerary
         self.best_places = {}           # Dictionary of place type -> list of places
         self.recommendations_json = []  # Formatted recommendations for AI prompts
+        
+        # Initialize rate limiter for API calls
+        self.rate_limiter = RateLimiter(max_calls=100, time_window=60)  # 100 calls per minute
 
     # =============================================================================
     # SETTER METHODS FOR UPDATING PREFERENCES
@@ -116,41 +196,29 @@ class Preferences:
         # Get companion-specific place type recommendations
         companion_places = COMPANION_PLACE_TYPES.get(self.companion_type.lower(), [])
         
-        # Expand to use more place types for better variety
-        # This creates a richer pool for Phi to choose from
-        max_companion_types = 3  # Reduced from 4 to 3 to prioritize user types
+        # Add companion types for variety
+        max_companion_types = 3
         if len(companion_places) > 0:
-            # Select companion types systematically for consistent variety
-            # Instead of random selection, use a structured approach
             available_companion_types = [t for t in companion_places if t not in self.selected_types]
             if available_companion_types:
-                # Take the first 3 types to ensure consistent selection and prioritize user types
                 num_to_add = min(max_companion_types, len(available_companion_types))
-                additional_types = available_companion_types[:num_to_add]  # Remove random.sample for consistency
+                additional_types = available_companion_types[:num_to_add]
                 self.selected_types.extend(additional_types)
                 print(f"🔍 Added {len(additional_types)} companion-specific types: {additional_types}", file=sys.stderr)
         
-        # Add additional variety types for rich experience
-        # These provide more options for Phi to create diverse itineraries
+        # Add variety types for rich experience
         from constants import VARIETY_PLACE_TYPES
         variety_types = VARIETY_PLACE_TYPES
         
-        # Add variety types systematically for consistent results
-        # Using structured selection ([:num_variety]) instead of random.sample() ensures:
-        # 1. Consistent results across multiple runs
-        # 2. Predictable variety in place types
-        # 3. Better debugging and reproducibility
         available_variety = [t for t in variety_types if t not in self.selected_types]
         if available_variety:
-            num_variety = min(2, len(available_variety))  # Reduced from 3 to 2 to prioritize user types
-            # Use systematic selection instead of random for consistency
-            selected_variety = available_variety[:num_variety]  # Remove random.sample for consistency
+            num_variety = min(2, len(available_variety))
+            selected_variety = available_variety[:num_variety]
             self.selected_types.extend(selected_variety)
             print(f"🔍 Added {len(selected_variety)} variety types: {selected_variety}", file=sys.stderr)
         
         # Ensure we have at least 6 types for rich variety
         if len(self.selected_types) < 6:
-            # Add default types if we don't have enough
             from constants import DEFAULT_PLACE_TYPES
             for default_type in DEFAULT_PLACE_TYPES:
                 if default_type not in self.selected_types and len(self.selected_types) < 6:
@@ -158,66 +226,418 @@ class Preferences:
             print(f"🔍 Added default types to ensure minimum variety: {self.selected_types}", file=sys.stderr)
         
         # Limit total types to prevent overwhelming the search
-        if len(self.selected_types) > 10:  # Increased from 8 to 10 to allow more variety
-            # Keep user-selected types and limit companion/variety types
+        if len(self.selected_types) > 10:
             user_types = [t for t in self.selected_types if t in (user_selected_types or [])]
             other_types = [t for t in self.selected_types if t not in user_types]
-            # Keep all user types + max 7 other types (increased from 5)
             self.selected_types = user_types + other_types[:7]
             print(f"🔍 Limited total types to prevent search overload: {self.selected_types}", file=sys.stderr)
         
         print(f"🔍 Final selected place types: {self.selected_types} (Total: {len(self.selected_types)})", file=sys.stderr)
 
     # =============================================================================
-    # PLACE RECOMMENDATION COLLECTION
+    # SIMPLIFIED PLACE RECOMMENDATION COLLECTION
     # =============================================================================
     
     def collect_best_place(self):
         """
-        Collect geographically coherent place recommendations using smart clustering.
+        Collect place recommendations using an optimized approach with batch API calls.
         
-        This method uses progressive place selection to ensure consecutive
-        locations are close to each other while minimizing API calls and
-        providing manageable options for the AI model.
-        
-        Key benefits:
-        - Reduces places from 60-75 to 15-25 (manageable for Phi)
-        - Ensures geographic proximity between consecutive locations
-        - Creates logical, walkable routes
-        - Minimizes token usage in AI prompts
+        This method:
+        1. Makes batch API calls to reduce the number of requests
+        2. Gets 10-15 places from each place type within walking distance
+        3. Combines all places into a single list
+        4. Reduces to 20 candidates ensuring variety of place types
+        5. Implements smart caching to minimize API calls
         
         Returns:
             dict: Dictionary where keys are place types and values are lists of places
         """
         print(f"🔍 Collecting places for types: {self.selected_types}", file=sys.stderr)
         
-        # Use progressive place selection with smart clustering
-        # This ensures geographically close locations while providing variety for Phi
-        optimal_places = get_progressive_place_selection_enhanced(
-            self.selected_types,                       # List of place types to search for
-            self.start_location,                       # Starting coordinates
-            int(self.max_distance_km * 1000),          # Distance in meters
-            places_per_type=25,                        # Increased from 20 to 25 per type for maximum variety
-            max_cluster_distance=800,                  # Increased from 600m to 800m for better clustering
-            target_places=40                           # Increased from 30 to 40 for Phi to choose from
-        )
+        # Check if we have cached results for this location and place types
+        cache_key = self._generate_cache_key()
+        cached_results = self._get_cached_results(cache_key)
         
-        print(f"🔍 Found {len(optimal_places)} optimal places", file=sys.stderr)
+        if cached_results:
+            print(f"✅ Using cached results for location {self.location_name}", file=sys.stderr)
+            self.best_places = cached_results
+            return
         
-        # Group the selected places by type for compatibility with existing code
-        self.best_places = {}
-        for place in optimal_places:
-            place_type = place.get('place_type', 'Unknown')
-            if place_type not in self.best_places:
-                self.best_places[place_type] = []
-            self.best_places[place_type].append(place)
+        # Make batch API calls instead of individual calls for each type
+        all_places = []
         
-        print(f"🔍 Grouped places by type: {list(self.best_places.keys())}", file=sys.stderr)
+        # Group place types into batches to minimize API calls
+        # Kakao API can handle multiple place types in a single request
+        batch_size = 3  # Process 3 place types per batch
+        place_type_batches = [self.selected_types[i:i + batch_size] 
+                            for i in range(0, len(self.selected_types), batch_size)]
+        
+        print(f"🔍 Processing {len(self.selected_types)} place types in {len(place_type_batches)} batches", file=sys.stderr)
+        
+        for batch_idx, place_types_batch in enumerate(place_type_batches):
+            try:
+                print(f"🔍 Processing batch {batch_idx + 1}: {place_types_batch}", file=sys.stderr)
+                
+                # Check rate limits before making API call
+                self.rate_limiter.wait_if_needed()
+                
+                # Make a single API call for multiple place types
+                search_result = search_multiple_place_types(
+                    place_types_batch,  # Pass multiple types at once
+                    self.start_location[0], 
+                    self.start_location[1], 
+                    int(self.max_distance_km * 1000), 
+                    15  # Get 15 places per type
+                )
+                
+                # Log rate limiter status
+                status = self.rate_limiter.get_status()
+                print(f"📊 Rate limiter status: {status['current_calls']}/{status['max_calls']} calls in {status['time_window']}s window", file=sys.stderr)
+                
+                # Process results for each place type in the batch
+                for place_type in place_types_batch:
+                    if place_type in search_result:
+                        places = search_result[place_type]
+                        # Add place type information to each place
+                        for place in places:
+                            place['place_type'] = place_type
+                        
+                        all_places.extend(places)
+                        print(f"🔍 Found {len(places)} places for {place_type}", file=sys.stderr)
+                        
+                        # Debug: show first place structure
+                        if places:
+                            print(f"🔍 Sample place structure: {list(places[0].keys())}", file=sys.stderr)
+                    else:
+                        print(f"⚠️ No results found for {place_type}", file=sys.stderr)
+                
+                # Add small delay between batches to respect API rate limits
+                if batch_idx < len(place_type_batches) - 1:
+                    time.sleep(0.2)  # 200ms delay between batches
+                
+            except Exception as e:
+                print(f"Warning: Failed to search for batch {place_types_batch}: {e}", file=sys.stderr)
+                continue
+        
+        if not all_places:
+            print("❌ No places found for any type", file=sys.stderr)
+            return
+        
+        print(f"🔍 Total places found: {len(all_places)}", file=sys.stderr)
+        
+        # Reduce to 20 candidates ensuring variety
+        self.best_places = self._reduce_to_20_candidates(all_places)
+        
+        print(f"🔍 Reduced to {len(self.best_places)} place types with variety", file=sys.stderr)
         for place_type, places in self.best_places.items():
             print(f"🔍 {place_type}: {len(places)} places", file=sys.stderr)
-            # Show first few places of each type for debugging
-            for i, place in enumerate(places[:3]):
-                print(f"🔍   {i+1}. {place.get('place_name', 'Unknown')} - {place.get('category_code', 'No code')}", file=sys.stderr)
+        
+        # Cache the results for future use
+        self._cache_results(cache_key, self.best_places)
+
+    def _generate_cache_key(self) -> str:
+        """
+        Generate a cache key based on location, place types, and search parameters.
+        
+        Returns:
+            str: Unique cache key for this search
+        """
+        # Sort place types for consistent cache keys
+        sorted_types = sorted(self.selected_types)
+        types_str = "_".join(sorted_types)
+        
+        # Round coordinates to 2 decimal places (~1km precision)
+        # This provides better cache hit rates while maintaining reasonable accuracy
+        rounded_lat = round(self.start_location[0], 2)
+        rounded_lng = round(self.start_location[1], 2)
+        
+        # Include search radius in cache key
+        radius_m = int(self.max_distance_km * 1000)
+        
+        cache_key = f"{self.location_name}_{types_str}_{rounded_lat}_{rounded_lng}_{radius_m}"
+        return cache_key
+
+    def _get_cached_results(self, cache_key: str) -> Dict[str, List[Dict]]:
+        """
+        Retrieve cached results if available and not expired.
+        
+        Args:
+            cache_key (str): Cache key for the search
+            
+        Returns:
+            Dict[str, List[Dict]]: Cached results or None if not found/expired
+        """
+        try:
+            # Simple in-memory cache with TTL
+            if not hasattr(self, '_cache'):
+                self._cache = {}
+                self._cache_timestamps = {}
+            
+            # Check if cache entry exists and is not expired
+            if cache_key in self._cache:
+                timestamp = self._cache_timestamps.get(cache_key, 0)
+                current_time = time.time()
+                cache_ttl = 3600  # 1 hour cache TTL
+                
+                if current_time - timestamp < cache_ttl:
+                    print(f"✅ Cache hit for key: {cache_key[:50]}...", file=sys.stderr)
+                    return self._cache[cache_key]
+                else:
+                    # Cache expired, remove it
+                    print(f"🔄 Cache expired for key: {cache_key[:50]}...", file=sys.stderr)
+                    del self._cache[cache_key]
+                    del self._cache_timestamps[cache_key]
+            
+            return None
+            
+        except Exception as e:
+            print(f"⚠️ Cache retrieval failed: {e}", file=sys.stderr)
+            return None
+
+    def _cache_results(self, cache_key: str, results: Dict[str, List[Dict]]):
+        """
+        Cache the search results for future use.
+        
+        Args:
+            cache_key (str): Cache key for the search
+            results (Dict[str, List[Dict]]): Results to cache
+        """
+        try:
+            if not hasattr(self, '_cache'):
+                self._cache = {}
+                self._cache_timestamps = {}
+            
+            # Store results and timestamp
+            self._cache[cache_key] = results
+            self._cache_timestamps[cache_key] = time.time()
+            
+            print(f"💾 Cached results for key: {cache_key[:50]}...", file=sys.stderr)
+            
+            # Implement cache size limit to prevent memory issues
+            max_cache_size = 50
+            if len(self._cache) > max_cache_size:
+                self._cleanup_cache()
+                
+        except Exception as e:
+            print(f"⚠️ Caching failed: {e}", file=sys.stderr)
+
+    def _cleanup_cache(self):
+        """
+        Clean up old cache entries to prevent memory issues.
+        """
+        try:
+            if not hasattr(self, '_cache') or not hasattr(self, '_cache_timestamps'):
+                return
+            
+            # Remove oldest entries
+            current_time = time.time()
+            cache_ttl = 3600  # 1 hour
+            
+            expired_keys = []
+            for key, timestamp in self._cache_timestamps.items():
+                if current_time - timestamp > cache_ttl:
+                    expired_keys.append(key)
+            
+            # Remove expired entries
+            for key in expired_keys:
+                del self._cache[key]
+                del self._cache_timestamps[key]
+            
+            # If still too many entries, remove oldest ones
+            if len(self._cache) > 50:
+                # Sort by timestamp and keep only the 50 most recent
+                sorted_keys = sorted(self._cache_timestamps.items(), key=lambda x: x[1], reverse=True)
+                keys_to_keep = [key for key, _ in sorted_keys[:50]]
+                
+                keys_to_remove = [key for key in self._cache.keys() if key not in keys_to_keep]
+                for key in keys_to_remove:
+                    del self._cache[key]
+                    del self._cache_timestamps[key]
+                
+                print(f"🧹 Cleaned up cache, removed {len(keys_to_remove)} old entries", file=sys.stderr)
+                
+        except Exception as e:
+            print(f"⚠️ Cache cleanup failed: {e}", file=sys.stderr)
+
+    def get_performance_stats(self) -> dict:
+        """
+        Get comprehensive performance statistics for monitoring and optimization.
+        
+        Returns:
+            dict: Performance statistics including cache hits, API calls, and rate limiting
+        """
+        stats = {
+            "cache_stats": {},
+            "rate_limiter_stats": {},
+            "api_call_efficiency": {}
+        }
+        
+        # Cache statistics
+        if hasattr(self, '_cache'):
+            stats["cache_stats"] = {
+                "total_cached_entries": len(self._cache),
+                "cache_size_limit": 50,
+                "cache_utilization_percent": (len(self._cache) / 50) * 100
+            }
+            
+            # Calculate cache hit rate if we have timestamps
+            if hasattr(self, '_cache_timestamps'):
+                current_time = time.time()
+                expired_entries = sum(1 for ts in self._cache_timestamps.values() 
+                                   if current_time - ts > 3600)
+                stats["cache_stats"]["expired_entries"] = expired_entries
+                stats["cache_stats"]["active_entries"] = len(self._cache) - expired_entries
+        else:
+            stats["cache_stats"] = {"status": "Cache not initialized"}
+        
+        # Rate limiter statistics
+        if hasattr(self, 'rate_limiter'):
+            rate_stats = self.rate_limiter.get_status()
+            stats["rate_limiter_stats"] = {
+                "current_calls": rate_stats["current_calls"],
+                "max_calls": rate_stats["max_calls"],
+                "calls_remaining": rate_stats["calls_remaining"],
+                "utilization_percent": (rate_stats["current_calls"] / rate_stats["max_calls"]) * 100,
+                "time_window_seconds": rate_stats["time_window"]
+            }
+        else:
+            stats["rate_limiter_stats"] = {"status": "Rate limiter not initialized"}
+        
+        # API call efficiency
+        if hasattr(self, 'selected_types'):
+            total_place_types = len(self.selected_types)
+            batch_size = 3
+            total_batches = (total_place_types + batch_size - 1) // batch_size
+            
+            stats["api_call_efficiency"] = {
+                "total_place_types": total_place_types,
+                "batch_size": batch_size,
+                "total_batches": total_batches,
+                "api_calls_per_itinerary": total_batches,
+                "improvement_from_individual": f"{((total_place_types - total_batches) / total_place_types) * 100:.1f}%"
+            }
+        
+        return stats
+
+    def clear_cache(self):
+        """
+        Clear all cached results to force fresh API calls.
+        Useful for testing or when you want to refresh data.
+        """
+        if hasattr(self, '_cache'):
+            cache_size = len(self._cache)
+            self._cache.clear()
+            self._cache_timestamps.clear()
+            print(f"🧹 Cleared {cache_size} cached entries", file=sys.stderr)
+        else:
+            print("ℹ️ No cache to clear", file=sys.stderr)
+
+    def get_cache_status(self) -> dict:
+        """
+        Get detailed cache status information.
+        
+        Returns:
+            dict: Cache status including size, utilization, and entry details
+        """
+        if not hasattr(self, '_cache'):
+            return {"status": "Cache not initialized"}
+        
+        current_time = time.time()
+        cache_ttl = 3600  # 1 hour
+        
+        # Analyze cache entries
+        active_entries = 0
+        expired_entries = 0
+        entry_details = []
+        
+        for key, timestamp in self._cache_timestamps.items():
+            age = current_time - timestamp
+            if age < cache_ttl:
+                active_entries += 1
+                entry_details.append({
+                    "key": key[:50] + "..." if len(key) > 50 else key,
+                    "age_seconds": int(age),
+                    "status": "active"
+                })
+            else:
+                expired_entries += 1
+                entry_details.append({
+                    "key": key[:50] + "..." if len(key) > 50 else key,
+                    "age_seconds": int(age),
+                    "status": "expired"
+                })
+        
+        return {
+            "total_entries": len(self._cache),
+            "active_entries": active_entries,
+            "expired_entries": expired_entries,
+            "cache_utilization_percent": (len(self._cache) / 50) * 100,
+            "cache_size_limit": 50,
+            "cache_ttl_seconds": cache_ttl,
+            "entry_details": entry_details[:10]  # Show first 10 entries
+        }
+
+    def _reduce_to_20_candidates(self, all_places: List[Dict]) -> Dict[str, List[Dict]]:
+        """
+        Reduce the list of places to 20 candidates ensuring variety of place types.
+        
+        Args:
+            all_places (List[Dict]): List of all places found
+            
+        Returns:
+            Dict[str, List[Dict]]: Dictionary with place types as keys and reduced lists as values
+        """
+        # Group places by type
+        places_by_type = {}
+        for place in all_places:
+            place_type = place.get('place_type', 'Unknown')
+            if place_type not in places_by_type:
+                places_by_type[place_type] = []
+            places_by_type[place_type].append(place)
+        
+        # Calculate how many places to take from each type to get 20 total
+        total_types = len(places_by_type)
+        places_per_type = max(1, 20 // total_types)  # At least 1 per type
+        
+        # Select places from each type
+        reduced_places = {}
+        total_selected = 0
+        
+        for place_type, places in places_by_type.items():
+            # Take up to places_per_type from each type
+            selected = places[:places_per_type]
+            reduced_places[place_type] = selected
+            total_selected += len(selected)
+            
+            # If we have more than 20, stop
+            if total_selected >= 20:
+                break
+        
+        # If we have fewer than 20, add more from types with more places
+        if total_selected < 20:
+            remaining_needed = 20 - total_selected
+            
+            # Sort types by number of available places (descending)
+            sorted_types = sorted(places_by_type.items(), key=lambda x: len(x[1]), reverse=True)
+            
+            for place_type, places in sorted_types:
+                if total_selected >= 20:
+                    break
+                    
+                # How many more we can take from this type
+                already_taken = len(reduced_places.get(place_type, []))
+                available = len(places) - already_taken
+                can_take = min(available, remaining_needed)
+                
+                if can_take > 0:
+                    # Take additional places
+                    additional = places[already_taken:already_taken + can_take]
+                    reduced_places[place_type].extend(additional)
+                    total_selected += can_take
+                    remaining_needed -= can_take
+        
+        print(f"✅ Reduced to {total_selected} total candidates across {len(reduced_places)} place types", file=sys.stderr)
+        return reduced_places
 
     def format_recommendations(self):
         """
@@ -229,73 +649,41 @@ class Preferences:
         Returns:
             list: Formatted recommendations ready for AI prompt generation
         """
+        # Use the existing format_kakao_places_for_prompt function which properly
+        # converts Kakao API response format to our standardized format
         self.recommendations_json = format_kakao_places_for_prompt(self.best_places)
         return self.recommendations_json
 
     # =============================================================================
-    # ITINERARY GENERATION WORKFLOW
+    # SIMPLIFIED ITINERARY GENERATION WORKFLOW
     # =============================================================================
     
     def run_route_planner(self):
         """
-        Generate a route plan using the Phi model.
+        Generate a route plan using the Phi model with simplified logic.
         
         This method:
-        1. Collects multiple place recommendations from Kakao API (10-15 per type)
-        2. Selects optimal places for the itinerary
-        3. Builds a prompt for the Phi model
-        4. Generates a route plan with 4-5 locations
-        5. Returns the result as JSON
+        1. Collects place recommendations (10-15 per type, reduced to 20 total)
+        2. Builds a simple prompt for the Phi model
+        3. Asks Phi to randomly select 4-5 places from the 20 candidates
+        4. Converts the selection to JSON format for the WPF frontend
         
         Returns:
             str: JSON string with route plan or None if failed
         """
         try:
-            # Collect multiple place recommendations for each type
+            # Collect place recommendations
             if self.progress_callback:
                 self.progress_callback(60, "Collecting place recommendations...")
             
             self.collect_best_place()
             
-            # Apply geographic clustering to ensure walkable itineraries
-            if self.progress_callback:
-                self.progress_callback(61, "Creating geographic clusters for walkability...")
-            
-            clustered_candidates = self._create_geographic_clusters()
-            if clustered_candidates:
-                print(f"✅ Created {len(clustered_candidates)} geographic clusters for walkable itineraries", file=sys.stderr)
-                
-                # Select the best cluster that balances variety and proximity
-                best_cluster = self._select_best_balanced_cluster(clustered_candidates)
-                print(f"✅ Selected best balanced cluster with {len(best_cluster)} places", file=sys.stderr)
-                
-                # Preserve original place types while using clustered locations
-                # Group clustered places by their original place types
-                clustered_by_type = {}
-                for place in best_cluster:
-                    # Get the original place type from the place data
-                    original_type = place.get('place_type', 'Unknown')
-                    if original_type not in clustered_by_type:
-                        clustered_by_type[original_type] = []
-                    clustered_by_type[original_type].append(place)
-                
-                # Update best_places with clustered locations grouped by original types
-                self.best_places = clustered_by_type
-                print(f"✅ Preserved place types in clustering: {list(clustered_by_type.keys())}", file=sys.stderr)
-                for place_type, places in clustered_by_type.items():
-                    print(f"✅ {place_type}: {len(places)} places", file=sys.stderr)
-            else:
-                print("⚠️ Could not create geographic clusters, using all candidates", file=sys.stderr)
-                # Even when clustering fails, ensure we maintain variety
-                # Group places by type and select representatives from each type
-                self._ensure_variety_in_fallback()
-            
-            # Places are already optimally selected and ordered by the progressive selection system
-            if self.progress_callback:
-                self.progress_callback(62, "Places optimally selected and ordered...")
-            
-            # The progressive selection already provides optimal, geographically close places
-            # No need for additional selection logic
+            # Validate that we have places to work with
+            if not self.best_places:
+                print("❌ No places collected, cannot generate route plan", file=sys.stderr)
+                if self.progress_callback:
+                    self.progress_callback(75, "No places found")
+                return None
             
             if self.progress_callback:
                 self.progress_callback(65, "Building route planning prompt...")
@@ -303,38 +691,73 @@ class Preferences:
             # Format the recommendations for the prompt
             recommendations = self.format_recommendations()
             
-            # Build the prompt for the Phi model
+            # Validate recommendations
+            if not recommendations:
+                print("❌ No recommendations formatted, cannot generate route plan", file=sys.stderr)
+                if self.progress_callback:
+                    self.progress_callback(75, "Recommendations formatting failed")
+                return None
+            
+            # Debug: Check the structure of recommendations
+            print(f"🔍 Recommendations structure: {type(recommendations)}", file=sys.stderr)
+            print(f"🔍 Number of recommendations: {len(recommendations)}", file=sys.stderr)
+            if recommendations:
+                print(f"🔍 First recommendation keys: {list(recommendations[0].keys()) if recommendations else 'None'}", file=sys.stderr)
+                print(f"🔍 Sample recommendation: {recommendations[0] if recommendations else 'None'}", file=sys.stderr)
+            
+            # Build the simple prompt for the Phi model
             prompt = build_phi_location_prompt(
-                self.start_location,                    # Starting coordinates
-                self.companion_type,                    # Companion type for context
-                self.starting_time,                     # Starting time for timing
-                self.budget,                            # Budget level for cost considerations
-                recommendations                         # Place recommendations
+                self.start_location,
+                self.companion_type,
+                self.starting_time,
+                self.budget,
+                recommendations,
+                self.location_name
             )
             
             if self.progress_callback:
                 self.progress_callback(70, "Running Phi model for route planning...")
             
-            # Run the Phi model with progress callback
+            # Run the Phi model
             runner = GenieRunner(progress_callback=self.progress_callback)
             raw_output = runner.run_phi(prompt)
+            
+            # Validate Phi output
+            if not raw_output:
+                print("❌ Phi model returned no output", file=sys.stderr)
+                if self.progress_callback:
+                    self.progress_callback(75, "Phi model failed - no output")
+                fallback_plan = self._create_simple_fallback_route_plan()
+                return fallback_plan
             
             if self.progress_callback:
                 self.progress_callback(75, "Processing route planning results...")
             
-            # Extract the JSON result from the model output
-            route_plan_json = self._extract_json_from_output(raw_output)
+            # Extract the selected places from Phi's output
+            selected_places = self._extract_places_from_phi_output(raw_output, recommendations)
             
-            if route_plan_json:
-                return route_plan_json
-            else:
-                # JSON extraction failed, try to create a fallback route plan
-                if self.progress_callback:
-                    self.progress_callback(75, "Creating fallback route plan...")
-                
-                print("⚠️ JSON extraction failed, creating fallback route plan", file=sys.stderr)
-                fallback_plan = self._create_fallback_route_plan(self.start_location, self.selected_types)
-                return fallback_plan
+            # Debug: Check what Phi returned
+            print(f"🔍 Phi raw output length: {len(raw_output) if raw_output else 0}", file=sys.stderr)
+            print(f"🔍 Phi extracted places: {len(selected_places)}", file=sys.stderr)
+            if selected_places:
+                print(f"🔍 Selected place names: {[p.get('place_name', 'Unknown') for p in selected_places]}", file=sys.stderr)
+            
+            if selected_places:
+                # Convert to JSON format for WPF
+                route_plan_json = self._convert_places_to_json(selected_places)
+                if route_plan_json:
+                    print(f"✅ Successfully generated route plan with {len(selected_places)} places", file=sys.stderr)
+                    return route_plan_json
+                else:
+                    # Add explicit fallback when JSON conversion fails
+                    print("⚠️ JSON conversion failed, using fallback", file=sys.stderr)
+                    fallback_plan = self._create_simple_fallback_route_plan()
+                    return fallback_plan
+            
+            # If Phi failed, create a simple fallback
+            print("⚠️ Phi model failed, creating simple fallback route plan", file=sys.stderr)
+            fallback_plan = self._create_simple_fallback_route_plan()
+            return fallback_plan
             
         except Exception as e:
             print(f"Route planner failed: {e}", file=sys.stderr)
@@ -343,1052 +766,189 @@ class Preferences:
             
             # Try fallback as last resort
             try:
-                if self.progress_callback:
-                    self.progress_callback(75, "Attempting fallback route plan...")
-                fallback_plan = self._create_fallback_route_plan(self.start_location, self.selected_types)
+                fallback_plan = self._create_simple_fallback_route_plan()
                 return fallback_plan
             except Exception as fallback_error:
                 print(f"Fallback route plan also failed: {fallback_error}", file=sys.stderr)
                 return None
-    
-    def _create_fallback_route_plan(self, start_location: Tuple[float, float], 
-                                   place_types: List[str]) -> str:
+
+    def _extract_places_from_phi_output(self, raw_output: str, recommendations: List[Dict]) -> List[Dict]:
         """
-        Create a fallback route plan when Phi fails.
-        
-        This generates a realistic route plan with actual place names and coordinates
-        around the starting location to ensure the system can continue.
+        Extract selected places from Phi's output.
         
         Args:
-            start_location (Tuple[float, float]): Starting coordinates (lat, lng)
-            place_types (List[str]): List of place types to include
+            raw_output (str): Raw output from Phi model
+            recommendations (List[Dict]): List of candidate places
             
+        Returns:
+            List[Dict]: List of selected places
+        """
+        if not raw_output:
+            print("⚠️ No raw output from Phi model", file=sys.stderr)
+            return []
+        
+        print(f"🔍 Processing Phi output: {len(raw_output)} characters", file=sys.stderr)
+        print(f"🔍 Available recommendations: {len(recommendations)} places", file=sys.stderr)
+        
+        # Extract place names from Phi's numbered list format
+        selected_places = []
+        lines = raw_output.split('\n')
+        
+        for line_num, line in enumerate(lines, 1):
+            line = line.strip()
+            if line and line[0].isdigit() and '.' in line:
+                try:
+                    # Look for patterns like "1. Place Name - Reason"
+                    parts = line.split('.', 1)
+                    if len(parts) == 2:
+                        place_info = parts[1].strip()
+                        if ' - ' in place_info:
+                            place_name, reason = place_info.split(' - ', 1)
+                            place_name = place_name.strip()
+                            
+                            print(f"🔍 Line {line_num}: Extracted place name: '{place_name}'", file=sys.stderr)
+                            
+                            # Find the matching place in recommendations
+                            matching_place = self._find_matching_place(place_name, recommendations)
+                            if matching_place:
+                                selected_places.append(matching_place)
+                                print(f"✅ Found match: '{place_name}' -> '{matching_place.get('place_name')}'", file=sys.stderr)
+                            else:
+                                print(f"⚠️ No match found for: '{place_name}'", file=sys.stderr)
+                        else:
+                            print(f"⚠️ Line {line_num}: No reason separator found in '{line}'", file=sys.stderr)
+                    else:
+                        print(f"⚠️ Line {line_num}: Invalid format in '{line}'", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️ Line {line_num}: Error processing '{line}': {e}", file=sys.stderr)
+                    continue
+        
+        print(f"🔍 Successfully extracted {len(selected_places)} places from Phi output", file=sys.stderr)
+        if selected_places:
+            print(f"🔍 Selected place names: {[p.get('place_name', 'Unknown') for p in selected_places]}", file=sys.stderr)
+        
+        return selected_places
+
+    def _find_matching_place(self, place_name: str, recommendations: List[Dict]) -> Optional[Dict]:
+        """
+        Find a matching place in the recommendations list.
+        
+        Args:
+            place_name (str): Place name from Phi output
+            recommendations (List[Dict]): List of candidate places
+            
+        Returns:
+            Optional[Dict]: Matching place or None if not found
+        """
+        # Try exact match first
+        for place in recommendations:
+            if place.get('place_name') == place_name:
+                return place
+        
+        # Try normalized matching (remove spaces, special chars, case-insensitive)
+        normalized_name = ''.join(c.lower() for c in place_name if c.isalnum())
+        for place in recommendations:
+            candidate_name = place.get('place_name', '')
+            normalized_candidate = ''.join(c.lower() for c in candidate_name if c.isalnum())
+            if normalized_name in normalized_candidate or normalized_candidate in normalized_name:
+                print(f"🔍 Normalized match found: '{place_name}' -> '{candidate_name}'", file=sys.stderr)
+                return place
+        
+        # Try partial match as last resort
+        for place in recommendations:
+            candidate_name = place.get('place_name', '')
+            if place_name.lower() in candidate_name.lower() or candidate_name.lower() in place_name.lower():
+                print(f"🔍 Partial match found: '{place_name}' -> '{candidate_name}'", file=sys.stderr)
+                return place
+        
+        print(f"⚠️ No match found for: '{place_name}'", file=sys.stderr)
+        return None
+
+    def _convert_places_to_json(self, selected_places: List[Dict]) -> str:
+        """
+        Convert selected places to JSON format for WPF frontend.
+        
+        Args:
+            selected_places (List[Dict]): List of selected places
+            
+        Returns:
+            str: JSON string with route plan
+        """
+        try:
+            if not selected_places:
+                print("⚠️ No places to convert to JSON", file=sys.stderr)
+                return None
+            
+            # Ensure we have the required fields for WPF
+            formatted_places = []
+            for i, place in enumerate(selected_places):
+                try:
+                    # Validate required fields
+                    place_name = place.get('place_name')
+                    if not place_name:
+                        print(f"⚠️ Place {i} missing place_name, skipping", file=sys.stderr)
+                        continue
+                    
+                    formatted_place = {
+                        "place_name": place_name,
+                        "road_address_name": place.get('road_address_name', ''),
+                        "place_type": place.get('place_type', 'Unknown'),
+                        "distance": int(place.get('distance', 0)),
+                        "place_url": place.get('place_url', ''),
+                        "latitude": float(place.get('latitude', 0)),
+                        "longitude": float(place.get('longitude', 0)),
+                        "selection_reason": "Selected by Phi model for itinerary"
+                    }
+                    formatted_places.append(formatted_place)
+                    print(f"✅ Formatted place {i+1}: {place_name}", file=sys.stderr)
+                    
+                except (ValueError, TypeError) as e:
+                    print(f"⚠️ Error formatting place {i}: {e}, skipping", file=sys.stderr)
+                    continue
+            
+            if not formatted_places:
+                print("❌ No valid places to convert to JSON", file=sys.stderr)
+                return None
+            
+            json_output = json.dumps(formatted_places, ensure_ascii=False)
+            print(f"✅ Successfully converted {len(formatted_places)} places to JSON format", file=sys.stderr)
+            return json_output
+            
+        except Exception as e:
+            print(f"❌ Failed to convert places to JSON: {e}", file=sys.stderr)
+            return None
+
+    def _create_simple_fallback_route_plan(self) -> str:
+        """
+        Create a simple fallback route plan when Phi fails.
+        
         Returns:
             str: JSON string with fallback route plan
         """
-        print("⚠️ Creating enhanced fallback route plan", file=sys.stderr)
+        print("⚠️ Creating simple fallback route plan", file=sys.stderr)
         
-        # Generate realistic fallback places around the starting location
-        base_lat, base_lng = start_location
-        
-        # Create realistic fallback locations with actual place names
-        fallback_places = []
-        
-        # Define realistic place names for different types
-        place_names = {
-            "Cafe": ["스타벅스 홍대점", "투썸플레이스 홍대점", "할리스 홍대점", "이디야 홍대점", "빽다방 홍대점"],
-            "Restaurant": ["홍대 맛집", "홍대 분식", "홍대 치킨", "홍대 피자", "홍대 떡볶이"],
-            "Cultural": ["홍대 클럽", "홍대 공연장", "홍대 갤러리", "홍대 카페거리", "홍대 상점가"],
-            "Entertainment": ["홍대 놀이터", "홍대 게임장", "홍대 노래방", "홍대 영화관", "홍대 볼링장"]
-        }
-        
-        # Create 5 unique locations with realistic names
-        for i in range(5):
-            # Generate unique coordinates with small offsets
-            offset_lat = base_lat + (i * 0.0005)  # Small northward progression
-            offset_lng = base_lng + (i * 0.0003)  # Small eastward progression
-            
-            # Ensure coordinates are valid for Korea
-            if offset_lat > 38.6:  # Korea's northern boundary
-                offset_lat = base_lat - (i * 0.0005)  # Go south instead
-            
-            # Select appropriate place type and name
-            place_type = place_types[i % len(place_types)] if place_types else "Cafe"
-            type_key = place_type.capitalize()
-            
-            # Get realistic names for this type, or use generic if not found
-            available_names = place_names.get(type_key, place_names["Cafe"])
-            place_name = available_names[i % len(available_names)]
-            
-            fallback_place = {
-                "place_name": place_name,
-                "road_address_name": f"홍대 근처 {place_type}",
-                "place_type": place_type,
-                "distance": str((i + 1) * 100),  # Increasing distance
-                "place_url": "",
-                "latitude": offset_lat,
-                "longitude": offset_lng,
-                "selection_reason": f"Fallback {place_type} location for itinerary generation"
-            }
-            
-            fallback_places.append(fallback_place)
-        
-        try:
-            json_output = json.dumps(fallback_places, ensure_ascii=False)
-            print(f"✅ Created enhanced fallback route plan with {len(fallback_places)} realistic locations", file=sys.stderr)
-            print(f"✅ Each location has unique coordinates and realistic names", file=sys.stderr)
-            return json_output
-        except Exception as e:
-            print(f"❌ Failed to create JSON for fallback plan: {e}", file=sys.stderr)
-            return None
-
-    def _extract_json_from_output(self, raw_output: str) -> str:
-        """
-        Extract JSON content from the raw model output.
-        
-        Since Phi cannot generate valid JSON, we now expect text-based place selection
-        and convert it to JSON format programmatically.
-        
-        Args:
-            raw_output (str): Raw output from the Phi model
-            
-        Returns:
-            str: Cleaned JSON string, or None if no valid data found
-        """
-        if not raw_output:
-            return None
-            
-        print(f"Raw Phi model output: {raw_output[:500]}...", file=sys.stderr)
-        
-        # Clean the output - remove common Phi artifacts
-        cleaned_output = raw_output
-        
-        # Remove common Phi output artifacts
-        artifacts_to_remove = [
-            'Using libGenie.so version',
-            '[INFO]',
-            '[PROMPT]:',
-            '<|system|>',
-            '<|user|>',
-            '<|end|>',
-            'Starting from',
-            'Available places:'
-        ]
-        
-        for artifact in artifacts_to_remove:
-            cleaned_output = cleaned_output.replace(artifact, '')
-        
-        print(f"Cleaned output: {cleaned_output[:300]}...", file=sys.stderr)
-        
-        # Try to extract place selection from text output
-        print("🔍 Attempting to extract place selection from text...", file=sys.stderr)
-        selected_places = self._extract_places_from_text(cleaned_output)
-        
-        if selected_places:
-            # Clean up Phi's output by removing duplicates
-            selected_places = self._clean_phi_output(selected_places)
-            
-            # Validate Phi's output meets our 4-5 place requirement
-            self._validate_phi_output(selected_places)
-            
-            # Validate geographic proximity of selected places
-            self._validate_geographic_proximity(selected_places)
-            
-            # Ensure we have minimum required locations for map functionality
-            print(f"🔍 Before supplementation: {len(selected_places)} places", file=sys.stderr)
-            print(f"🔍 Places before supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
-            
-            # Only supplement if we have fewer than 3 places (system stability requirement)
-            # Phi should generate 4-5, so supplementation should rarely be needed
-            if len(selected_places) < 3:
-                print(f"⚠️ Phi generated only {len(selected_places)} places, supplementing for system stability", file=sys.stderr)
-                selected_places = self._ensure_minimum_locations(selected_places, min_locations=3)
-                print(f"🔍 After supplementation: {len(selected_places)} places", file=sys.stderr)
-                print(f"🔍 Places after supplementation: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
-            else:
-                print(f"✅ Phi generated {len(selected_places)} places as expected (4-5 range)", file=sys.stderr)
-            
-            # Convert to JSON format
-            json_output = self._convert_places_to_json(selected_places)
-            if json_output:
-                print(f"✅ Successfully converted text selection to JSON with {len(selected_places)} places", file=sys.stderr)
-                return json_output
-        
-        print("❌ Failed to extract place selection from text", file=sys.stderr)
-        return None
-
-    def _extract_places_from_text(self, text: str) -> List[Dict]:
-        """
-        Extract place information from Phi's text-based place selection.
-        
-        Args:
-            text (str): Raw output from the Phi model
-            
-        Returns:
-            List[Dict]: List of place dictionaries, or empty if not found
-        """
-        places = []
-        lines = text.split('\n')
-        
-        for line in lines:
-            line = line.strip()
-            if line and line[0].isdigit() and '.' in line:
-                # Look for patterns like "1. Place Name - Reason"
-                parts = line.split('.', 1)
-                if len(parts) == 2:
-                    place_info = parts[1].strip()
-                    if ' - ' in place_info:
-                        place_name, reason = place_info.split(' - ', 1)
-                        place_name = place_name.strip()
-                        
-                        # Filter out generic place names and placeholder text
-                        if (place_name and 
-                            place_name.lower() not in ['place name', 'location', 'venue', 'spot', 'place'] and
-                            '[' not in place_name and  # Filter out [Copy exact name from candidates]
-                            ']' not in place_name and  # Filter out placeholder brackets
-                            'exact' not in place_name.lower() and  # Filter out "exact" references
-                            'candidates' not in place_name.lower() and  # Filter out "candidates" references
-                            len(place_name) > 2 and  # Must be longer than 2 characters
-                            not place_name.isdigit()):  # Must not be just numbers
-                            
-                            places.append({
-                                "place_name": place_name,
-                                "selection_reason": reason.strip()
-                            })
-                        else:
-                            print(f"⚠️ Filtered out invalid place name: '{place_name}'", file=sys.stderr)
-        
-        print(f"🔍 Extracted {len(places)} valid places from text: {[p['place_name'] for p in places]}", file=sys.stderr)
-        return places
-    
-    def _clean_phi_output(self, selected_places: List[Dict]) -> List[Dict]:
-        """
-        Clean Phi's output by removing duplicates and ensuring unique places.
-        
-        Args:
-            selected_places (List[Dict]): List of places from Phi output
-            
-        Returns:
-            List[Dict]: Cleaned list with duplicates removed
-        """
-        if not selected_places:
-            return selected_places
-        
-        # Remove duplicates while preserving order
-        seen_names = set()
-        cleaned_places = []
-        
-        for place in selected_places:
-            place_name = place['place_name'].lower()
-            if place_name not in seen_names:
-                seen_names.add(place_name)
-                cleaned_places.append(place)
-            else:
-                print(f"🧹 Removed duplicate place: {place['place_name']}", file=sys.stderr)
-        
-        if len(cleaned_places) != len(selected_places):
-            print(f"🧹 Cleaned Phi output: {len(selected_places)} -> {len(cleaned_places)} unique places", file=sys.stderr)
-        
-        return cleaned_places
-    
-    def _validate_geographic_proximity(self, selected_places: List[Dict]) -> None:
-        """
-        Validate that Phi's selected places are geographically close and walkable.
-        
-        Args:
-            selected_places (List[Dict]): List of places from Phi output
-        """
-        if len(selected_places) < 2:
-            return  # Need at least 2 places to check proximity
-        
-        print(f"🌍 Validating geographic proximity for {len(selected_places)} places", file=sys.stderr)
-        
-        # Get the original candidate data to access coordinates
-        all_candidates = self._get_all_candidates()
-        if not all_candidates:
-            print("⚠️ Cannot validate proximity - no candidate data available", file=sys.stderr)
-            return
-        
-        # Find coordinates for selected places
-        place_coordinates = []
-        for selected in selected_places:
-            selected_name = selected['place_name']
-            
-            # Find matching candidate
-            matching_candidate = None
-            for candidate in all_candidates:
-                if selected_name.lower() == candidate.get('place_name', '').lower():
-                    matching_candidate = candidate
-                    break
-            
-            if matching_candidate:
-                lat = float(matching_candidate.get('y', 0))
-                lng = float(matching_candidate.get('x', 0))
-                place_coordinates.append({
-                    'name': selected_name,
-                    'lat': lat,
-                    'lng': lng
-                })
-        
-        if len(place_coordinates) < 2:
-            print("⚠️ Cannot validate proximity - insufficient coordinate data", file=sys.stderr)
-            return
-        
-        # Calculate distances between all pairs
-        max_distance = 0
-        total_distance = 0
-        pair_count = 0
-        
-        for i in range(len(place_coordinates)):
-            for j in range(i + 1, len(place_coordinates)):
-                place1 = place_coordinates[i]
-                place2 = place_coordinates[j]
-                
-                # Calculate distance using Haversine formula
-                distance = self._calculate_distance(
-                    place1['lat'], place1['lng'],
-                    place2['lat'], place2['lng']
-                )
-                
-                max_distance = max(max_distance, distance)
-                total_distance += distance
-                pair_count += 1
-                
-                print(f"🌍 {place1['name']} ↔ {place2['name']}: {distance:.1f}m", file=sys.stderr)
-        
-        if pair_count > 0:
-            avg_distance = total_distance / pair_count
-            print(f"🌍 Geographic analysis: Max distance: {max_distance:.1f}m, Average: {avg_distance:.1f}m", file=sys.stderr)
-            
-            if max_distance > 1000:  # More than 1km
-                print(f"⚠️ WARNING: Places are too far apart ({max_distance:.1f}m) - not walkable!", file=sys.stderr)
-                print(f"⚠️ Phi should prioritize geographic proximity for better itineraries", file=sys.stderr)
-            elif max_distance > 500:  # More than 500m
-                print(f"⚠️ Places are moderately distant ({max_distance:.1f}m) - consider closer options", file=sys.stderr)
-            else:
-                print(f"✅ Places are well-clustered ({max_distance:.1f}m) - good for walking itinerary", file=sys.stderr)
-    
-    def _create_geographic_clusters(self) -> List[List[Dict]]:
-        """
-        Create geographic clusters from the collected places.
-        
-        This method groups places that are within walking distance of each other,
-        ensuring the final itinerary is walkable and enjoyable.
-        
-        Returns:
-            List[List[Dict]]: List of clusters, where each cluster is a list of places
-        """
-        if not self.best_places:
-            return []
-        
-        # Flatten all places into a single list
+        # Get all available places
         all_places = []
         for place_type, places in self.best_places.items():
             all_places.extend(places)
         
-        if len(all_places) < 2:
-            return [all_places] if all_places else []
-        
-        print(f"🌍 Creating geographic clusters from {len(all_places)} places", file=sys.stderr)
-        print(f"🌍 Place types available: {list(set(p.get('place_type') for p in all_places))}", file=sys.stderr)
-        
-        # Create clusters based on geographic proximity
-        clusters = []
-        used_indices = set()
-        
-        for i, place1 in enumerate(all_places):
-            if i in used_indices:
-                continue
-                
-            cluster = [place1]
-            used_indices.add(i)
-            
-            for j, place2 in enumerate(all_places):
-                if j in used_indices:
-                    continue
-                    
-                try:
-                    lat1, lng1 = float(place1.get('y', 0)), float(place1.get('x', 0))
-                    lat2, lng2 = float(place2.get('y', 0)), float(place2.get('x', 0))
-                    
-                    distance = self._calculate_distance(lat1, lng1, lat2, lng2)
-                    
-                    if distance <= 800:  # 800m walking distance
-                        cluster.append(place2)
-                        used_indices.add(j)
-                except:
-                    continue
-            
-            if len(cluster) >= 2:  # Only keep clusters with at least 2 places
-                clusters.append(cluster)
-        
-        # Sort clusters by size (largest first) and filter out tiny clusters
-        # Lower the minimum requirement to allow smaller but diverse clusters
-        min_cluster_size = 2  # Allow clusters with at least 2 places
-        clusters = [cluster for cluster in clusters if len(cluster) >= min_cluster_size]
-        clusters.sort(key=len, reverse=True)
-        
-        # If no clusters meet the minimum size, create a single cluster with all places
-        # This ensures we don't lose variety when geographic clustering is challenging
-        if not clusters:
-            print(f"🌍 No clusters met minimum size {min_cluster_size}, creating single cluster with all places", file=sys.stderr)
-            clusters = [all_places]
-        
-        # Prioritize clusters with better place type variety
-        if len(clusters) > 1:
-            def cluster_variety_score(cluster):
-                place_types = set(p.get('place_type') for p in cluster)
-                # Higher score for clusters with more diverse place types
-                return len(place_types) * 100 + len(cluster)  # Increased variety weight
-            
-            # Sort by variety score (place type diversity + size)
-            clusters.sort(key=cluster_variety_score, reverse=True)
-            print(f"🌍 Reordered clusters by place type variety", file=sys.stderr)
-        
-        # Print cluster information for debugging
-        for i, cluster in enumerate(clusters):
-            place_types = set(p.get('place_type') for p in cluster)
-            center_place = cluster[0]
-            center_lat = float(center_place.get('y', 0))
-            center_lng = float(center_place.get('x', 0))
-            
-            print(f"🌍 Cluster {i+1}: {len(cluster)} places, types: {list(place_types)}")
-            print(f"🌍   Center: {center_place.get('place_name', 'Unknown')} at ({center_lat}, {center_lng})")
-        
-        return clusters
-    
-    def _select_best_balanced_cluster(self, clusters: List[List[Dict]]) -> List[Dict]:
-        """
-        Select the best cluster that balances geographic proximity with place type variety.
-        This method ensures we get a mix of different place types (cafes, restaurants, cultural spots)
-        instead of clusters dominated by a single type, while prioritizing walkability.
-        """
-        if not clusters:
-            return []
-        
-        print(f"🔍 Selecting best balanced cluster from {len(clusters)} options", file=sys.stderr)
-        
-        cluster_scores = []
-        for i, cluster in enumerate(clusters):
-            place_types = set(p.get('place_type') for p in cluster)
-            type_variety = len(place_types)
-            
-            # Calculate maximum distance between any two places in the cluster
-            max_distance = 0
-            total_distance = 0
-            center_lat = sum(float(p.get('y', 0)) for p in cluster) / len(cluster)
-            center_lng = sum(float(p.get('x', 0)) for p in cluster) / len(cluster)
-            
-            for j, place1 in enumerate(cluster):
-                for k, place2 in enumerate(cluster):
-                    if j < k:  # Only check each pair once
-                        try:
-                            lat1, lng1 = float(place1.get('y', 0)), float(place1.get('x', 0))
-                            lat2, lng2 = float(place2.get('y', 0)), float(place2.get('x', 0))
-                            distance = self._calculate_distance(lat1, lng1, lat2, lng2)
-                            max_distance = max(max_distance, distance)
-                            total_distance += distance
-                        except:
-                            continue
-                
-                # Also calculate distance from center
-                try:
-                    lat = float(place1.get('y', 0))
-                    lng = float(place1.get('x', 0))
-                    center_distance = self._calculate_distance(center_lat, center_lng, lat, lng)
-                    total_distance += center_distance
-                except:
-                    continue
-            
-            avg_distance = total_distance / (len(cluster) * 2) if cluster else 0
-            
-            # Score formula: prioritize walkability, then variety, then size
-            # Walkability gets highest weight (1000x), variety gets medium weight (100x), size gets low weight (10x)
-            walkability_score = max(0, 1000 - max_distance) * 10  # Higher score for shorter max distance
-            variety_score = type_variety * 100
-            size_score = len(cluster) * 10
-            
-            total_score = walkability_score + variety_score + size_score
-            
-            cluster_scores.append({
-                'index': i,
-                'cluster': cluster,
-                'score': total_score,
-                'variety': type_variety,
-                'size': len(cluster),
-                'max_distance': max_distance,
-                'avg_distance': avg_distance
-            })
-            
-            print(f"🔍 Cluster {i+1}: Score={total_score:.1f}, Variety={type_variety}, Size={len(cluster)}, MaxDist={max_distance:.1f}m, Types={list(place_types)}", file=sys.stderr)
-        
-        # Sort by total score (highest is best)
-        cluster_scores.sort(key=lambda x: x['score'], reverse=True)
-        
-        best_cluster_info = cluster_scores[0]
-        print(f"✅ Selected cluster {best_cluster_info['index']+1} with score {best_cluster_info['score']:.1f}")
-        print(f"✅ Variety: {best_cluster_info['variety']} types, Size: {best_cluster_info['size']} places")
-        print(f"✅ Max distance: {best_cluster_info['max_distance']:.1f}m, Avg distance: {best_cluster_info['avg_distance']:.1f}m")
-        print(f"✅ Place types: {list(set(p.get('place_type') for p in best_cluster_info['cluster']))}")
-        
-        # Verify the selected cluster is truly walkable
-        if best_cluster_info['max_distance'] > 800:
-            print(f"⚠️ WARNING: Selected cluster has max distance {best_cluster_info['max_distance']:.1f}m > 800m", file=sys.stderr)
-            print(f"⚠️ This may not be walkable - consider selecting a different cluster", file=sys.stderr)
-        
-        return best_cluster_info['cluster']
-    
-    def _calculate_cluster_score(self, cluster: List[Dict]) -> float:
-        """
-        Calculate a score for a given cluster based on variety and proximity.
-        
-        This score is a weighted combination of place type diversity and
-        geographic proximity.
-        
-        Args:
-            cluster (List[Dict]): The cluster to score
-            
-        Returns:
-            float: The calculated score
-        """
-        if not cluster:
-            return 0.0
-        
-        # Calculate place type variety score
-        place_types = set(p.get('place_type') for p in cluster)
-        variety_score = len(place_types) * 10
-        
-        # Calculate geographic proximity score
-        # This is a simplified approach; a more sophisticated method would
-        # calculate distances between all pairs and find the max/min.
-        # For now, we'll just check if all places are close.
-        # A more robust solution would involve a distance matrix.
-        
-        # For simplicity, we'll assume a max distance of 500m for a "close" cluster
-        # and a max distance of 1000m for a "distant" cluster.
-        # This is a heuristic and might need tuning.
-        
-        # Find the maximum distance in the cluster
-        max_distance = 0
-        for i in range(len(cluster)):
-            for j in range(i + 1, len(cluster)):
-                try:
-                    lat1 = float(cluster[i].get('y', 0))
-                    lng1 = float(cluster[i].get('x', 0))
-                    lat2 = float(cluster[j].get('y', 0))
-                    lng2 = float(cluster[j].get('x', 0))
-                    
-                    distance = self._calculate_distance(lat1, lng1, lat2, lng2)
-                    max_distance = max(max_distance, distance)
-                except (ValueError, TypeError):
-                    continue # Skip if coordinates are missing
-        
-        # Assign a score based on distance
-        if max_distance < 500: # Very close cluster
-            proximity_score = 100
-        elif max_distance < 1000: # Moderately distant cluster
-            proximity_score = 70
-        else: # Far cluster
-            proximity_score = 50
-        
-        # Combine variety and proximity scores
-        # Weights can be adjusted based on desired balance
-        total_score = variety_score + proximity_score
-        
-        return total_score
-    
-    def _calculate_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-        """
-        Calculate approximate distance between two coordinates using Haversine formula.
-        
-        Args:
-            lat1, lng1: First coordinate
-            lat2, lng2: Second coordinate
-            
-        Returns:
-            float: Distance in meters
-        """
-        import math
-        
-        # Convert to radians
-        lat1_rad = math.radians(lat1)
-        lng1_rad = math.radians(lng1)
-        lat2_rad = math.radians(lat2)
-        lng2_rad = math.radians(lng2)
-        
-        # Haversine formula
-        dlat = lat2_rad - lat1_rad
-        dlng = lng2_rad - lng1_rad
-        
-        a = (math.sin(dlat/2)**2 + 
-             math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng/2)**2)
-        c = 2 * math.asin(math.sqrt(a))
-        
-        # Earth radius in meters
-        r = 6371000
-        
-        return r * c
-    
-    def _calculate_kakao_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-        """
-        Calculate distance using Kakao Map API for more accurate real-world distances.
-        
-        This method provides walking distance instead of "as the crow flies" distance,
-        which is more accurate for clustering and itinerary planning.
-        
-        Args:
-            lat1, lng1: First coordinate
-            lat2, lng2: Second coordinate
-            
-        Returns:
-            float: Distance in meters, or None if API call fails
-        """
-        try:
-            # For now, fall back to Haversine for performance
-            # In the future, this could call Kakao Map API's distance calculation endpoint
-            # https://apis.map.kakao.com/web/sample/calculatePolylineDistance/
-            
-            # For now, use Haversine but with a small adjustment factor
-            # to better approximate walking distance
-            haversine_distance = self._calculate_distance(lat1, lng1, lat2, lng2)
-            
-            # Walking distance is typically 1.1-1.3x the straight-line distance
-            # due to street layouts and walking paths
-            walking_factor = 1.2
-            estimated_walking_distance = haversine_distance * walking_factor
-            
-            return estimated_walking_distance
-            
-        except Exception as e:
-            print(f"⚠️ Kakao distance calculation failed, using Haversine fallback: {e}", file=sys.stderr)
-            return self._calculate_distance(lat1, lng1, lat2, lng2)
-    
-    def _validate_phi_output(self, selected_places: List[Dict]) -> None:
-        """
-        Validate that Phi's output meets our 4-5 place requirement.
-        
-        Args:
-            selected_places (List[Dict]): List of places extracted from Phi output
-        """
-        place_count = len(selected_places)
-        expected_min = 4
-        expected_max = 5
-        
-        if place_count < expected_min:
-            print(f"⚠️ Phi generated only {place_count} places (expected {expected_min}-{expected_max})", file=sys.stderr)
-            print(f"⚠️ This may indicate the model didn't follow instructions properly", file=sys.stderr)
-        elif place_count > expected_max:
-            print(f"⚠️ Phi generated {place_count} places (expected {expected_min}-{expected_max})", file=sys.stderr)
-            print(f"⚠️ The model generated more places than requested", file=sys.stderr)
-        else:
-            print(f"✅ Phi generated {place_count} places as expected ({expected_min}-{expected_max} range)", file=sys.stderr)
-        
-        # Log the actual places for debugging
-        print(f"🔍 Phi selected places: {[p['place_name'] for p in selected_places]}", file=sys.stderr)
-    
-    def _ensure_minimum_locations(self, selected_places: List[Dict], min_locations: int = 4) -> List[Dict]:
-        """
-        Ensure we have a minimum number of locations by supplementing with fallback places if needed.
-        
-        This addresses the issue where Phi generates generic placeholders instead of real locations.
-        
-        Args:
-            selected_places (List[Dict]): List of places extracted from Phi output
-            min_locations (int): Minimum number of locations required
-            
-        Returns:
-            List[Dict]: List with minimum required locations
-        """
-        if len(selected_places) >= min_locations:
-            return selected_places
-        
-        print(f"⚠️ Only {len(selected_places)} valid places found, need minimum {min_locations}", file=sys.stderr)
-        print("🔧 Supplementing with fallback locations to ensure map functionality", file=sys.stderr)
-        
-        # Get all available candidates to supplement the list
-        all_candidates = self._get_all_candidates()
-        if not all_candidates:
-            print("❌ No candidate places available for supplementation", file=sys.stderr)
-            return selected_places
-        
-        # Create a set of already selected place names to avoid duplicates
-        selected_names = {place['place_name'].lower() for place in selected_places}
-        
-        # Find additional candidates that weren't selected
-        additional_places = []
-        for candidate in all_candidates:
-            candidate_name = candidate.get('place_name', '').lower()
-            if candidate_name not in selected_names:
-                additional_places.append({
-                    "place_name": candidate.get('place_name', 'Unknown'),
-                    "selection_reason": f"Supplemented location for complete itinerary"
-                })
-                selected_names.add(candidate_name)
-                
-                # Stop when we have enough locations
-                if len(selected_places) + len(additional_places) >= min_locations:
-                    break
-        
-        # Combine original and additional places
-        final_places = selected_places + additional_places
-        
-        print(f"✅ Supplemented to {len(final_places)} total locations", file=sys.stderr)
-        print(f"✅ Original: {len(selected_places)}, Additional: {len(additional_places)}", file=sys.stderr)
-        
-        return final_places
-    
-    def _create_fallback_locations_for_qwen(self, existing_locations: List[Dict], min_locations: int = 4) -> List[Dict]:
-        """
-        Create fallback locations when we don't have enough for Qwen story generation.
-        
-        This ensures the Qwen prompts always have enough locations to work with.
-        
-        Args:
-            existing_locations (List[Dict]): List of existing valid locations
-            min_locations (int): Minimum number of locations required
-            
-        Returns:
-            List[Dict]: List with minimum required locations
-        """
-        print(f"🔧 Creating fallback locations for Qwen (current: {len(existing_locations)})", file=sys.stderr)
-        
-        # We need at least 4 locations for the Qwen prompts to work properly
-        if len(existing_locations) >= min_locations:
-            return existing_locations
-        
-        # Get all available candidates to supplement
-        all_candidates = self._get_all_candidates()
-        if not all_candidates:
-            print("❌ No candidate places available for Qwen fallback", file=sys.stderr)
-            return existing_locations
-        
-        # Create a set of already selected place names to avoid duplicates
-        selected_names = {loc.get('place_name', '').lower() for loc in existing_locations}
-        
-        # Find additional candidates that weren't selected
-        additional_locations = []
-        for candidate in all_candidates:
-            candidate_name = candidate.get('place_name', '').lower()
-            if candidate_name not in selected_names:
-                # Create a location entry compatible with Qwen prompts
-                fallback_location = {
-                    "place_name": candidate.get('place_name', 'Unknown'),
-                    "road_address_name": candidate.get('road_address_name', ''),
-                    "place_type": candidate.get('place_type', 'Unknown'),
-                    "distance": str(candidate.get('distance', 0)),
-                    "place_url": candidate.get('place_url', ''),
-                    "latitude": float(candidate.get('y', 0)),
-                    "longitude": float(candidate.get('x', 0)),
-                    "selection_reason": f"Fallback location for complete itinerary"
-                }
-                additional_locations.append(fallback_location)
-                selected_names.add(candidate_name)
-                
-                # Stop when we have enough locations
-                if len(existing_locations) + len(additional_locations) >= min_locations:
-                    break
-        
-        # Combine existing and additional locations
-        final_locations = existing_locations + additional_locations
-        
-        print(f"✅ Created Qwen fallback locations: {len(final_locations)} total", file=sys.stderr)
-        print(f"✅ Original: {len(existing_locations)}, Additional: {len(additional_locations)}", file=sys.stderr)
-        
-        return final_locations
-    
-    def _convert_places_to_json(self, selected_places: List[str]) -> List[Dict]:
-        """
-        Convert selected place names to JSON format with full place data.
-        
-        This method matches the selected place names with the actual place data
-        to create a complete JSON representation for the itinerary.
-        
-        Args:
-            selected_places (List[str]): List of selected place names
-            
-        Returns:
-            List[Dict]: List of place data in JSON format
-        """
-        print(f"🔍 Converting {len(selected_places)} places to JSON format", file=sys.stderr)
-        
-        # Flatten all places from different types into a single list
-        all_candidates = []
-        for place_type, places in self.best_places.items():
-            all_candidates.extend(places)
-        
-        print(f"🔍 Available candidates: {[p.get('place_name', 'Unknown') for p in all_candidates[:5]]}", file=sys.stderr)
-        
-        converted_places = []
-        for place_name in selected_places:
-            print(f"🔍 Looking for match: '{place_name}'", file=sys.stderr)
-            
-            # Try exact match first
-            exact_match = None
-            for candidate in all_candidates:
-                if candidate.get('place_name') == place_name:
-                    exact_match = candidate
-                    break
-            
-            if exact_match:
-                print(f"✅ Exact match found: '{place_name}' -> '{exact_match.get('place_name')}'", file=sys.stderr)
-                converted_places.append(exact_match)
-                continue
-            
-            # Try fuzzy matching for Korean names
-            best_match = None
-            best_score = 0.0
-            
-            for candidate in all_candidates:
-                candidate_name = candidate.get('place_name', '')
-                if not candidate_name:
-                    continue
-                
-                # Calculate similarity score using multiple methods
-                score = self._calculate_name_similarity(place_name, candidate_name)
-                
-                if score > best_score and score > 0.7:  # Minimum 70% similarity
-                    best_score = score
-                    best_match = candidate
-            
-            if best_match:
-                print(f"✅ Fuzzy match found: '{place_name}' -> '{best_match.get('place_name')}' (score: {best_score:.2f})", file=sys.stderr)
-                converted_places.append(best_match)
-            else:
-                print(f"⚠️ Could not find candidate data for: '{place_name}'", file=sys.stderr)
-                print(f"⚠️ Available candidates: {[p.get('place_name', 'Unknown') for p in all_candidates[:5]]}", file=sys.stderr)
-        
-        print(f"✅ Converted {len(converted_places)} places to JSON with UTF-8 encoding", file=sys.stderr)
-        return converted_places
-    
-    def _calculate_name_similarity(self, name1: str, name2: str) -> float:
-        """
-        Calculate similarity between two place names using multiple methods.
-        
-        Args:
-            name1 (str): First place name
-            name2 (str): Second place name
-            
-        Returns:
-            float: Similarity score between 0 and 1
-        """
-        if not name1 or not name2:
-            return 0.0
-        
-        # Normalize names
-        name1_norm = name1.strip().lower()
-        name2_norm = name2.strip().lower()
-        
-        # Exact match
-        if name1_norm == name2_norm:
-            return 1.0
-        
-        # Contains match
-        if name1_norm in name2_norm or name2_norm in name1_norm:
-            return 0.9
-        
-        # Jaccard similarity for character overlap
-        chars1 = set(name1_norm)
-        chars2 = set(name2_norm)
-        intersection = chars1.intersection(chars2)
-        union = chars1.union(chars2)
-        
-        if union:
-            jaccard_score = len(intersection) / len(union)
-        else:
-            jaccard_score = 0.0
-        
-        # Compound name matching (for Korean compound names)
-        compound_score = 0.0
-        if len(name1_norm) > 2 and len(name2_norm) > 2:
-            # Check if parts of names match
-            name1_parts = [name1_norm[i:i+2] for i in range(len(name1_norm)-1)]
-            name2_parts = [name2_norm[i:i+2] for i in range(len(name2_norm)-1)]
-            
-            common_parts = set(name1_parts).intersection(set(name2_parts))
-            if name1_parts and name2_parts:
-                compound_score = len(common_parts) / max(len(name1_parts), len(name2_parts))
-        
-        # Partial match score
-        partial_score = 0.0
-        if len(name1_norm) >= 3 and len(name2_norm) >= 3:
-            # Check if 3+ character sequences match
-            for i in range(len(name1_norm) - 2):
-                for j in range(len(name2_norm) - 2):
-                    if name1_norm[i:i+3] == name2_norm[j:j+3]:
-                        partial_score = max(partial_score, 0.8)
-                        break
-        
-        # Combine scores with weights
-        final_score = (
-            jaccard_score * 0.4 +
-            compound_score * 0.3 +
-            partial_score * 0.3
-        )
-        
-        return final_score
-    
-    def _is_korean_text(self, text: str) -> bool:
-        """
-        Check if text contains Korean characters.
-        
-        Args:
-            text (str): Text to check
-            
-        Returns:
-            bool: True if text contains Korean characters
-        """
-        if not text:
-            return False
-        
-        # Korean character ranges in Unicode
-        korean_ranges = [
-            (0xAC00, 0xD7AF),  # Hangul Syllables
-            (0x1100, 0x11FF),  # Hangul Jamo
-            (0x3130, 0x318F),  # Hangul Compatibility Jamo
-        ]
-        
-        for char in text:
-            char_code = ord(char)
-            for start, end in korean_ranges:
-                if start <= char_code <= end:
-                    return True
-        
-        return False
-    
-    def _calculate_korean_similarity(self, text1: str, text2: str) -> float:
-        """
-        Calculate similarity between two Korean texts using character-based comparison.
-        
-        Args:
-            text1 (str): First text
-            text2 (str): Second text
-            
-        Returns:
-            float: Similarity score (0-100)
-        """
-        if not text1 or not text2:
-            return 0.0
-        
-        # Normalize texts (remove spaces, convert to lowercase)
-        norm1 = ''.join(text1.lower().split())
-        norm2 = ''.join(text2.lower().split())
-        
-        if norm1 == norm2:
-            return 100.0
-        
-        # Calculate character overlap
-        chars1 = set(norm1)
-        chars2 = set(norm2)
-        
-        intersection = len(chars1.intersection(chars2))
-        union = len(chars1.union(chars2))
-        
-        if union == 0:
-            return 0.0
-        
-        # Jaccard similarity
-        jaccard = intersection / union
-        
-        # Additional weight for length similarity
-        length_similarity = 1.0 - abs(len(norm1) - len(norm2)) / max(len(norm1), len(norm2))
-        
-        # Combined score
-        final_score = (jaccard * 70) + (length_similarity * 30)
-        
-        return min(100.0, final_score)
-    
-    def _is_compound_name_match(self, name1: str, name2: str) -> bool:
-        """
-        Check if two names are compound matches (contain similar components).
-        
-        Args:
-            name1 (str): First name
-            name2 (str): Second name
-            
-        Returns:
-            bool: True if names are compound matches
-        """
-        if not name1 or not name2:
-            return False
-        
-        # Split names into components (by spaces, hyphens, etc.)
-        components1 = set(re.split(r'[\s\-_]+', name1.lower()))
-        components2 = set(re.split(r'[\s\-_]+', name2.lower()))
-        
-        # Remove empty components
-        components1.discard('')
-        components2.discard('')
-        
-        if not components1 or not components2:
-            return False
-        
-        # Check if there's significant overlap
-        intersection = len(components1.intersection(components2))
-        min_components = min(len(components1), len(components2))
-        
-        # At least 50% of components should match
-        return intersection >= max(1, min_components * 0.5)
-    
-    def _get_all_candidates(self) -> List[Dict]:
-        """
-        Get all candidate places that were sent to Phi for selection.
-        
-        Returns:
-            List[Dict]: List of all candidate places
-        """
-        if hasattr(self, 'best_places') and self.best_places:
-            # Flatten the best_places dictionary into a single list
-            all_candidates = []
-            for place_type, places in self.best_places.items():
-                for place in places:
-                    # Add place_type to each place for reference
-                    place['place_type'] = place_type
-                    all_candidates.append(place)
-            return all_candidates
-        else:
-            print("⚠️ No candidate places available in self.best_places", file=sys.stderr)
-            return []
-
-    def _attempt_json_reconstruction(self, partial_json: str) -> str:
-        """
-        Attempt to reconstruct a JSON array from a partial or malformed JSON string.
-        
-        This is a heuristic approach to try to salvage a JSON structure
-        even if it's not fully valid. It looks for common patterns like
-        starting with '[' and ending with ']' or '}' if it's an object.
-        
-        Args:
-            partial_json (str): The partial or malformed JSON string
-            
-        Returns:
-            str: A potentially valid JSON string, or None if reconstruction fails
-        """
-        if not partial_json:
+        if not all_places:
+            print("❌ No places available for fallback", file=sys.stderr)
             return None
-            
-        # Remove common Phi artifacts that might interfere with JSON parsing
-        cleaned_json = partial_json
-        artifacts_to_remove = [
-            'Using libGenie.so version',
-            '[INFO]',
-            '[PROMPT]:',
-            '<|system|>',
-            '<|user|>',
-            '<|end|>',
-            'Starting from',
-            'Available places:'
-        ]
-        for artifact in artifacts_to_remove:
-            cleaned_json = cleaned_json.replace(artifact, '')
-            
-        # Look for the first '[' and last ']' or '}'
-        start_idx = cleaned_json.find('[')
-        end_idx = -1
         
-        if start_idx != -1:
-            bracket_count = 0
-            for i, char in enumerate(cleaned_json[start_idx:], start_idx):
-                if char == '[':
-                    bracket_count += 1
-                elif char == ']' or char == '}':
-                    bracket_count -= 1
-                    if bracket_count == 0:
-                        end_idx = i + 1
-                        break
-            
-            if end_idx != -1:
-                return cleaned_json[start_idx:end_idx]
+        # Select first 4-5 places
+        num_to_select = min(5, len(all_places))
+        selected_places = all_places[:num_to_select]
         
-        return None
+        # Convert to JSON
+        return self._convert_places_to_json(selected_places)
 
     def run_qwen_itinerary(self, route_plan_json=None):
         """
-        Generate a comprehensive, personalized travel itinerary using the Qwen model.
+        Generate a comprehensive itinerary using the Qwen model.
         
         This method takes the route plan from run_route_planner and generates
-        a detailed, emotionally engaging itinerary that covers all selected places
-        while reflecting user preferences for companion type, budget, and timing.
-        It includes fallback mechanisms to ensure comprehensive coverage.
+        a detailed itinerary that covers all selected places.
         
         Args:
             route_plan_json (str, optional): Pre-generated route plan JSON. 
@@ -1415,34 +975,24 @@ class Preferences:
             if len(selected_locations) == 0:
                 return "No locations selected for itinerary - cannot generate story"
             
-            # Final safety check: Ensure we have enough locations for the prompts
-            if len(selected_locations) < 4:
-                print(f"⚠️ Only {len(selected_locations)} locations available, need minimum 4 for map functionality", file=sys.stderr)
-                fallback_locations = self._create_fallback_locations_for_qwen(selected_locations, min_locations=4)
-                if fallback_locations:
-                    selected_locations = fallback_locations
-                    print(f"✅ Created fallback locations: {len(selected_locations)} total (minimum 4 achieved)", file=sys.stderr)
-                else:
-                    return "Insufficient locations for itinerary generation - need at least 4 places"
-            
             print(f"✅ Proceeding with {len(selected_locations)} locations for Qwen story generation", file=sys.stderr)
             
         except Exception as e:
-            print(f"경로 추천 결과를 JSON으로 파싱할 수 없습니다: {e}")
+            print(f"Failed to parse route plan: {e}", file=sys.stderr)
             return f"Failed to parse route plan: {e}"
         
-        # Use the unified, well-engineered Qwen prompt for comprehensive itinerary generation
+        # Build the simple Qwen prompt
         prompt = build_qwen_itinerary_prompt(
-            self.companion_type,                    # Companion type for tone/style
-            self.budget,                            # Budget level for activity suggestions
-            self.starting_time,                     # Starting time for temporal context
-            selected_locations,                     # The 4-5 locations from route planner
+            self.companion_type,
+            self.budget,
+            self.starting_time,
+            selected_locations,
         )
         
-        # Run the Qwen model to generate emotional storytelling
+        # Run the Qwen model to generate the itinerary
         try:
             if self.progress_callback:
-                self.progress_callback(80, "Running Qwen model for emotional storytelling...")
+                self.progress_callback(80, "Running Qwen model for itinerary generation...")
             
             runner = GenieRunner(progress_callback=self.progress_callback)
             raw_output = runner.run_qwen(prompt)
@@ -1450,97 +1000,22 @@ class Preferences:
             # Extract clean story text from the model output
             clean_story = self._extract_story_from_output(raw_output)
             
-            # Check if all places were covered
-            if clean_story and self._verify_place_coverage(clean_story, selected_locations):
-                print("✅ All places covered in first attempt", file=sys.stderr)
+            if clean_story:
+                print("✅ Itinerary generated successfully", file=sys.stderr)
                 return clean_story
             else:
-                print("⚠️ Not all places covered, attempting fallback with token-efficient prompt", file=sys.stderr)
+                print("❌ Failed to extract story from Qwen output", file=sys.stderr)
+                return "Failed to generate itinerary - no story content found"
                 
-                # Fallback: Use the unified prompt with enhanced guidance
-                fallback_prompt = build_qwen_itinerary_prompt(
-                    self.companion_type,
-                    self.budget,
-                    self.starting_time,
-                    selected_locations,
-                )
-                
-                if self.progress_callback:
-                    self.progress_callback(85, "Retrying with optimized prompt...")
-                
-                fallback_output = runner.run_qwen(fallback_prompt)
-                fallback_story = self._extract_story_from_output(fallback_output)
-                
-                if fallback_story and self._verify_place_coverage(fallback_story, selected_locations):
-                    print("✅ All places covered in fallback attempt", file=sys.stderr)
-                    return fallback_story
-                else:
-                    print("⚠️ Fallback also incomplete, attempting ultra-comprehensive prompt", file=sys.stderr)
-                    
-                    # Enhanced fallback: Use the unified prompt with additional emphasis on coverage
-                    enhanced_prompt = build_qwen_itinerary_prompt(
-                        self.companion_type,
-                        self.budget,
-                        self.starting_time,
-                        selected_locations,
-                    )
-                    
-                    if self.progress_callback:
-                        self.progress_callback(90, "Retrying with enhanced prompt...")
-                    
-                    enhanced_output = runner.run_qwen(enhanced_prompt)
-                    enhanced_story = self._extract_story_from_output(enhanced_output)
-                    
-                    if enhanced_story and self._verify_place_coverage(enhanced_story, selected_locations):
-                        print("✅ All places covered in enhanced fallback", file=sys.stderr)
-                        return enhanced_story
-                    else:
-                        print("⚠️ Enhanced fallback also incomplete, returning best available story", file=sys.stderr)
-                        return fallback_story if fallback_story else clean_story
-                    
         except Exception as e:
             print(f"Qwen model failed: {e}", file=sys.stderr)
             if self.progress_callback:
                 self.progress_callback(95, "Qwen model failed")
-            return f"Failed to generate emotional story: {e}"
-    
-    def _verify_place_coverage(self, story_text: str, selected_locations: list) -> bool:
-        """
-        Verify that all selected places are mentioned in the generated story.
-        
-        Args:
-            story_text (str): The generated story text
-            selected_locations (list): List of selected locations to verify
-            
-        Returns:
-            bool: True if all places are covered, False otherwise
-        """
-        if not story_text or not selected_locations:
-            return False
-        
-        story_lower = story_text.lower()
-        covered_count = 0
-        
-        for location in selected_locations:
-            place_name = location.get('place_name', '').lower()
-            if place_name and place_name in story_lower:
-                covered_count += 1
-                print(f"✅ Found coverage for: {location['place_name']}", file=sys.stderr)
-            else:
-                print(f"❌ Missing coverage for: {location['place_name']}", file=sys.stderr)
-        
-        coverage_percentage = (covered_count / len(selected_locations)) * 100
-        print(f"📊 Place coverage: {covered_count}/{len(selected_locations)} ({coverage_percentage:.1f}%)", file=sys.stderr)
-        
-        # Consider it covered if at least 80% of places are mentioned
-        return coverage_percentage >= 80
+            return f"Failed to generate itinerary: {e}"
     
     def _extract_story_from_output(self, raw_output: str) -> str:
         """
         Extract clean story text from the Qwen model output.
-        
-        The model might output debug information, so we need to find
-        the actual story content within the output.
         
         Args:
             raw_output (str): Raw output from the Qwen model
@@ -1553,46 +1028,12 @@ class Preferences:
             
         print(f"Raw Qwen model output: {raw_output[:500]}...", file=sys.stderr)
         
-        # Look for content after <|assistant|> tag
-        if '<|assistant|>' in raw_output:
-            parts = raw_output.split('<|assistant|>')
-            if len(parts) > 1:
-                content_after_assistant = parts[-1].strip()
-                print(f"Content after <|assistant|>: {content_after_assistant[:200]}...", file=sys.stderr)
-                
-                # Clean up the content by removing technical markers
-                cleaned_content = self._clean_story_content(content_after_assistant)
-                if cleaned_content:
-                    return cleaned_content
-        
-        # Look for content after </assistant> tag
-        if '</assistant>' in raw_output:
-            parts = raw_output.split('</assistant>')
-            if len(parts) > 1:
-                content_after_assistant = parts[-1].strip()
-                print(f"Content after </assistant>: {content_after_assistant[:200]}...", file=sys.stderr)
-                
-                cleaned_content = self._clean_story_content(content_after_assistant)
-                if cleaned_content:
-                    return cleaned_content
-        
-        # Look for content after [BEGIN]: marker
-        if '[BEGIN]:' in raw_output:
-            parts = raw_output.split('[BEGIN]:')
-            if len(parts) > 1:
-                content_after_begin = parts[-1].strip()
-                print(f"Content after [BEGIN]: {content_after_begin[:200]}...", file=sys.stderr)
-                
-                cleaned_content = self._clean_story_content(content_after_begin)
-                if cleaned_content:
-                    return cleaned_content
-        
-        # If no markers found, try to clean the entire output
+        # Clean the output by removing technical markers
         cleaned_content = self._clean_story_content(raw_output)
         if cleaned_content:
+            print(f"✅ Cleaned story content: {cleaned_content[:100]}...", file=sys.stderr)
             return cleaned_content
         
-        print(f"❌ No clean story content found in Qwen model output", file=sys.stderr)
         return None
     
     def _clean_story_content(self, content: str) -> str:
@@ -1638,36 +1079,7 @@ class Preferences:
         cleaned_content = '\n'.join(cleaned_lines).strip()
         
         if cleaned_content:
-            print(f"✅ Cleaned story content: {cleaned_content[:100]}...", file=sys.stderr)
             return cleaned_content
         
         return None
-    
-    def _ensure_variety_in_fallback(self):
-        """
-        Ensure place type variety is maintained even when geographic clustering fails.
-        
-        This method selects a balanced mix of places from different types
-        to ensure Phi has variety to choose from.
-        """
-        print(f"🔧 Ensuring variety in fallback mode", file=sys.stderr)
-        
-        # Get all available place types
-        all_types = list(self.best_places.keys())
-        print(f"🔧 Available place types: {all_types}", file=sys.stderr)
-        
-        # Create a balanced selection with representatives from each type
-        balanced_places = {}
-        max_places_per_type = 3  # Limit places per type to ensure variety
-        
-        for place_type in all_types:
-            places = self.best_places[place_type]
-            # Take up to max_places_per_type from each type
-            selected_places = places[:max_places_per_type]
-            balanced_places[place_type] = selected_places
-            print(f"🔧 {place_type}: Selected {len(selected_places)} places", file=sys.stderr)
-        
-        # Update best_places with the balanced selection
-        self.best_places = balanced_places
-        print(f"🔧 Fallback variety ensured: {list(balanced_places.keys())}", file=sys.stderr)
     
