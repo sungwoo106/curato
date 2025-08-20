@@ -1269,10 +1269,10 @@ class Preferences:
     
     def _clean_story_content(self, content: str) -> str:
         """
-        Clean story content by removing technical markers, prompt instructions, and unwanted tokens.
+        Clean story content by extracting only the assistant's response.
         
         Args:
-            content (str): Raw content to clean
+            content (str): Raw content from the model
             
         Returns:
             str: Cleaned story content
@@ -1280,178 +1280,20 @@ class Preferences:
         if not content:
             return None
         
-        # Remove unwanted tokens and markers first
+        # Remove unwanted tokens first
         content = re.sub(r'\[END\]', '', content, flags=re.IGNORECASE)
         content = re.sub(r'<\|end\|>', '', content, flags=re.IGNORECASE)
         content = re.sub(r'<\|im_end\|>', '', content, flags=re.IGNORECASE)
-        content = re.sub(r'<\|im_start\|>', '', content, flags=re.IGNORECASE)
         
-        # Remove technical markers
-        content = re.sub(r'Using libGenie\.so version \d+\.\d+\.\d+', '', content)
-        content = re.sub(r'\[PROMPT\]:.*?<\|im_end\|>', '', content, flags=re.DOTALL)
-        content = re.sub(r'\[PROMPT\]:.*?<\|end\|>', '', content, flags=re.DOTALL)
-        
-        # Split into lines for detailed cleaning
-        lines = content.split('\n')
-        cleaned_lines = []
-        
-        # Track if we're in the actual content section
-        content_started = False
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            
-            # Skip technical markers and debug info
-            if (line.startswith('Using libGenie.so') or
-                line.startswith('[INFO]') or
-                line.startswith('[PROMPT]:') or
-                line.startswith('<|system|>') or
-                line.startswith('<|user|>') or
-                line.startswith('<|assistant|>') or
-                line.startswith('<|end|>') or
-                line.startswith('<|im_start|>') or
-                line.startswith('<|im_end|>') or
-                line.startswith('Note:') or
-                line.startswith('[KPIS]:') or
-                line.startswith('Init Time:') or
-                line.startswith('Prompt Processing Time:') or
-                line.startswith('Token Generation Time:') or
-                line.startswith('Prompt Processing Rate:') or
-                line.startswith('Token Generation Rate:')):
-                continue
-            
-            # Skip prompt instructions and formatting
-            if (line.startswith('You are a professional') or
-                line.startswith('Create a comprehensive') or
-                line.startswith('IMPORTANT:') or
-                line.startswith('Context:') or
-                line.startswith('Requirements:') or
-                line.startswith('Output Format:') or
-                line.startswith('I\'ll create') or
-                line.startswith('I have now covered') or
-                line.startswith('- Companion Type:') or
-                line.startswith('- Budget Level:') or
-                line.startswith('- Start Time:') or
-                line.startswith('- Total Locations:') or
-                line.startswith('- Cover ALL') or
-                line.startswith('- Write 3-4') or
-                line.startswith('- Make it engaging') or
-                line.startswith('- Consider the budget') or
-                line.startswith('- Only finish') or
-                line.startswith('Do not stop early') or
-                line.startswith('[Place Name]') or
-                line.startswith('[3-4 detailed sentences') or
-                line.startswith('Do not stop early or truncate')):
-                continue
-            
-            # Skip numbered placeholders
-            if re.match(r'^\d+\.$', line):
-                continue
-            
-            # Skip empty numbered lines
-            if re.match(r'^\d+\.\s*$', line):
-                continue
-            
-            # Check if we've found actual content (place names with descriptions)
-            if not content_started:
-                # Look for patterns that indicate actual content has started
-                if (re.match(r'^[가-힣\w\s\-]+ - [가-힣\w\s]+$', line) or  # Korean/English place names
-                    re.match(r'^[A-Za-z\s\-]+ - [A-Za-z\s]+$', line) or  # English place names
-                    re.match(r'^\d+\.\s*[가-힣\w\s\-]+ - [가-힣\w\s]+$', line) or  # Numbered Korean/English place names
-                    re.match(r'^\d+\.\s*[A-Za-z\s\-]+ - [A-Za-z\s]+$', line)):  # Numbered English place names
-                    content_started = True
-                elif line.startswith('1.') or line.startswith('2.') or line.startswith('3.'):
-                    # Skip numbered headers
-                    continue
-                elif line.startswith('I\'ll create a comprehensive itinerary'):
-                    # Skip the assistant's response header
-                    continue
-                else:
-                    # Skip until we find actual content
-                    continue
-            
-            # If we're in content section, add the line
-            if content_started:
-                cleaned_lines.append(line)
-        
-        # Join the cleaned lines
-        cleaned_content = '\n'.join(cleaned_lines).strip()
-        
-        # Final cleanup: remove any remaining unwanted patterns
-        cleaned_content = re.sub(r'\n\s*\n\s*\n+', '\n\n', cleaned_content)  # Remove excessive newlines
-        cleaned_content = re.sub(r'^\s*\d+\.\s*', '', cleaned_content, flags=re.MULTILINE)  # Remove leading numbers
-        
-        if cleaned_content:
-            return cleaned_content
-        
-        # Fallback: try to extract content after the last prompt marker
-        fallback_content = self._extract_content_fallback(content)
-        if fallback_content:
-            return fallback_content
-        
-        # Final fallback: try to extract content after <|im_start|> assistant marker
+        # Extract content after <|im_start|> assistant marker
         assistant_content = self._extract_assistant_response(content)
         if assistant_content:
             return assistant_content
         
-        return None
+        # If no assistant marker found, return the cleaned content as fallback
+        return content.strip()
     
-    def _extract_content_fallback(self, content: str) -> str:
-        """
-        Fallback method to extract content when main cleaning fails.
-        
-        Args:
-            content (str): Raw content to extract from
-            
-        Returns:
-            str: Extracted content or None
-        """
-        if not content:
-            return None
-        
-        # Look for content after the last prompt marker
-        prompt_markers = [
-            'Do not stop early or truncate your response.',
-            'Continue this format for all',
-            'I\'ll create a comprehensive itinerary',
-            'assistant'
-        ]
-        
-        # Find the last occurrence of any prompt marker
-        last_marker_pos = -1
-        for marker in prompt_markers:
-            pos = content.rfind(marker)
-            if pos > last_marker_pos:
-                last_marker_pos = pos
-        
-        if last_marker_pos > 0:
-            # Extract content after the last marker
-            content_after_marker = content[last_marker_pos + len(marker):].strip()
-            
-            # Clean up the extracted content
-            lines = content_after_marker.split('\n')
-            cleaned_lines = []
-            
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-                
-                # Skip empty lines and technical content
-                if (line and 
-                    not line.startswith('Using libGenie.so') and
-                    not line.startswith('[INFO]') and
-                    not line.startswith('[PROMPT]:') and
-                    not line.startswith('<|') and
-                    not line.startswith('Note:')):
-                    cleaned_lines.append(line)
-            
-            if cleaned_lines:
-                return '\n'.join(cleaned_lines).strip()
-        
-        return None
+
     
     def _extract_assistant_response(self, content: str) -> str:
         """
@@ -1517,27 +1359,13 @@ class Preferences:
             if not line:
                 continue
                 
-            # Check for removed patterns
-            if (line.startswith('- Companion Type:') or
-                line.startswith('- Budget Level:') or
-                line.startswith('- Start Time:') or
-                line.startswith('- Total Locations:') or
-                line.startswith('- Cover ALL') or
-                line.startswith('- Write 3-4') or
-                line.startswith('- Make it engaging') or
-                line.startswith('- Consider the budget') or
-                line.startswith('- Only finish') or
-                line.startswith('Do not stop early') or
-                line.startswith('[Place Name]') or
-                line.startswith('[3-4 detailed sentences') or
-                line.startswith('Do not stop early or truncate') or
-                line.startswith('Using libGenie.so') or
-                line.startswith('[INFO]') or
-                line.startswith('[PROMPT]:') or
-                line.startswith('[KPIS]:') or
-                line.startswith('Init Time:') or
-                line.startswith('Token Generation Time:') or
-                '[END]' in line):
+            # Check for removed patterns (simplified for new approach)
+            if (line.startswith('<|im_start|>') or
+                line.startswith('<|im_end|>') or
+                line.startswith('<|system|>') or
+                line.startswith('<|user|>') or
+                line.startswith('[END]') or
+                line.startswith('Using libGenie.so')):
                 stats["removed_patterns"].append(line[:50] + "..." if len(line) > 50 else line)
         
         return stats
