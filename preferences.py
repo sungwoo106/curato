@@ -1297,27 +1297,20 @@ class Preferences:
     
     def _extract_assistant_response(self, content: str) -> str:
         """
-        Extract content after the <|im_start|> assistant marker.
+        Extract content between <|im_start|> assistant and [END] markers.
         
         Args:
             content (str): Raw content from the model
             
         Returns:
-            str: Content after the assistant marker, or None if not found
+            str: Extracted content between markers or None if not found
         """
-        if not content:
-            return None
-        
-        # Define the pattern to search for the marker
-        pattern = r'<\|im_start\|> assistant\s*(.*)'
-        
-        # Search for the pattern in the text
+        # Look for content between <|im_start|> assistant and [END]
+        pattern = r'<\|im_start\|> assistant\s*(.*?)(?=\[END\]|$)'
         match = re.search(pattern, content, re.DOTALL)
-        
         if match:
-            # Return the content following the marker
             extracted_content = match.group(1).strip()
-            print(f"✅ Extracted content after <|im_start|> assistant marker: {len(extracted_content)} characters", file=sys.stderr)
+            print(f"✅ Extracted content between <|im_start|> assistant and [END]: {len(extracted_content)} characters", file=sys.stderr)
             return extracted_content
         else:
             print(f"⚠️ <|im_start|> assistant marker not found in content", file=sys.stderr)
@@ -1359,13 +1352,19 @@ class Preferences:
             if not line:
                 continue
                 
-            # Check for removed patterns (simplified for new approach)
+            # Check for removed patterns (focusing on the new extraction approach)
             if (line.startswith('<|im_start|>') or
                 line.startswith('<|im_end|>') or
                 line.startswith('<|system|>') or
                 line.startswith('<|user|>') or
-                line.startswith('[END]') or
-                line.startswith('Using libGenie.so')):
+                line.startswith('[PROMPT]:') or
+                line.startswith('Using libGenie.so') or
+                line.startswith('[KPIS]:') or
+                line.startswith('Init Time:') or
+                line.startswith('Token Generation Time:') or
+                line.startswith('Prompt Processing Time:') or
+                line.startswith('Token Generation Rate:') or
+                line.startswith('Prompt Processing Rate:')):
                 stats["removed_patterns"].append(line[:50] + "..." if len(line) > 50 else line)
         
         return stats
