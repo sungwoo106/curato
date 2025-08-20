@@ -11,6 +11,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Data;
+using System.Windows.Shapes;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Curato.Models;
@@ -88,6 +90,10 @@ namespace Curato.Views
                 psi.StandardErrorEncoding = Encoding.UTF8;
 
                 using var process = Process.Start(psi);
+                if (process == null)
+                {
+                    throw new InvalidOperationException("Failed to start Python process");
+                }
                 using var reader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8);
                 string result = await reader.ReadToEndAsync();
                 

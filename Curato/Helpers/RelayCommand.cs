@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Input;
+using System.Windows;
 
 // <summary>
 // RelayCommand allows for command binding in WPF applications.
@@ -19,8 +20,12 @@ namespace Curato.Helpers
             _canExecute = canExecute;
         }
 
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter!) ?? true;
         public void Execute(object? parameter) => _execute(parameter!);
-        public event EventHandler? CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged
+        {
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
+        }
     }
 }
