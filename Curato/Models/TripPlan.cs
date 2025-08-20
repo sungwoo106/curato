@@ -1,5 +1,3 @@
-using Curato.Models;
-
 namespace Curato.Models
 {
     public class TripPlan

@@ -6,6 +6,8 @@ using System.Windows;
 using Curato.Helpers;
 using Curato.Models;
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Curato.Views
 {
@@ -132,13 +134,24 @@ namespace Curato.Views
                 {
                     _phiCompleted = true;
                     
+                    Logger.LogInfo($"LoadingPage - Received phi_completion message: {update.message}");
+                    Logger.LogInfo($"LoadingPage - Message length: {update.message.Length}");
+                    
                     // Extract the route plan data from the message using pipe separator
                     var routePlanData = update.message.Substring("phi_completion|".Length);
+                    Logger.LogInfo($"LoadingPage - Extracted route plan data length: {routePlanData.Length}");
+                    
                     if (!string.IsNullOrEmpty(routePlanData))
                     {
                         _routePlanData = routePlanData;
-                        Logger.LogInfo($"LoadingPage - Extracted route plan data length: {routePlanData.Length}");
                         Logger.LogInfo($"LoadingPage - Route plan data preview: {routePlanData.Substring(0, Math.Min(200, routePlanData.Length))}...");
+                        
+                        // Log the first and last few characters to see the exact format
+                        if (routePlanData.Length > 10)
+                        {
+                            Logger.LogInfo($"LoadingPage - First 10 chars: '{routePlanData.Substring(0, 10)}'");
+                            Logger.LogInfo($"LoadingPage - Last 10 chars: '{routePlanData.Substring(routePlanData.Length - 10)}'");
+                        }
                         
                         // Validate JSON format
                         try
@@ -149,6 +162,7 @@ namespace Curato.Views
                         catch (Exception jsonEx)
                         {
                             Logger.LogError($"LoadingPage - JSON validation failed: {jsonEx.Message}", jsonEx);
+                            Logger.LogInfo($"LoadingPage - Raw route plan data for debugging: '{routePlanData}'");
                         }
                     }
                     else
@@ -185,31 +199,46 @@ namespace Curato.Views
             try
             {
                 Logger.LogInfo("LoadingPage - Phi completed, showing output page early");
+                Logger.LogInfo($"LoadingPage - _routePlanData is null: {_routePlanData == null}");
+                Logger.LogInfo($"LoadingPage - _routePlanData is empty: {string.IsNullOrEmpty(_routePlanData)}");
                 
                 // Parse the route plan data and populate AppState before showing OutputPage
                 if (!string.IsNullOrEmpty(_routePlanData))
                 {
                     Logger.LogInfo($"LoadingPage - Attempting to parse route plan data: {_routePlanData.Length} characters");
+                    Logger.LogInfo($"LoadingPage - Raw data: '{_routePlanData}'");
                     
                     try
                     {
-                        // Parse the route plan JSON and create a TripPlan object
-                        var routePlan = System.Text.Json.JsonSerializer.Deserialize<TripPlan>(_routePlanData);
-                        if (routePlan != null)
+                        // Parse the route plan JSON - it's an array of places, not a TripPlan object
+                        Logger.LogInfo("LoadingPage - Starting JSON deserialization of places array...");
+                        var placesArray = System.Text.Json.JsonSerializer.Deserialize<List<PhiPlace>>(_routePlanData);
+                        Logger.LogInfo("LoadingPage - JSON deserialization of places array completed");
+                        
+                        if (placesArray != null && placesArray.Count > 0)
                         {
+                            // Create a TripPlan object and populate it with the parsed places
+                            var routePlan = new TripPlan
+                            {
+                                SuggestedPlaces = placesArray,
+                                EmotionalNarrative = string.Empty, // Will be filled by Qwen later
+                                SelectedPlaces = placesArray.Select(p => p.Name).ToList()
+                            };
+                            
                             // Set the route plan in AppState so the map can access it
                             AppState.SharedTripPlan = routePlan;
-                            Logger.LogInfo($"LoadingPage - Route plan parsed and set in AppState: {routePlan.SuggestedPlaces?.Count ?? 0} places");
+                            Logger.LogInfo($"LoadingPage - Route plan created and set in AppState: {routePlan.SuggestedPlaces?.Count ?? 0} places");
                         }
                         else
                         {
-                            Logger.LogError("LoadingPage - JSON deserialization returned null");
+                            Logger.LogError("LoadingPage - JSON deserialization returned null or empty array");
+                            AppState.SharedTripPlan = new TripPlan();
                         }
                     }
                     catch (Exception ex)
                     {
                         Logger.LogError($"Failed to parse route plan data: {ex.Message}", ex);
-                        Logger.LogInfo($"LoadingPage - Raw route plan data: {_routePlanData}");
+                        Logger.LogInfo($"LoadingPage - Raw route plan data: '{_routePlanData}'");
                         
                         // Create a default TripPlan to prevent crashes
                         AppState.SharedTripPlan = new TripPlan();
