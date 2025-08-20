@@ -94,7 +94,7 @@ public static class PlannerEngine
                             
                             // Report progress
                             progress?.Report((progressValue, message));
-                            Logger.LogInfo($"Progress: {progressValue}% - {message}");
+                            // Removed duplicate logging - progress is already logged in SearchPage.xaml.cs
                         }
                         else if (type == "completion")
                         {
