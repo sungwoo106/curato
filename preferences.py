@@ -1391,6 +1391,11 @@ class Preferences:
         if fallback_content:
             return fallback_content
         
+        # Final fallback: try to extract content after <|im_start|> assistant marker
+        assistant_content = self._extract_assistant_response(content)
+        if assistant_content:
+            return assistant_content
+        
         return None
     
     def _extract_content_fallback(self, content: str) -> str:
@@ -1447,6 +1452,34 @@ class Preferences:
                 return '\n'.join(cleaned_lines).strip()
         
         return None
+    
+    def _extract_assistant_response(self, content: str) -> str:
+        """
+        Extract content after the <|im_start|> assistant marker.
+        
+        Args:
+            content (str): Raw content from the model
+            
+        Returns:
+            str: Content after the assistant marker, or None if not found
+        """
+        if not content:
+            return None
+        
+        # Define the pattern to search for the marker
+        pattern = r'<\|im_start\|> assistant\s*(.*)'
+        
+        # Search for the pattern in the text
+        match = re.search(pattern, content, re.DOTALL)
+        
+        if match:
+            # Return the content following the marker
+            extracted_content = match.group(1).strip()
+            print(f"✅ Extracted content after <|im_start|> assistant marker: {len(extracted_content)} characters", file=sys.stderr)
+            return extracted_content
+        else:
+            print(f"⚠️ <|im_start|> assistant marker not found in content", file=sys.stderr)
+            return None
     
     def get_cleaning_stats(self, raw_output: str) -> dict:
         """

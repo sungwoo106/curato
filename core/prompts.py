@@ -117,6 +117,7 @@ Write 3-4 engaging sentences for each place, suitable for {companion_type.lower(
 <|im_end|>
 
 <|im_start|>assistant
+I'll create a detailed itinerary for your {companion_type.lower()} outing in Seoul, covering all {len(selected_places)} locations:
 """
     
     return prompt
