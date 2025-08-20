@@ -8,13 +8,16 @@ using System.Text.Json.Serialization;
 using Curato.Models;
 using secure;
 using Curato.Helpers;
+using System.Text;
 
 namespace Curato.Views
 {
     public partial class OutputPage : UserControl
     {
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
+        public double Latitude { get; set; } = 37.5665; // default to Seoul
+        public double Longitude { get; set; } = 126.9780;
+        private readonly StringBuilder _streamingStoryBuilder = new StringBuilder();
+        private bool _isStreaming = false;
 
         public OutputPage()
         {
@@ -28,15 +31,23 @@ namespace Curato.Views
 
         private async void OutputPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // Wait a moment for the AppState to be properly populated
-            await Task.Delay(100);
+            Logger.LogInfo("OutputPage_Loaded - Starting");
             
-            // Load the emotional narrative into the TextBlock
+            // Set preferences summary
+            if (AppState.SharedInputViewModel != null)
+            {
+                var vm = AppState.SharedInputViewModel;
+                var summary = $"{vm.SelectedCompanion} • {vm.SelectedBudget} • {vm.SelectedTime}";
+                if (!string.IsNullOrWhiteSpace(vm.LocationQuery) && vm.LocationQuery != "Search Location")
+                {
+                    summary += $" • {vm.LocationQuery}";
+                }
+                PreferencesSummaryLabel.Text = summary;
+            }
+
+            // Check if we have a plan from AppState
             var plan = AppState.SharedTripPlan;
-            
-            // Log the plan data
-            Logger.LogInfo($"OutputPage_Loaded - Plan: {plan?.EmotionalNarrative}");
-            Logger.LogInfo($"OutputPage_Loaded - Plan is null: {plan == null}");
+            Logger.LogInfo($"OutputPage_Loaded - Plan from AppState: {plan?.EmotionalNarrative}");
             Logger.LogInfo($"OutputPage_Loaded - EmotionalNarrative is null/empty: {string.IsNullOrWhiteSpace(plan?.EmotionalNarrative)}");
             Logger.LogInfo($"OutputPage_Loaded - SuggestedPlaces count: {plan?.SuggestedPlaces?.Count ?? 0}");
             
@@ -54,6 +65,7 @@ namespace Curato.Views
                 EmotionalItineraryTextBlock.Inlines.Clear();
                 foreach (var para in cleanedContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
+                    EmotionalItineraryTextBlock.Inlines.Clear();
                     EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
@@ -62,7 +74,7 @@ namespace Curato.Views
             else
             {
                 Logger.LogInfo("Plan or EmotionalNarrative is null/empty, not setting text");
-                EmotionalItineraryTextBlock.Text = "No story generated. Please try again.";
+                EmotionalItineraryTextBlock.Text = "Story is being generated in real-time...";
                 
                 // Try to reload from AppState after a longer delay
                 await Task.Delay(1000);
@@ -332,6 +344,84 @@ namespace Curato.Views
             }
 
             return string.Join("\n", cleanedLines);
+        }
+
+        /// <summary>
+        /// Receives streaming tokens for real-time story display
+        /// </summary>
+        /// <param name="token">The token to display</param>
+        /// <param name="isFinal">Whether this is the final token</param>
+        public void ReceiveStreamingToken(string token, bool isFinal = false)
+        {
+            try
+            {
+                if (isFinal)
+                {
+                    // Final token received - story generation complete
+                    _isStreaming = false;
+                    Logger.LogInfo("Streaming completed - story generation finished");
+                    
+                    // Update the final story in AppState if we have a complete story
+                    if (_streamingStoryBuilder.Length > 0)
+                    {
+                        var finalStory = _streamingStoryBuilder.ToString();
+                        if (AppState.SharedTripPlan != null)
+                        {
+                            AppState.SharedTripPlan.EmotionalNarrative = finalStory;
+                        }
+                        Logger.LogInfo($"Final streaming story saved to AppState: {finalStory.Substring(0, Math.Min(100, finalStory.Length))}...");
+                    }
+                    return;
+                }
+                
+                if (string.IsNullOrEmpty(token))
+                    return;
+                
+                // Start streaming mode if not already started
+                if (!_isStreaming)
+                {
+                    _isStreaming = true;
+                    _streamingStoryBuilder.Clear();
+                    EmotionalItineraryTextBlock.Inlines.Clear();
+                    Logger.LogInfo("Starting real-time story streaming");
+                }
+                
+                // Add token to builder
+                _streamingStoryBuilder.Append(token);
+                
+                // Display token in real-time
+                Dispatcher.Invoke(() =>
+                {
+                    EmotionalItineraryTextBlock.Inlines.Add(new Run(token));
+                    
+                    // Auto-scroll to bottom
+                    var scrollViewer = FindScrollViewer();
+                    if (scrollViewer != null)
+                    {
+                        scrollViewer.ScrollToBottom();
+                    }
+                });
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error processing streaming token: {ex.Message}", ex);
+            }
+        }
+        
+        /// <summary>
+        /// Finds the ScrollViewer parent of the EmotionalItineraryTextBlock
+        /// </summary>
+        private ScrollViewer? FindScrollViewer()
+        {
+            var parent = EmotionalItineraryTextBlock.Parent as FrameworkElement;
+            while (parent != null)
+            {
+                if (parent is ScrollViewer scrollViewer)
+                    return scrollViewer;
+                parent = parent.Parent as FrameworkElement;
+            }
+            return null;
         }
     }
 }

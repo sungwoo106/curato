@@ -1244,6 +1244,100 @@ class Preferences:
                 self.progress_callback(95, "Qwen model failed")
             return f"Failed to generate itinerary: {e}"
     
+    def run_qwen_itinerary_streaming(self, route_plan_json=None, stream_callback=None):
+        """
+        Generate a comprehensive itinerary using the Qwen model with real-time streaming.
+        
+        This method takes the route plan from run_route_planner and generates
+        a detailed itinerary that covers all selected places, streaming the output
+        in real-time for immediate display.
+        
+        Args:
+            route_plan_json (str, optional): Pre-generated route plan JSON. 
+                                          If None, will call run_route_planner().
+            stream_callback (callable, optional): Callback function for streaming updates.
+                                               Should accept (token, is_final) parameters.
+        
+        Returns:
+            str: Comprehensive itinerary text or error message
+        """
+        # Get the route plan - either from parameter or by calling route planner
+        if route_plan_json is None:
+            route_plan_json = self.run_route_planner()
+        
+        if not route_plan_json:
+            return "Failed to generate route plan - cannot create itinerary"
+        
+        try:
+            # Parse the JSON route plan
+            selected_locations = json.loads(route_plan_json)
+            
+            # Safety check: Ensure we have valid locations
+            if not selected_locations or not isinstance(selected_locations, list):
+                return "Invalid route plan format - no locations found"
+            
+            if len(selected_locations) == 0:
+                return "No locations selected for itinerary - cannot generate story"
+            
+            print(f"✅ Proceeding with {len(selected_locations)} locations for Qwen streaming story generation", file=sys.stderr)
+            
+        except Exception as e:
+            print(f"Failed to parse route plan: {e}", file=sys.stderr)
+            return f"Failed to parse route plan: {e}"
+        
+        # Build the simple Qwen prompt
+        prompt = build_qwen_itinerary_prompt(
+            self.companion_type,
+            self.budget,
+            self.starting_time,
+            selected_locations,
+        )
+        
+        # Run the Qwen model with streaming to generate the itinerary
+        try:
+            if self.progress_callback:
+                self.progress_callback(80, "Running Qwen model with streaming for real-time itinerary generation...")
+            
+            runner = self._get_qwen_runner()
+            
+            # Define streaming callback to send real-time updates
+            def streaming_callback(token, is_final):
+                if stream_callback:
+                    stream_callback(token, is_final)
+                else:
+                    # Default behavior: print to stderr for debugging
+                    if not is_final:
+                        print(token, end='', file=sys.stderr, flush=True)
+                    else:
+                        print("\n✅ Streaming completed", file=sys.stderr)
+            
+            # Use streaming method if available, fallback to regular method
+            if hasattr(runner, 'run_qwen_streaming'):
+                raw_output = runner.run_qwen_streaming(prompt, streaming_callback)
+            else:
+                # Fallback to non-streaming method
+                print("⚠️ Streaming not available, using regular generation", file=sys.stderr)
+                raw_output = runner.run_qwen(prompt)
+                # Simulate streaming by sending the complete output
+                if stream_callback:
+                    stream_callback(raw_output, True)
+            
+            # Extract clean story text from the model output
+            clean_story = self._extract_story_from_output(raw_output)
+            
+            if clean_story:
+                print("✅ Streaming itinerary generation completed successfully", file=sys.stderr)
+                return clean_story
+            else:
+                print("❌ Failed to extract story from Qwen streaming output", file=sys.stderr)
+                return "Failed to generate itinerary - no story content found"
+                
+        except Exception as e:
+            print(f"Qwen streaming model failed: {e}", file=sys.stderr)
+            if self.progress_callback:
+                self.progress_callback(95, "Qwen streaming model failed")
+            return f"Failed to generate streaming itinerary: {e}"
+    
     def _extract_story_from_output(self, raw_output: str) -> str:
         """
         Extract clean story text from the Qwen model output.

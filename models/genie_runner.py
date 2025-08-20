@@ -402,6 +402,20 @@ class GenieRunner:
         """
         return self._run_model("qwen", prompt)
     
+    def run_qwen_streaming(self, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
+        """
+        Run the Qwen model with streaming support for real-time output.
+        
+        Args:
+            prompt (str): The complete prompt to send to the Qwen model
+            stream_callback (Callable[[str, bool], None]): Callback function for streaming tokens
+                                                       First param: token text, Second param: is_final
+            
+        Returns:
+            str: The complete generated output from the Qwen model
+        """
+        return self._run_model_streaming("qwen", prompt, stream_callback)
+    
     def _run_model(self, model_type: ModelType, prompt: str) -> str:
         """
         Internal method to run a specific model type.
@@ -505,6 +519,140 @@ class GenieRunner:
             raise RuntimeError(error_msg) from e
         except Exception as e:
             error_msg = f"Unexpected error running {model_type} model: {e}"
+            print(f"❌ Error: {error_msg}", file=sys.stderr)
+            raise RuntimeError(error_msg) from e
+        finally:
+            # Clean up the temporary prompt file
+            try:
+                if prompt_path.exists():
+                    prompt_path.unlink()
+            except Exception:
+                pass  # Ignore cleanup errors
+    
+    def _run_model_streaming(self, model_type: ModelType, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
+        """
+        Internal method to run a specific model type with streaming support.
+        
+        Args:
+            model_type (ModelType): Type of model to run ("phi" or "qwen")
+            prompt (str): The prompt to send to the model
+            stream_callback (Callable[[str, bool], None]): Callback for streaming tokens
+            
+        Returns:
+            str: The complete generated output from the model
+        """
+        # Determine which bundle to use
+        if model_type == "phi":
+            bundle_path = self.phi_bundle_path
+            prompt_file = "phi_prompt.txt"
+        elif model_type == "qwen":
+            bundle_path = self.qwen_bundle_path
+            prompt_file = "qwen_prompt.txt"
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
+        
+        # Create the full path to the prompt file
+        prompt_path = self.working_dir / prompt_file
+        
+        try:
+            # Write the prompt to a temporary text file with UTF-8 encoding
+            with open(prompt_path, "w", encoding="utf-8") as f:
+                f.write(prompt)
+            
+            # Determine which executable to use based on model type
+            if model_type == "phi":
+                executable = self.phi_genie_executable
+            elif model_type == "qwen":
+                executable = self.qwen_genie_executable
+            else:
+                raise ValueError(f"Unsupported model type: {model_type}")
+            
+            print(f"📝 Running {model_type} model with streaming...", file=sys.stderr)
+            print(f"📁 Bundle path: {bundle_path}", file=sys.stderr)
+            print(f"📁 Working directory: {self.working_dir}", file=sys.stderr)
+            print(f"🔧 Executable: {executable}", file=sys.stderr)
+            
+            # Show NPU processing information
+            print("🚀 Starting NPU inference with streaming...", file=sys.stderr)
+            print("⏳ Model is now processing on your NPU...", file=sys.stderr)
+            print("💡 Monitor NPU usage in Task Manager > Performance tab", file=sys.stderr)
+            print("🔍 You can also check GPU-Z or similar tools for detailed NPU stats", file=sys.stderr)
+            
+            # Send progress update if callback is available
+            if self.progress_callback:
+                self.progress_callback(85, f"Running {model_type} model on NPU with streaming...")
+            
+            # Execute the genie-t2t-run executable with the correct parameters
+            # Format: genie-t2t-run.exe -c genie_config.json --prompt_file prompt.txt
+            # Note: We run from the bundle directory so it can find its config and model files
+            cmd = [
+                executable,
+                "-c", "genie_config.json",
+                "--prompt_file", str(prompt_path)
+            ]
+            
+            print(f"🚀 Running command: {' '.join(cmd)}", file=sys.stderr)
+            print(f"🚀 From directory: {bundle_path}", file=sys.stderr)
+            
+            # Add progress indicator
+            import time
+            start_time = time.time()
+            
+            # Use Popen for real-time streaming
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=bundle_path,  # Run from the bundle directory
+                encoding="utf-8",
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            # Stream output in real-time
+            full_output = ""
+            
+            while True:
+                # Read output in chunks for better performance
+                chunk = process.stdout.read(1)  # Read one character at a time for smooth streaming
+                if not chunk:
+                    break
+                
+                full_output += chunk
+                
+                # Send individual characters for real-time streaming
+                stream_callback(chunk, False)
+                
+                # Flush to ensure immediate display
+                sys.stdout.flush()
+            
+            # Wait for process to complete
+            process.wait()
+            
+            end_time = time.time()
+            processing_time = end_time - start_time
+            
+            print(f"✅ NPU inference completed in {processing_time:.2f} seconds!", file=sys.stderr)
+            
+            # Send progress update if callback is available
+            if self.progress_callback:
+                self.progress_callback(90, f"{model_type} model completed successfully")
+            
+            # Check if the command was successful
+            if process.returncode != 0:
+                stderr_output = process.stderr.read()
+                error_msg = f"Model {model_type} failed to run (exit code {process.returncode}): {stderr_output}"
+                print(f"❌ Error: {error_msg}", file=sys.stderr)
+                raise RuntimeError(error_msg)
+            
+            # Send final completion signal
+            stream_callback("", True)
+            
+            # Return the complete output
+            return full_output.strip()
+            
+        except Exception as e:
+            error_msg = f"Unexpected error running {model_type} model with streaming: {e}"
             print(f"❌ Error: {error_msg}", file=sys.stderr)
             raise RuntimeError(error_msg) from e
         finally:

@@ -22,6 +22,10 @@ namespace Curato.Views
         private readonly Func<Task<UserControl>>? _onFinishedAsync;
         private readonly Func<UserControl>? _onFinished;
         private Progress<(int progress, string message)>? _progressTracker;
+        private MainWindow? _parentWindow;
+        private bool _phiCompleted = false;
+        private bool _streamingStarted = false;
+        private OutputPage? _currentOutputPage;
 
         public LoadingPage(Func<Task<UserControl>> onFinishedAsync)
         {
@@ -95,10 +99,50 @@ namespace Curato.Views
             {
                 targetProgress = update.progress;
                 
+                // Handle special streaming messages
+                if (update.message.StartsWith("streaming_token:"))
+                {
+                    // This is a streaming token - handle it specially
+                    if (!_streamingStarted)
+                    {
+                        _streamingStarted = true;
+                        ProgressSubtext.Text = "Generating story in real-time...";
+                    }
+                    
+                    // Extract the token and send it to the OutputPage
+                    var token = update.message.Substring("streaming_token:".Length);
+                    if (_currentOutputPage != null)
+                    {
+                        _currentOutputPage.ReceiveStreamingToken(token, false);
+                    }
+                    
+                    return; // Don't update subtext for streaming tokens
+                }
+                
                 // Update status message in subtext if provided
                 if (!string.IsNullOrEmpty(update.message))
                 {
                     ProgressSubtext.Text = update.message;
+                }
+                
+                // Check if Phi has completed and we should show output page
+                if (update.message.Contains("Phi model completed") && !_phiCompleted)
+                {
+                    _phiCompleted = true;
+                    ProgressSubtext.Text = "Phi model completed - showing output page";
+                    
+                    // Show output page immediately after Phi completes
+                    ShowOutputPageEarly();
+                }
+                
+                // Check if story streaming completed
+                if (update.message.Contains("Story streaming completed"))
+                {
+                    // Send final token to OutputPage
+                    if (_currentOutputPage != null)
+                    {
+                        _currentOutputPage.ReceiveStreamingToken("", true);
+                    }
                 }
                 
                 // Start smooth progress animation if not already running
@@ -107,6 +151,37 @@ namespace Curato.Views
                     smoothProgressTimer.Start();
                 }
             });
+        }
+        
+        private async void ShowOutputPageEarly()
+        {
+            try
+            {
+                Logger.LogInfo("LoadingPage - Phi completed, showing output page early");
+                
+                // Create a basic OutputPage to show immediately
+                _currentOutputPage = new OutputPage();
+                
+                // Get the parent window
+                if (_parentWindow == null)
+                {
+                    _parentWindow = Window.GetWindow(this) as MainWindow;
+                }
+                
+                if (_parentWindow != null)
+                {
+                    // Show the output page immediately
+                    _parentWindow.MainFrame.Content = _currentOutputPage;
+                    
+                    // Continue monitoring progress for story streaming
+                    // The story will be streamed to the OutputPage in real-time
+                    Logger.LogInfo("LoadingPage - Output page shown, continuing to monitor story streaming");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Failed to show output page early", ex);
+            }
         }
 
         private async void LoadingPage_LoadedAsync(object sender, EventArgs e)
@@ -117,6 +192,9 @@ namespace Curato.Views
 
             // Set initial subtext message
             ProgressSubtext.Text = "Preparing your personalized trip...";
+            
+            // Get reference to parent window
+            _parentWindow = Window.GetWindow(this) as MainWindow;
 
             try
             {
@@ -127,24 +205,37 @@ namespace Curato.Views
                 
                 Logger.LogInfo($"LoadingPage_LoadedAsync - Async operation completed, result type: {result?.GetType().Name}");
                 
-                // Ensure progress reaches 100%
-                targetProgress = 100;
-                
-                // Wait for smooth animation to complete
-                await Task.Delay(500);
-                
-                // Stop the timers
-                dotTimer.Stop();
-                smoothProgressTimer.Stop();
-
-                Logger.LogInfo("LoadingPage_LoadedAsync - Navigating to result page");
-
-                // Navigate to the result page
-                var parentWindow = Window.GetWindow(this) as MainWindow;
-                if (parentWindow != null)
+                // If we haven't shown the output page yet (Phi didn't complete), show it now
+                if (!_phiCompleted)
                 {
-                    parentWindow.MainFrame.Content = result ?? new OutputPage();
-                    Logger.LogInfo("LoadingPage_LoadedAsync - Navigation completed");
+                    // Ensure progress reaches 100%
+                    targetProgress = 100;
+                    
+                    // Wait for smooth animation to complete
+                    await Task.Delay(500);
+                    
+                    // Stop the timers
+                    dotTimer.Stop();
+                    smoothProgressTimer.Stop();
+
+                    Logger.LogInfo("LoadingPage_LoadedAsync - Navigating to result page");
+
+                    // Navigate to the result page
+                    if (_parentWindow != null)
+                    {
+                        _parentWindow.MainFrame.Content = result ?? new OutputPage();
+                        Logger.LogInfo("LoadingPage_LoadedAsync - Navigation completed");
+                    }
+                }
+                else
+                {
+                    // Phi already completed and output page is shown
+                    // Just ensure the final result is properly set
+                    Logger.LogInfo("LoadingPage_LoadedAsync - Phi already completed, output page already shown");
+                    
+                    // Stop the timers
+                    dotTimer.Stop();
+                    smoothProgressTimer.Stop();
                 }
             }
             catch (Exception ex)
@@ -156,10 +247,9 @@ namespace Curato.Views
                 smoothProgressTimer.Stop();
                 
                 // Navigate to search page on error
-                var parentWindow = Window.GetWindow(this) as MainWindow;
-                if (parentWindow != null)
+                if (_parentWindow != null)
                 {
-                    parentWindow.MainFrame.Content = new SearchPage();
+                    _parentWindow.MainFrame.Content = new SearchPage();
                 }
             }
         }

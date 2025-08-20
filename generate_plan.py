@@ -104,6 +104,34 @@ def send_progress_update(progress: int, message: str):
     }
     print(json.dumps(progress_data, ensure_ascii=False), flush=True)
 
+def send_phi_completion(route_plan_json: str):
+    """
+    Send Phi completion signal to show output page immediately.
+    
+    Args:
+        route_plan_json (str): The generated route plan JSON with location data
+    """
+    completion_data = {
+        "type": "phi_completion",
+        "route_plan": route_plan_json
+    }
+    print(json.dumps(completion_data, ensure_ascii=False), flush=True)
+
+def send_streaming_token(token: str, is_final: bool = False):
+    """
+    Send a streaming token to the C# frontend for real-time display.
+    
+    Args:
+        token (str): The token to display
+        is_final (bool): Whether this is the final token
+    """
+    token_data = {
+        "type": "streaming_token",
+        "token": token,
+        "is_final": is_final
+    }
+    print(json.dumps(token_data, ensure_ascii=False), flush=True)
+
 def send_completion_update(route_plan_json: str, emotional_itinerary: str):
     """
     Send the final completion result to the C# frontend.
@@ -229,14 +257,28 @@ def main() -> None:
             if route_plan_json:
                 send_progress_update(75, "Route plan generated successfully")
                 print(f"✅ Route plan generated: {route_plan_json[:200]}...", file=sys.stderr)
+                send_phi_completion(route_plan_json) # Signal Phi completion
             else:
                 send_progress_update(75, "Route plan generation failed")
                 print("❌ Route plan generation failed", file=sys.stderr)
 
-            # Generate the comprehensive itinerary text using the Qwen model
-            send_progress_update(80, "Generating comprehensive itinerary with Qwen model...")
-            print("Generating AI-powered itinerary...", file=sys.stderr)
-            itinerary = planner.run_qwen_itinerary(route_plan_json)
+            # Generate the comprehensive itinerary text using the Qwen model with streaming
+            send_progress_update(80, "Generating comprehensive itinerary with Qwen model (streaming)...")
+            print("Generating AI-powered itinerary with streaming...", file=sys.stderr)
+            
+            # Use streaming method if available
+            if hasattr(planner, 'run_qwen_itinerary_streaming'):
+                # Define streaming callback to send tokens in real-time
+                def streaming_callback(token, is_final):
+                    if not is_final:
+                        send_streaming_token(token, False)
+                    else:
+                        send_streaming_token("", True)
+                
+                itinerary = planner.run_qwen_itinerary_streaming(route_plan_json, streaming_callback)
+            else:
+                # Fallback to non-streaming method
+                itinerary = planner.run_qwen_itinerary(route_plan_json)
             
             if itinerary:
                 send_progress_update(95, "Itinerary generated successfully")

@@ -70,6 +70,7 @@ public static class PlannerEngine
             string? finalItinerary = null;
             string? finalRoutePlan = null;
             bool hasCompleted = false;
+            bool phiCompleted = false;
             
             // Handle streaming output for progress updates
             process.OutputDataReceived += (sender, e) =>
@@ -95,6 +96,45 @@ public static class PlannerEngine
                             // Report progress
                             progress?.Report((progressValue, message));
                             // Removed duplicate logging - progress is already logged in SearchPage.xaml.cs
+                        }
+                        else if (type == "phi_completion")
+                        {
+                            // Phi model completed - we can show the output page now
+                            if (progressData.TryGetProperty("route_plan", out var routePlanElement))
+                            {
+                                finalRoutePlan = routePlanElement.GetString();
+                                Logger.LogInfo($"Phi completed - route plan received: {finalRoutePlan?.Substring(0, Math.Min(100, finalRoutePlan?.Length ?? 0))}...");
+                                phiCompleted = true;
+                                
+                                // Report Phi completion to show output page immediately
+                                progress?.Report((85, "Phi model completed - showing output page"));
+                            }
+                            else
+                            {
+                                Logger.LogInfo("No route_plan property found in phi_completion message");
+                            }
+                        }
+                        else if (type == "streaming_token")
+                        {
+                            // Handle streaming tokens for real-time story display
+                            if (progressData.TryGetProperty("token", out var tokenElement))
+                            {
+                                string token = tokenElement.GetString() ?? "";
+                                bool isFinal = progressData.TryGetProperty("is_final", out var isFinalElement) 
+                                    ? isFinalElement.GetBoolean() 
+                                    : false;
+                                
+                                if (!isFinal && !string.IsNullOrEmpty(token))
+                                {
+                                    // Send streaming token for real-time display
+                                    progress?.Report((90, $"streaming_token:{token}"));
+                                }
+                                else if (isFinal)
+                                {
+                                    // Streaming completed
+                                    progress?.Report((95, "Story streaming completed"));
+                                }
+                            }
                         }
                         else if (type == "completion")
                         {
