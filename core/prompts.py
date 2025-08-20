@@ -42,9 +42,15 @@ def build_phi_location_prompt(
         str: Simple prompt string for Phi
     """
     
-    # Format the candidate places simply
+    # Format the candidate places in RANDOM order to ensure Phi doesn't just pick the first few
+    import random
+    
+    # Create a shuffled copy of the recommendations to randomize the order Phi sees
+    shuffled_recommendations = recommendations_json.copy()
+    random.shuffle(shuffled_recommendations)
+    
     places_text = ""
-    for i, place in enumerate(recommendations_json, 1):
+    for i, place in enumerate(shuffled_recommendations, 1):
         place_name = place.get('place_name', 'Unknown')
         place_type = place.get('place_type', 'Unknown')
         places_text += f"{i}. {place_name} ({place_type})\n"
@@ -60,7 +66,8 @@ Select exactly 4-5 places from this list for a {companion_type.lower()} outing:
 
 Rules:
 - Pick exactly 4-5 places (no more, no less)
-- Choose randomly for variety
+- IMPORTANT: Choose places from DIFFERENT positions in the list (not just the first few)
+- Mix selections from early, middle, and late positions for variety
 - Do not repeat any place
 - Use this format: 1. [Place Name] - [Brief reason]
 
