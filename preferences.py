@@ -1317,9 +1317,16 @@ class Preferences:
         """
         # Look for content after <|im_start|> assistant marker
         pattern = r'<\|im_start\|> assistant\s*(.*)'
+        print(f"🔍 Searching for pattern: {pattern}", file=sys.stderr)
+        print(f"🔍 Content length: {len(content)}", file=sys.stderr)
+        print(f"🔍 Content contains '<|im_start|>': {'<|im_start|>' in content}", file=sys.stderr)
+        print(f"🔍 Content contains 'assistant': {'assistant' in content}", file=sys.stderr)
+        print(f"🔍 Content contains '<|im_start|>assistant': {'<|im_start|>assistant' in content}", file=sys.stderr)
+        
         match = re.search(pattern, content, re.DOTALL)
         if match:
             extracted_content = match.group(1).strip()
+            print(f"✅ Regex match found! Extracted {len(extracted_content)} characters", file=sys.stderr)
             
             # Clean up the extracted content by removing technical markers
             # Stop at common technical markers that indicate the end of useful content
@@ -1339,6 +1346,7 @@ class Preferences:
                 pos = extracted_content.find(marker)
                 if pos != -1 and pos < earliest_marker_pos:
                     earliest_marker_pos = pos
+                    print(f"🔍 Found technical marker '{marker}' at position {pos}", file=sys.stderr)
             
             # Cut off at the first technical marker
             if earliest_marker_pos < len(extracted_content):
@@ -1350,6 +1358,8 @@ class Preferences:
             return extracted_content
         else:
             print(f"⚠️ <|im_start|> assistant marker not found in content", file=sys.stderr)
+            print(f"🔍 Content preview (first 300 chars): {content[:300]}...", file=sys.stderr)
+            print(f"🔍 Content preview (last 300 chars): {content[-300:] if len(content) > 300 else content}...", file=sys.stderr)
             return None
     
     def get_cleaning_stats(self, raw_output: str) -> dict:
