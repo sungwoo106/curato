@@ -212,7 +212,10 @@ namespace Curato.Views
                     {
                         // Parse the route plan JSON - it's an array of places, not a TripPlan object
                         Logger.LogInfo("LoadingPage - Starting JSON deserialization of places array...");
-                        var placesArray = System.Text.Json.JsonSerializer.Deserialize<List<PhiPlace>>(_routePlanData);
+                        var placesArray = System.Text.Json.JsonSerializer.Deserialize<List<PhiPlace>>(_routePlanData, new JsonSerializerOptions 
+                        { 
+                            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                        });
                         Logger.LogInfo("LoadingPage - JSON deserialization of places array completed");
                         
                         if (placesArray != null && placesArray.Count > 0)

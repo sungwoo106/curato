@@ -1,25 +1,19 @@
-using System.IO;
-using System.Windows.Media;
-using System.Windows.Controls.Primitives;
-using System.Windows.Shapes;
-using System.Windows.Media.Animation;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Globalization;
-using System.Text;
-using System.Text.Json;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Data;
-using System.Windows.Threading;
-using System.Threading.Tasks;
-using Curato.ViewModels;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Curato.Models;
-using Curato;
+using Curato.ViewModels;
 using Curato.Helpers;
+using System.Text;
 
 namespace Curato.Views
 {
@@ -75,16 +69,20 @@ namespace Curato.Views
             {
                 var scriptPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\core\location_suggest.py"));
 
-                var pythonPath = "python";
                 var psi = new ProcessStartInfo
                 {
-                    FileName = pythonPath,
+                    FileName = "python",
                     Arguments = $"\"{scriptPath}\" \"{query}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true, // capture error
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = AppContext.BaseDirectory
                 };
+
+                // Ensure proper UTF-8 encoding for Korean text
+                psi.StandardOutputEncoding = Encoding.UTF8;
+                psi.StandardErrorEncoding = Encoding.UTF8;
 
                 using var process = Process.Start(psi);
                 using var reader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8);
@@ -92,7 +90,10 @@ namespace Curato.Views
                 
                 await process.WaitForExitAsync();
 
-                var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result);
+                var suggestions = JsonSerializer.Deserialize<List<PlaceSuggestion>>(result, new JsonSerializerOptions 
+                { 
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                });
                 vm.LocationSuggestions = new ObservableCollection<PlaceSuggestion>(suggestions ?? new());
 
                 vm.IsLocationPopupOpen = vm.LocationSuggestions.Count > 0;

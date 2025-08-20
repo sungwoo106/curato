@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Linq;
 using System.IO;
 using System.Windows.Input;
+using System.Text;
 using Curato.Models;
 using Curato.Helpers;
 
@@ -310,7 +311,10 @@ namespace Curato.ViewModels
                     categories = SelectedCategories.ToList()
                 };
 
-                string json = JsonSerializer.Serialize(payload);
+                string json = JsonSerializer.Serialize(payload, new JsonSerializerOptions 
+                { 
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                });
 
                 var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
                 
@@ -329,6 +333,10 @@ namespace Curato.ViewModels
                     CreateNoWindow = true,
                     WorkingDirectory = AppContext.BaseDirectory
                 };
+
+                // Ensure proper UTF-8 encoding for Korean text
+                psi.StandardOutputEncoding = Encoding.UTF8;
+                psi.StandardErrorEncoding = Encoding.UTF8;
 
                 psi.Environment["INPUT_JSON"] = json;
 
@@ -353,7 +361,10 @@ namespace Curato.ViewModels
 
                 try
                 {
-                    var result = JsonSerializer.Deserialize<PlanResult>(output);
+                    var result = JsonSerializer.Deserialize<PlanResult>(output, new JsonSerializerOptions 
+                    { 
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                    });
                     PlanText = result?.Itinerary ?? output;
                 }
                 catch
@@ -381,16 +392,22 @@ namespace Curato.ViewModels
                 var psi = new ProcessStartInfo
                 {
                     FileName = "python",
-                    Arguments = "-c \"import json, constants; print(json.dumps(constants.COMPANION_TYPES))\"",
+                    Arguments = "-c \"import json, constants; print(json.dumps(constants.COMPANION_TYPES, ensure_ascii=False))\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
 
+                // Ensure proper UTF-8 encoding for Korean text
+                psi.StandardOutputEncoding = Encoding.UTF8;
+
                 using var process = Process.Start(psi)!;
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
-                return JsonSerializer.Deserialize<List<string>>(output) ?? new List<string>();
+                return JsonSerializer.Deserialize<List<string>>(output, new JsonSerializerOptions 
+                { 
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                }) ?? new List<string>();
             }
             catch (Exception ex)
             {
@@ -405,16 +422,22 @@ namespace Curato.ViewModels
                 var psi = new ProcessStartInfo
                 {
                     FileName = "python",
-                    Arguments = "-c \"import json, constants; print(json.dumps(constants.USER_SELECTABLE_PLACE_TYPES))\"",
+                    Arguments = "-c \"import json, constants; print(json.dumps(constants.USER_SELECTABLE_PLACE_TYPES, ensure_ascii=False))\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
 
+                // Ensure proper UTF-8 encoding for Korean text
+                psi.StandardOutputEncoding = Encoding.UTF8;
+
                 using var process = Process.Start(psi)!;
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
-                return JsonSerializer.Deserialize<List<string>>(output) ?? new List<string>();
+                return JsonSerializer.Deserialize<List<string>>(output, new JsonSerializerOptions 
+                { 
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                }) ?? new List<string>();
             }
             catch (Exception ex)
             {

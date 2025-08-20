@@ -113,7 +113,7 @@ namespace Curato.Views
             try
             {
                 var htmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "html", "map_template.html");
-                var htmlTemplate = File.ReadAllText(htmlPath);
+                var htmlTemplate = File.ReadAllText(htmlPath, Encoding.UTF8);
                 var kakaoMapKey = crypto_utils.get_kakao_map_api_key();
 
                 // Get the plan from AppState

@@ -34,7 +34,10 @@ public static class PlannerEngine
                 categories = request.PreferredPlaceTypes ?? new List<string>()
             };
 
-            string json = JsonSerializer.Serialize(payload);
+            string json = JsonSerializer.Serialize(payload, new JsonSerializerOptions 
+            { 
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+            });
             
             // Log the payload being sent to Python
             Logger.LogInfo($"Sending payload to Python: {json}");
@@ -80,7 +83,10 @@ public static class PlannerEngine
                 try
                 {
                     // Try to parse as JSON progress update
-                    var progressData = JsonSerializer.Deserialize<JsonElement>(e.Data);
+                    var progressData = JsonSerializer.Deserialize<JsonElement>(e.Data, new JsonSerializerOptions 
+                    { 
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                    });
                     
                     if (progressData.TryGetProperty("type", out var typeElement))
                     {
@@ -245,7 +251,10 @@ public static class PlannerEngine
                 {
                     try
                     {
-                        var routePlanData = JsonSerializer.Deserialize<List<PhiPlace>>(finalRoutePlan);
+                        var routePlanData = JsonSerializer.Deserialize<List<PhiPlace>>(finalRoutePlan, new JsonSerializerOptions 
+                        { 
+                            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
+                        });
                         if (routePlanData != null)
                         {
                             tripPlan.SuggestedPlaces = routePlanData;

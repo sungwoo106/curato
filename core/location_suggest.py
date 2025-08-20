@@ -113,7 +113,7 @@ def suggest_locations(query):
         
         # Return an empty array to indicate no suggestions available
         # This ensures the calling application doesn't crash
-        print(json.dumps([]))
+        print(json.dumps([], ensure_ascii=False))
 
 # =============================================================================
 # SCRIPT EXECUTION ENTRY POINT
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     # Check if a query argument was provided
     if len(sys.argv) < 2:
         # No query provided, return empty suggestions
-        print(json.dumps([]))
+        print(json.dumps([], ensure_ascii=False))
     else:
         # Extract the query from command line arguments
         # The first argument (sys.argv[0]) is the script name
