@@ -208,12 +208,12 @@ namespace Curato.ViewModels
             }
         }
 
-        public string PreferencesSummary => string.Join("        |        ", new[]
+        public string PreferencesSummary => string.Join("\t|\t", new[]
         {
-            LocationQuery,
             SelectedCompanion,
             SelectedBudget,
             string.IsNullOrWhiteSpace(SelectedSubTime) ? null : $"Start at {SelectedSubTime}",
+            string.IsNullOrWhiteSpace(LocationQuery) || LocationQuery == "Search Location" ? null : LocationQuery,
             SelectedCategoriesText
         }.Where(s => !string.IsNullOrWhiteSpace(s)));
 

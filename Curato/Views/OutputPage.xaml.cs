@@ -33,16 +33,21 @@ namespace Curato.Views
         {
             Logger.LogInfo("OutputPage_Loaded - Starting");
             
-            // Set preferences summary
+            // Set the DataContext to the shared InputViewModel for proper data binding
+            this.DataContext = AppState.SharedInputViewModel;
+            
+            // Set preferences summary using the ViewModel's property
             if (AppState.SharedInputViewModel != null)
             {
                 var vm = AppState.SharedInputViewModel;
-                var summary = $"{vm.SelectedCompanion} • {vm.SelectedBudget} • {vm.SelectedTime}";
-                if (!string.IsNullOrWhiteSpace(vm.LocationQuery) && vm.LocationQuery != "Search Location")
-                {
-                    summary += $" • {vm.LocationQuery}";
-                }
-                PreferencesSummaryLabel.Text = summary;
+                // Use the existing PreferencesSummary property from the ViewModel
+                PreferencesSummaryLabel.Text = vm.PreferencesSummary;
+                Logger.LogInfo($"OutputPage_Loaded - Set preferences summary: {vm.PreferencesSummary}");
+            }
+            else
+            {
+                Logger.LogWarning("OutputPage_Loaded - SharedInputViewModel is null");
+                PreferencesSummaryLabel.Text = "Preferences not available";
             }
 
             // Check if we have a plan from AppState

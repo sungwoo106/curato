@@ -106,8 +106,8 @@ public static class PlannerEngine
                                 Logger.LogInfo($"Phi completed - route plan received: {finalRoutePlan?.Substring(0, Math.Min(100, finalRoutePlan?.Length ?? 0))}...");
                                 phiCompleted = true;
                                 
-                                // Report Phi completion to show output page immediately
-                                progress?.Report((85, "Phi model completed - showing output page"));
+                                // Report Phi completion with route plan data to show output page immediately
+                                progress?.Report((85, $"phi_completion:{finalRoutePlan}"));
                             }
                             else
                             {

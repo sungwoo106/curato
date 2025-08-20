@@ -26,6 +26,7 @@ namespace Curato.Views
         private bool _phiCompleted = false;
         private bool _streamingStarted = false;
         private OutputPage? _currentOutputPage;
+        private string? _routePlanData; // Store route plan data for early output page
 
         public LoadingPage(Func<Task<UserControl>> onFinishedAsync)
         {
@@ -126,9 +127,18 @@ namespace Curato.Views
                 }
                 
                 // Check if Phi has completed and we should show output page
-                if (update.message.Contains("Phi model completed") && !_phiCompleted)
+                if (update.message.StartsWith("phi_completion:") && !_phiCompleted)
                 {
                     _phiCompleted = true;
+                    
+                    // Extract the route plan data from the message
+                    var routePlanData = update.message.Substring("phi_completion:".Length);
+                    if (!string.IsNullOrEmpty(routePlanData))
+                    {
+                        _routePlanData = routePlanData;
+                        Logger.LogInfo($"LoadingPage - Extracted route plan data: {routePlanData.Substring(0, Math.Min(100, routePlanData.Length))}...");
+                    }
+                    
                     ProgressSubtext.Text = "Phi model completed - showing output page";
                     
                     // Show output page immediately after Phi completes
@@ -158,6 +168,26 @@ namespace Curato.Views
             try
             {
                 Logger.LogInfo("LoadingPage - Phi completed, showing output page early");
+                
+                // Parse the route plan data and populate AppState before showing OutputPage
+                if (!string.IsNullOrEmpty(_routePlanData))
+                {
+                    try
+                    {
+                        // Parse the route plan JSON and create a TripPlan object
+                        var routePlan = System.Text.Json.JsonSerializer.Deserialize<Curato.Models.TripPlan>(_routePlanData);
+                        if (routePlan != null)
+                        {
+                            // Set the route plan in AppState so the map can access it
+                            AppState.SharedTripPlan = routePlan;
+                            Logger.LogInfo($"LoadingPage - Route plan parsed and set in AppState: {routePlan.SuggestedPlaces?.Count ?? 0} places");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError($"Failed to parse route plan data: {ex.Message}", ex);
+                    }
+                }
                 
                 // Create a basic OutputPage to show immediately
                 _currentOutputPage = new OutputPage();

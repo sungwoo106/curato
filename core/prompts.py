@@ -111,7 +111,7 @@ def build_qwen_itinerary_prompt(
         places_text += f"{i}. {place_name} - {place_type}\n"
     
     prompt = f"""<|im_start|>system
-You are a professional travel writer. Generate ONLY the itinerary content without repeating instructions or prompts.
+You are a professional travel writer specializing in personalized itineraries. Create engaging, tailored content that reflects the user's preferences and creates memorable experiences.
 <|im_end|>
 
 <|im_start|>user
