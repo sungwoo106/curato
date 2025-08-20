@@ -128,16 +128,32 @@ namespace Curato.Views
                 }
                 
                 // Check if Phi has completed and we should show output page
-                if (update.message.StartsWith("phi_completion:") && !_phiCompleted)
+                if (update.message.StartsWith("phi_completion|") && !_phiCompleted)
                 {
                     _phiCompleted = true;
                     
-                    // Extract the route plan data from the message
-                    var routePlanData = update.message.Substring("phi_completion:".Length);
+                    // Extract the route plan data from the message using pipe separator
+                    var routePlanData = update.message.Substring("phi_completion|".Length);
                     if (!string.IsNullOrEmpty(routePlanData))
                     {
                         _routePlanData = routePlanData;
-                        Logger.LogInfo($"LoadingPage - Extracted route plan data: {routePlanData.Substring(0, Math.Min(100, routePlanData.Length))}...");
+                        Logger.LogInfo($"LoadingPage - Extracted route plan data length: {routePlanData.Length}");
+                        Logger.LogInfo($"LoadingPage - Route plan data preview: {routePlanData.Substring(0, Math.Min(200, routePlanData.Length))}...");
+                        
+                        // Validate JSON format
+                        try
+                        {
+                            var testParse = System.Text.Json.JsonDocument.Parse(routePlanData);
+                            Logger.LogInfo($"LoadingPage - JSON validation successful, root element type: {testParse.RootElement.ValueKind}");
+                        }
+                        catch (Exception jsonEx)
+                        {
+                            Logger.LogError($"LoadingPage - JSON validation failed: {jsonEx.Message}", jsonEx);
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogError("LoadingPage - No route plan data found in phi_completion message");
                     }
                     
                     ProgressSubtext.Text = "Phi model completed - showing output page";
@@ -173,6 +189,8 @@ namespace Curato.Views
                 // Parse the route plan data and populate AppState before showing OutputPage
                 if (!string.IsNullOrEmpty(_routePlanData))
                 {
+                    Logger.LogInfo($"LoadingPage - Attempting to parse route plan data: {_routePlanData.Length} characters");
+                    
                     try
                     {
                         // Parse the route plan JSON and create a TripPlan object
@@ -183,11 +201,24 @@ namespace Curato.Views
                             AppState.SharedTripPlan = routePlan;
                             Logger.LogInfo($"LoadingPage - Route plan parsed and set in AppState: {routePlan.SuggestedPlaces?.Count ?? 0} places");
                         }
+                        else
+                        {
+                            Logger.LogError("LoadingPage - JSON deserialization returned null");
+                        }
                     }
                     catch (Exception ex)
                     {
                         Logger.LogError($"Failed to parse route plan data: {ex.Message}", ex);
+                        Logger.LogInfo($"LoadingPage - Raw route plan data: {_routePlanData}");
+                        
+                        // Create a default TripPlan to prevent crashes
+                        AppState.SharedTripPlan = new TripPlan();
                     }
+                }
+                else
+                {
+                    Logger.LogError("LoadingPage - _routePlanData is null or empty, creating default TripPlan");
+                    AppState.SharedTripPlan = new TripPlan();
                 }
                 
                 // Create a basic OutputPage to show immediately

@@ -107,7 +107,8 @@ public static class PlannerEngine
                                 phiCompleted = true;
                                 
                                 // Report Phi completion with route plan data to show output page immediately
-                                progress?.Report((85, $"phi_completion:{finalRoutePlan}"));
+                                // Send the route plan data separately to avoid corrupting the JSON
+                                progress?.Report((85, $"phi_completion|{finalRoutePlan}"));
                             }
                             else
                             {
