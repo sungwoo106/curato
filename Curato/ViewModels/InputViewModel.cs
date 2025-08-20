@@ -209,30 +209,14 @@ namespace Curato.ViewModels
             }
         }
 
-        public string PreferencesSummary
+        public string PreferencesSummary => string.Join("\t|\t", new[]
         {
-            get
-            {
-                var preferences = new[]
-                {
-                    string.IsNullOrWhiteSpace(LocationQuery) || LocationQuery == "Search Location" ? null : LocationQuery,
-                    SelectedCompanion,
-                    SelectedBudget,
-                    string.IsNullOrWhiteSpace(SelectedSubTime) ? null : $"Start at {SelectedSubTime}",
-                    SelectedCategoriesText
-                }.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
-
-                if (preferences.Length == 0)
-                    return string.Empty;
-
-                // Calculate the maximum width for uniform spacing
-                int maxWidth = preferences.Max(s => s?.Length ?? 0);
-                
-                // Create evenly spaced summary with consistent padding
-                var formattedPreferences = preferences.Select(pref => pref?.PadRight(maxWidth));
-                return string.Join(" | ", formattedPreferences);
-            }
-        }
+            string.IsNullOrWhiteSpace(LocationQuery) || LocationQuery == "Search Location" ? null : LocationQuery,
+            SelectedCompanion,
+            SelectedBudget,
+            string.IsNullOrWhiteSpace(SelectedSubTime) ? null : $"Start at {SelectedSubTime}",
+            SelectedCategoriesText
+        }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
         // Generated Emotional Story
         private string? _planText;
