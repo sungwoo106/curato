@@ -1053,8 +1053,12 @@ class Preferences:
         lines = content.split('\n')
         cleaned_lines = []
         
+        # Skip until we find the actual content
+        skip_until_content = True
+        
         for line in lines:
             line = line.strip()
+            
             # Skip technical markers and debug info
             if (line and 
                 not line.startswith('Using libGenie.so') and
@@ -1074,6 +1078,21 @@ class Preferences:
                 not line.startswith('Prompt Processing Rate:') and
                 not line.startswith('Token Generation Rate:')):
                 
+                # Skip prompt instructions until we find actual content
+                if skip_until_content:
+                    if (line.startswith('You are a professional') or
+                        line.startswith('Create a comprehensive') or
+                        line.startswith('IMPORTANT:') or
+                        line.startswith('Context:') or
+                        line.startswith('Requirements:') or
+                        line.startswith('Output Format:') or
+                        line.startswith('I\'ll create') or
+                        line.startswith('I have now covered')):
+                        continue
+                    else:
+                        skip_until_content = False
+                
+                # Add the cleaned line
                 cleaned_lines.append(line)
         
         cleaned_content = '\n'.join(cleaned_lines).strip()
