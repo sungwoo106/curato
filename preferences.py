@@ -25,6 +25,58 @@ import time
 from typing import Tuple, List, Dict, Optional
 from collections import deque
 
+# =============================================================================
+# CENTRALIZED LOGGING UTILITY
+# =============================================================================
+
+class Logger:
+    """
+    Centralized logging utility to prevent duplicate logs and provide consistent formatting.
+    """
+    
+    def __init__(self, name: str = "Preferences"):
+        self.name = name
+        self._logged_messages = set()  # Track logged messages to prevent duplicates
+    
+    def _log(self, level: str, message: str, allow_duplicates: bool = False):
+        """Internal logging method with duplicate prevention."""
+        if not allow_duplicates and message in self._logged_messages:
+            return  # Skip duplicate messages
+        
+        timestamp = time.strftime("%H:%M:%S")
+        formatted_message = f"[{timestamp}] {level} - {message}"
+        print(formatted_message, file=sys.stderr)
+        
+        if not allow_duplicates:
+            self._logged_messages.add(message)
+    
+    def info(self, message: str, allow_duplicates: bool = False):
+        """Log informational message."""
+        self._log("INFO", message, allow_duplicates)
+    
+    def success(self, message: str, allow_duplicates: bool = False):
+        """Log success message."""
+        self._log("✅", message, allow_duplicates)
+    
+    def warning(self, message: str, allow_duplicates: bool = False):
+        """Log warning message."""
+        self._log("⚠️", message, allow_duplicates)
+    
+    def error(self, message: str, allow_duplicates: bool = False):
+        """Log error message."""
+        self._log("❌", message, allow_duplicates)
+    
+    def debug(self, message: str, allow_duplicates: bool = False):
+        """Log debug message."""
+        self._log("🔍", message, allow_duplicates)
+    
+    def clear_duplicate_tracker(self):
+        """Clear the duplicate message tracker."""
+        self._logged_messages.clear()
+
+# Initialize global logger instance
+_logger = Logger()
+
 class RateLimiter:
     """
     Rate limiter to prevent excessive API calls and respect Kakao API rate limits.
@@ -189,7 +241,7 @@ class Preferences:
         # Start with user-selected types as highest priority
         if user_selected_types:
             self.selected_types = user_selected_types.copy()
-            print(f"🔍 User selected place types: {self.selected_types}", file=sys.stderr)
+            _logger.debug(f"User selected place types: {self.selected_types}")
         else:
             self.selected_types = []
         
@@ -204,7 +256,7 @@ class Preferences:
                 num_to_add = min(max_companion_types, len(available_companion_types))
                 additional_types = available_companion_types[:num_to_add]
                 self.selected_types.extend(additional_types)
-                print(f"🔍 Added {len(additional_types)} companion-specific types: {additional_types}", file=sys.stderr)
+                _logger.debug(f"Added {len(additional_types)} companion-specific types: {additional_types}")
         
         # Add variety types for rich experience
         from constants import VARIETY_PLACE_TYPES
@@ -215,7 +267,7 @@ class Preferences:
             num_variety = min(2, len(available_variety))
             selected_variety = available_variety[:num_variety]
             self.selected_types.extend(selected_variety)
-            print(f"🔍 Added {len(selected_variety)} variety types: {selected_variety}", file=sys.stderr)
+            _logger.debug(f"Added {len(selected_variety)} variety types: {selected_variety}")
         
         # Ensure we have at least 6 types for rich variety
         if len(self.selected_types) < 6:
@@ -223,16 +275,16 @@ class Preferences:
             for default_type in DEFAULT_PLACE_TYPES:
                 if default_type not in self.selected_types and len(self.selected_types) < 6:
                     self.selected_types.append(default_type)
-            print(f"🔍 Added default types to ensure minimum variety: {self.selected_types}", file=sys.stderr)
+            _logger.debug(f"Added default types to ensure minimum variety: {self.selected_types}")
         
         # Limit total types to prevent overwhelming the search
         if len(self.selected_types) > 10:
             user_types = [t for t in self.selected_types if t in (user_selected_types or [])]
             other_types = [t for t in self.selected_types if t not in user_types]
             self.selected_types = user_types + other_types[:7]
-            print(f"🔍 Limited total types to prevent search overload: {self.selected_types}", file=sys.stderr)
+            _logger.debug(f"Limited total types to prevent search overload: {self.selected_types}")
         
-        print(f"🔍 Final selected place types: {self.selected_types} (Total: {len(self.selected_types)})", file=sys.stderr)
+        _logger.debug(f"Final selected place types: {self.selected_types} (Total: {len(self.selected_types)})")
 
     # =============================================================================
     # SIMPLIFIED PLACE RECOMMENDATION COLLECTION
@@ -252,14 +304,14 @@ class Preferences:
         Returns:
             dict: Dictionary where keys are place types and values are lists of places
         """
-        print(f"🔍 Collecting places for types: {self.selected_types}", file=sys.stderr)
+        _logger.debug(f"Collecting places for types: {self.selected_types}")
         
         # Check if we have cached results for this location and place types
         cache_key = self._generate_cache_key()
         cached_results = self._get_cached_results(cache_key)
         
         if cached_results:
-            print(f"✅ Using cached results for location {self.location_name}", file=sys.stderr)
+            _logger.success(f"Using cached results for location {self.location_name}")
             self.best_places = cached_results
             return
         
@@ -272,11 +324,11 @@ class Preferences:
         place_type_batches = [self.selected_types[i:i + batch_size] 
                             for i in range(0, len(self.selected_types), batch_size)]
         
-        print(f"🔍 Processing {len(self.selected_types)} place types in {len(place_type_batches)} batches", file=sys.stderr)
+        _logger.debug(f"Processing {len(self.selected_types)} place types in {len(place_type_batches)} batches")
         
         for batch_idx, place_types_batch in enumerate(place_type_batches):
             try:
-                print(f"🔍 Processing batch {batch_idx + 1}: {place_types_batch}", file=sys.stderr)
+                _logger.debug(f"Processing batch {batch_idx + 1}: {place_types_batch}")
                 
                 # Check rate limits before making API call
                 self.rate_limiter.wait_if_needed()
@@ -292,7 +344,7 @@ class Preferences:
                 
                 # Log rate limiter status
                 status = self.rate_limiter.get_status()
-                print(f"📊 Rate limiter status: {status['current_calls']}/{status['max_calls']} calls in {status['time_window']}s window", file=sys.stderr)
+                _logger.debug(f"Rate limiter status: {status['current_calls']}/{status['max_calls']} calls in {status['time_window']}s window")
                 
                 # Process results for each place type in the batch
                 for place_type in place_types_batch:
@@ -303,34 +355,34 @@ class Preferences:
                             place['place_type'] = place_type
                         
                         all_places.extend(places)
-                        print(f"🔍 Found {len(places)} places for {place_type}", file=sys.stderr)
+                        _logger.debug(f"Found {len(places)} places for {place_type}")
                         
                         # Debug: show first place structure
                         if places:
-                            print(f"🔍 Sample place structure: {list(places[0].keys())}", file=sys.stderr)
+                            _logger.debug(f"Sample place structure: {list(places[0].keys())}")
                     else:
-                        print(f"⚠️ No results found for {place_type}", file=sys.stderr)
+                        _logger.warning(f"No results found for {place_type}")
                 
                 # Add small delay between batches to respect API rate limits
                 if batch_idx < len(place_type_batches) - 1:
                     time.sleep(0.2)  # 200ms delay between batches
                 
             except Exception as e:
-                print(f"Warning: Failed to search for batch {place_types_batch}: {e}", file=sys.stderr)
+                _logger.warning(f"Failed to search for batch {place_types_batch}: {e}")
                 continue
         
         if not all_places:
-            print("❌ No places found for any type", file=sys.stderr)
+            _logger.error("No places found for any type")
             return
         
-        print(f"🔍 Total places found: {len(all_places)}", file=sys.stderr)
+        _logger.debug(f"Total places found: {len(all_places)}")
         
         # Reduce to 20 candidates ensuring variety
         self.best_places = self._reduce_to_20_candidates(all_places)
         
-        print(f"🔍 Reduced to {len(self.best_places)} place types with variety", file=sys.stderr)
+        _logger.debug(f"Reduced to {len(self.best_places)} place types with variety")
         for place_type, places in self.best_places.items():
-            print(f"🔍 {place_type}: {len(places)} places", file=sys.stderr)
+            _logger.debug(f"{place_type}: {len(places)} places")
         
         # Cache the results for future use
         self._cache_results(cache_key, self.best_places)
@@ -380,18 +432,18 @@ class Preferences:
                 cache_ttl = 3600  # 1 hour cache TTL
                 
                 if current_time - timestamp < cache_ttl:
-                    print(f"✅ Cache hit for key: {cache_key[:50]}...", file=sys.stderr)
+                    _logger.success(f"Cache hit for key: {cache_key[:50]}...")
                     return self._cache[cache_key]
                 else:
                     # Cache expired, remove it
-                    print(f"🔄 Cache expired for key: {cache_key[:50]}...", file=sys.stderr)
+                    _logger.debug(f"Cache expired for key: {cache_key[:50]}...")
                     del self._cache[cache_key]
                     del self._cache_timestamps[cache_key]
             
             return None
             
         except Exception as e:
-            print(f"⚠️ Cache retrieval failed: {e}", file=sys.stderr)
+            _logger.warning(f"Cache retrieval failed: {e}")
             return None
 
     def _cache_results(self, cache_key: str, results: Dict[str, List[Dict]]):
@@ -411,7 +463,7 @@ class Preferences:
             self._cache[cache_key] = results
             self._cache_timestamps[cache_key] = time.time()
             
-            print(f"💾 Cached results for key: {cache_key[:50]}...", file=sys.stderr)
+            _logger.debug(f"Cached results for key: {cache_key[:50]}...")
             
             # Implement cache size limit to prevent memory issues
             max_cache_size = 50
@@ -419,7 +471,7 @@ class Preferences:
                 self._cleanup_cache()
                 
         except Exception as e:
-            print(f"⚠️ Caching failed: {e}", file=sys.stderr)
+            _logger.warning(f"Caching failed: {e}")
 
     def _cleanup_cache(self):
         """
@@ -454,10 +506,10 @@ class Preferences:
                     del self._cache[key]
                     del self._cache_timestamps[key]
                 
-                print(f"🧹 Cleaned up cache, removed {len(keys_to_remove)} old entries", file=sys.stderr)
+                _logger.debug(f"🧹 Cleaned up cache, removed {len(keys_to_remove)} old entries")
                 
         except Exception as e:
-            print(f"⚠️ Cache cleanup failed: {e}", file=sys.stderr)
+            _logger.warning(f"⚠️ Cache cleanup failed: {e}")
 
     def get_performance_stats(self) -> dict:
         """
@@ -528,9 +580,9 @@ class Preferences:
             cache_size = len(self._cache)
             self._cache.clear()
             self._cache_timestamps.clear()
-            print(f"🧹 Cleared {cache_size} cached entries", file=sys.stderr)
+            _logger.debug(f"🧹 Cleared {cache_size} cached entries")
         else:
-            print("ℹ️ No cache to clear", file=sys.stderr)
+            _logger.debug("ℹ️ No cache to clear")
 
     def get_cache_status(self) -> dict:
         """
@@ -579,7 +631,10 @@ class Preferences:
 
     def _reduce_to_20_candidates(self, all_places: List[Dict]) -> Dict[str, List[Dict]]:
         """
-        Reduce the list of places to 20 candidates ensuring variety of place types.
+        Reduce the list of places to 20 candidates using TRUE RANDOM selection.
+        
+        This method now randomly selects from ALL places regardless of type,
+        allowing natural variety to emerge rather than forcing type distribution.
         
         Args:
             all_places (List[Dict]): List of all places found
@@ -587,56 +642,45 @@ class Preferences:
         Returns:
             Dict[str, List[Dict]]: Dictionary with place types as keys and reduced lists as values
         """
-        # Group places by type
-        places_by_type = {}
+        if not all_places:
+            return {}
+        
+        _logger.debug(f"🔍 Total places available for random selection: {len(all_places)}")
+        
+        # Show distribution of place types before selection
+        type_counts = {}
         for place in all_places:
             place_type = place.get('place_type', 'Unknown')
-            if place_type not in places_by_type:
-                places_by_type[place_type] = []
-            places_by_type[place_type].append(place)
+            type_counts[place_type] = type_counts.get(place_type, 0) + 1
         
-        # Calculate how many places to take from each type to get 20 total
-        total_types = len(places_by_type)
-        places_per_type = max(1, 20 // total_types)  # At least 1 per type
+        _logger.debug(f"🔍 Place type distribution before selection:")
+        for place_type, count in sorted(type_counts.items()):
+            _logger.debug(f"🔍   {place_type}: {count} places")
         
-        # Select places from each type
+        # IMPORTANT: Shuffle ALL places randomly for true randomness
+        random.shuffle(all_places)
+        _logger.debug(f"🔍 Randomly shuffled all {len(all_places)} places")
+        
+        # Take the first 20 places from the shuffled list
+        selected_places = all_places[:20]
+        _logger.debug(f"🔍 Randomly selected first 20 places from shuffled pool")
+        
+        # Group the selected places by type for the return format
         reduced_places = {}
+        for place in selected_places:
+            place_type = place.get('place_type', 'Unknown')
+            if place_type not in reduced_places:
+                reduced_places[place_type] = []
+            reduced_places[place_type].append(place)
+        
+        # Show final distribution after random selection
+        _logger.debug(f"🔍 Final random selection results:")
         total_selected = 0
+        for place_type, places in reduced_places.items():
+            _logger.debug(f"🔍   {place_type}: {len(places)} places")
+            total_selected += len(places)
         
-        for place_type, places in places_by_type.items():
-            # Take up to places_per_type from each type
-            selected = places[:places_per_type]
-            reduced_places[place_type] = selected
-            total_selected += len(selected)
-            
-            # If we have more than 20, stop
-            if total_selected >= 20:
-                break
-        
-        # If we have fewer than 20, add more from types with more places
-        if total_selected < 20:
-            remaining_needed = 20 - total_selected
-            
-            # Sort types by number of available places (descending)
-            sorted_types = sorted(places_by_type.items(), key=lambda x: len(x[1]), reverse=True)
-            
-            for place_type, places in sorted_types:
-                if total_selected >= 20:
-                    break
-                    
-                # How many more we can take from this type
-                already_taken = len(reduced_places.get(place_type, []))
-                available = len(places) - already_taken
-                can_take = min(available, remaining_needed)
-                
-                if can_take > 0:
-                    # Take additional places
-                    additional = places[already_taken:already_taken + can_take]
-                    reduced_places[place_type].extend(additional)
-                    total_selected += can_take
-                    remaining_needed -= can_take
-        
-        print(f"✅ Reduced to {total_selected} total candidates across {len(reduced_places)} place types", file=sys.stderr)
+        _logger.debug(f"✅ Randomly selected {total_selected} total candidates across {len(reduced_places)} place types")
         return reduced_places
 
     def format_recommendations(self):
