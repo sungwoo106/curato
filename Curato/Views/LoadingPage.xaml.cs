@@ -175,7 +175,7 @@ namespace Curato.Views
                     try
                     {
                         // Parse the route plan JSON and create a TripPlan object
-                        var routePlan = System.Text.Json.JsonSerializer.Deserialize<Curato.Models.TripPlan>(_routePlanData);
+                        var routePlan = System.Text.Json.JsonSerializer.Deserialize<TripPlan>(_routePlanData);
                         if (routePlan != null)
                         {
                             // Set the route plan in AppState so the map can access it

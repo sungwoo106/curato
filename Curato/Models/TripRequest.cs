@@ -1,19 +1,22 @@
 using System.Text.Json.Serialization;
 
-public class TripRequest
+namespace Curato.Models
 {
-    [JsonPropertyName("location_query")]
-    public string Location { get; set; } = string.Empty;
+    public class TripRequest
+    {
+        [JsonPropertyName("location_query")]
+        public string Location { get; set; } = string.Empty;
 
-    [JsonPropertyName("companion_type")]
-    public string Companion { get; set; } = string.Empty;
+        [JsonPropertyName("companion_type")]
+        public string Companion { get; set; } = string.Empty;
 
-    [JsonPropertyName("budget")]
-    public string Budget { get; set; } = string.Empty;
+        [JsonPropertyName("budget")]
+        public string Budget { get; set; } = string.Empty;
 
-    [JsonPropertyName("starting_time")]
-    public string StartTime { get; set; } = string.Empty;
+        [JsonPropertyName("starting_time")]
+        public string StartTime { get; set; } = string.Empty;
 
-    [JsonPropertyName("categories")]
-    public List<string> PreferredPlaceTypes { get; set; } = new List<string>();
+        [JsonPropertyName("categories")]
+        public List<string> PreferredPlaceTypes { get; set; } = new List<string>();
+    }
 }

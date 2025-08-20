@@ -46,7 +46,7 @@ namespace Curato.Views
             }
             else
             {
-                Logger.LogWarning("OutputPage_Loaded - SharedInputViewModel is null");
+                Logger.LogInfo("OutputPage_Loaded - SharedInputViewModel is null");
                 PreferencesSummaryLabel.Text = "Preferences not available";
             }
 
