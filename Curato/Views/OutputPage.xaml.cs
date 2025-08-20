@@ -47,9 +47,12 @@ namespace Curato.Views
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
-                Logger.LogInfo($"Setting EmotionalItineraryTextBlock with text: {plan.EmotionalNarrative}");
+                // Clean the content to remove prompt instructions
+                var cleanedContent = CleanStoryContent(plan.EmotionalNarrative);
+                Logger.LogInfo($"Setting EmotionalItineraryTextBlock with cleaned text: {cleanedContent}");
+                
                 EmotionalItineraryTextBlock.Inlines.Clear();
-                foreach (var para in plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var para in cleanedContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
@@ -66,9 +69,12 @@ namespace Curato.Views
                 var retryPlan = AppState.SharedTripPlan;
                 if (retryPlan != null && !string.IsNullOrWhiteSpace(retryPlan.EmotionalNarrative))
                 {
-                    Logger.LogInfo($"Retry successful - setting text: {retryPlan.EmotionalNarrative}");
+                    // Clean the content to remove prompt instructions
+                    var cleanedRetryContent = CleanStoryContent(retryPlan.EmotionalNarrative);
+                    Logger.LogInfo($"Retry successful - setting cleaned text: {cleanedRetryContent}");
+                    
                     EmotionalItineraryTextBlock.Inlines.Clear();
-                    foreach (var para in retryPlan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                    foreach (var para in cleanedRetryContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                     {
                         EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
                         EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
@@ -274,6 +280,58 @@ namespace Curato.Views
             {
                 MessageBox.Show($"Failed to show log: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// Cleans the story content by removing prompt instructions and technical markers
+        /// </summary>
+        /// <param name="rawContent">Raw content from the AI model</param>
+        /// <returns>Cleaned content suitable for display</returns>
+        private string CleanStoryContent(string rawContent)
+        {
+            if (string.IsNullOrWhiteSpace(rawContent))
+                return rawContent;
+
+            var lines = rawContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var cleanedLines = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+                
+                // Skip lines that contain prompt instructions
+                if (trimmedLine.StartsWith("You are a professional travel writer") ||
+                    trimmedLine.StartsWith("Create a comprehensive itinerary") ||
+                    trimmedLine.StartsWith("IMPORTANT:") ||
+                    trimmedLine.StartsWith("Context:") ||
+                    trimmedLine.StartsWith("Requirements:") ||
+                    trimmedLine.StartsWith("Output Format:") ||
+                    trimmedLine.StartsWith("Selected Locations:") ||
+                    trimmedLine.StartsWith("I'll create a comprehensive itinerary") ||
+                    trimmedLine.StartsWith("I have now covered all") ||
+                    trimmedLine.StartsWith("[BEGIN]:") ||
+                    trimmedLine.StartsWith("[END]") ||
+                    trimmedLine.StartsWith("1.") && trimmedLine.Contains("Place Name") ||
+                    trimmedLine.StartsWith("2.") && trimmedLine.Contains("Place Name") ||
+                    trimmedLine.StartsWith("3.") && trimmedLine.Contains("Place Name") ||
+                    trimmedLine.StartsWith("4.") && trimmedLine.Contains("Place Name") ||
+                    trimmedLine.StartsWith("5.") && trimmedLine.Contains("Place Name"))
+                {
+                    continue; // Skip this line
+                }
+
+                // Skip empty lines and technical markers
+                if (string.IsNullOrWhiteSpace(trimmedLine) || 
+                    trimmedLine.StartsWith("\\") ||
+                    trimmedLine.StartsWith("Continue this format"))
+                {
+                    continue;
+                }
+
+                cleanedLines.Add(trimmedLine);
+            }
+
+            return string.Join("\n", cleanedLines);
         }
     }
 }
