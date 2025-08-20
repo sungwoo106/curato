@@ -1,4 +1,5 @@
 using Curato.ViewModels;
+using Curato.Models;
 
 namespace Curato
 {

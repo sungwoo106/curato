@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Windows;
 using Curato.Helpers;
+using Curato.Models;
 using System.ComponentModel;
 
 namespace Curato.Views
