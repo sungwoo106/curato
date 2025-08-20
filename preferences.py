@@ -1257,14 +1257,18 @@ class Preferences:
         if not raw_output:
             return None
             
-        print(f"Raw Qwen model output: {raw_output[:500]}...", file=sys.stderr)
+        print(f"🔍 Raw Qwen model output length: {len(raw_output)}", file=sys.stderr)
+        print(f"🔍 Raw Qwen model output first 500 chars: {raw_output[:500]}...", file=sys.stderr)
         
         # Clean the output by removing technical markers
         cleaned_content = self._clean_story_content(raw_output)
         if cleaned_content:
-            print(f"✅ Cleaned story content: {cleaned_content[:100]}...", file=sys.stderr)
+            print(f"✅ Cleaned story content length: {len(cleaned_content)}", file=sys.stderr)
+            print(f"✅ Cleaned story content first 200 chars: {cleaned_content[:200]}...", file=sys.stderr)
+            print(f"✅ Cleaned story content last 200 chars: {cleaned_content[-200:] if len(cleaned_content) > 200 else cleaned_content}...", file=sys.stderr)
             return cleaned_content
         
+        print(f"❌ Failed to clean story content", file=sys.stderr)
         return None
     
     def _clean_story_content(self, content: str) -> str:
