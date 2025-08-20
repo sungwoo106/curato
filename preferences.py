@@ -1315,8 +1315,8 @@ class Preferences:
         Returns:
             str: Extracted content after assistant marker or None if not found
         """
-        # Look for content after <|im_start|> assistant marker
-        pattern = r'<\|im_start\|> assistant\s*(.*)'
+        # Look for content after <|im_start|> assistant marker (with or without space)
+        pattern = r'<\|im_start\|>\s*assistant\s*(.*)'
         print(f"🔍 Searching for pattern: {pattern}", file=sys.stderr)
         print(f"🔍 Content length: {len(content)}", file=sys.stderr)
         print(f"🔍 Content contains '<|im_start|>': {'<|im_start|>' in content}", file=sys.stderr)
