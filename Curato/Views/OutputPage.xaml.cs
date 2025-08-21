@@ -78,7 +78,7 @@ namespace Curato.Views
             }
             else
             {
-                EmotionalItineraryTextBlock.Text = "Story is being generated in real-time...";
+                EmotionalItineraryTextBlock.Text = "Story is being generated in real-time...\n\n";
                 
                 // Try to reload from AppState after a longer delay
                 await Task.Delay(1000);
@@ -375,7 +375,7 @@ namespace Curato.Views
                 
                 // Check for timeout if we haven't found [BEGIN] marker yet
                 var fullContent = _streamingStoryBuilder.ToString();
-                if (!fullContent.Contains("[BEGIN]"))
+                if (!fullContent.Contains("[BEGIN]: "))
                 {
                     var elapsedSeconds = (DateTime.Now - _streamingStartTime).TotalSeconds;
                     if (elapsedSeconds > BEGIN_MARKER_TIMEOUT_SECONDS)
@@ -457,7 +457,7 @@ namespace Curato.Views
         {
             // Get the current state from the full content
             var fullContent = _streamingStoryBuilder.ToString();
-            var hasBegin = fullContent.Contains("[BEGIN]");
+            var hasBegin = fullContent.Contains("[BEGIN]: ");
             var hasEnd = fullContent.Contains("[END]");
             
             // Log the current state for debugging
@@ -483,8 +483,8 @@ namespace Curato.Views
                 ClearLoadingMessage();
                 
                 // Extract content after [BEGIN] marker
-                var beginIndex = token.IndexOf("[BEGIN]");
-                var contentAfterBegin = token.Substring(beginIndex + "[BEGIN]".Length);
+                var beginIndex = token.IndexOf("[BEGIN]: ");
+                var contentAfterBegin = token.Substring(beginIndex + "[BEGIN]: ".Length);
                 
                 // Only show content after [BEGIN] if it's not empty
                 if (!string.IsNullOrWhiteSpace(contentAfterBegin))
@@ -501,7 +501,7 @@ namespace Curato.Views
             {
                 Logger.LogInfo("Found [END] marker in token");
                 // Extract content before [END] marker
-                var endIndex = token.IndexOf("[END]");
+                var endIndex = token.IndexOf("[END] ");
                 if (endIndex > 0)
                 {
                     var contentBeforeEnd = token.Substring(0, endIndex);
@@ -519,7 +519,7 @@ namespace Curato.Views
                 if (partialBegin)
                 {
                     Logger.LogInfo("Found partial [BEGIN] marker completion");
-                    var contentAfterBegin = token.Substring("BEGIN]".Length);
+                    var contentAfterBegin = token.Substring("BEGIN]: ".Length);
                     if (!string.IsNullOrWhiteSpace(contentAfterBegin))
                     {
                         Logger.LogInfo($"Returning content after completed [BEGIN]: '{contentAfterBegin.Substring(0, Math.Min(30, contentAfterBegin.Length))}...'");
@@ -600,7 +600,7 @@ namespace Curato.Views
             {
                 var elapsed = DateTime.Now - _streamingStartTime;
                 var contentLength = _streamingStoryBuilder.Length;
-                var hasBegin = _streamingStoryBuilder.ToString().Contains("[BEGIN]");
+                var hasBegin = _streamingStoryBuilder.ToString().Contains("[BEGIN]: ");
                 var hasEnd = _streamingStoryBuilder.ToString().Contains("[END]");
                 
                 Logger.LogInfo($"Streaming Stats - Elapsed: {elapsed.TotalSeconds:F1}s, Content: {contentLength} chars, [BEGIN]: {hasBegin}, [END]: {hasEnd}");
@@ -657,9 +657,9 @@ namespace Curato.Views
                 Logger.LogInfo("Found [END] marker without [BEGIN] marker - this shouldn't happen");
             }
             
-            if (fullContent.Contains("[BEGIN]") && fullContent.Contains("[END]"))
+            if (fullContent.Contains("[BEGIN]: ") && fullContent.Contains("[END]"))
             {
-                var beginIndex = fullContent.IndexOf("[BEGIN]");
+                var beginIndex = fullContent.IndexOf("[BEGIN]: ");
                 var endIndex = fullContent.IndexOf("[END]");
                 if (endIndex < beginIndex)
                 {
@@ -677,7 +677,7 @@ namespace Curato.Views
         private void LogCurrentStreamingState(string fullContent, bool hasBegin, bool hasEnd)
         {
             var contentLength = fullContent.Length;
-            var beginIndex = fullContent.IndexOf("[BEGIN]");
+            var beginIndex = fullContent.IndexOf("[BEGIN]: ");
             var endIndex = fullContent.IndexOf("[END]");
             
             Logger.LogInfo($"Streaming State - Content Length: {contentLength}, [BEGIN] at: {beginIndex}, [END] at: {endIndex}");
