@@ -253,7 +253,7 @@ class Preferences:
             
             # Use streaming method if available, fallback to regular method
             if hasattr(runner, 'run_qwen_streaming'):
-                raw_output = runner.run_qwen_streaming(prompt, streaming_callback, "qwen_streaming_profile")
+                raw_output = runner.run_qwen_streaming(prompt, streaming_callback, "qwen_profile")
             else:
                 # Fallback to non-streaming method
                 print("⚠️ Streaming not available, using regular generation", file=sys.stderr)
