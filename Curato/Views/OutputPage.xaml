@@ -50,19 +50,21 @@
                 <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
             </Border.Effect>
 
-            <!-- Logo positioned absolutely with Canvas -->
-            <Canvas>
-                <TextBlock Text="Curato"
-                           FontSize="46"
-                           FontFamily="{StaticResource SatoshiBold}"
-                           Height="80"
-                           Foreground="#FFB31A"
-                           Canvas.Left="75"
-                           Canvas.Top="20"
-                           Width="Auto"/>
-            </Canvas>
+            <!-- Container for both Canvas and Grid -->
+            <Grid>
+                <!-- Logo positioned absolutely with Canvas -->
+                <Canvas>
+                    <TextBlock Text="Curato"
+                               FontSize="46"
+                               FontFamily="{StaticResource SatoshiBold}"
+                               Height="80"
+                               Foreground="#FFB31A"
+                               Canvas.Left="75"
+                               Canvas.Top="20"
+                               Width="Auto"/>
+                </Canvas>
 
-            <Grid Margin="0,20,30,20">
+                <Grid Margin="0,20,30,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -179,6 +181,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
+                </Grid>
             </Grid>
         </Border>
 
