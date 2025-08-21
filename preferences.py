@@ -355,9 +355,10 @@ class Preferences:
             
             runner = self.model_manager.get_qwen_runner()
             
-            # Define streaming callback to send real-time updates
+            # Define streaming callback to send raw tokens directly to frontend for real-time filtering
             def streaming_callback(token, is_final):
                 if stream_callback:
+                    # Send raw token to frontend - let frontend handle the filtering
                     stream_callback(token, is_final)
                 else:
                     # Default behavior: print to stderr for debugging
@@ -377,15 +378,10 @@ class Preferences:
                 if stream_callback:
                     stream_callback(raw_output, True)
             
-            # Extract clean story text from the model output
-            clean_story = self._extract_story_from_output(raw_output)
-            
-            if clean_story:
-                print("✅ Streaming itinerary generation completed successfully", file=sys.stderr)
-                return clean_story
-            else:
-                print("❌ Failed to extract story from Qwen streaming output", file=sys.stderr)
-                return "Failed to generate itinerary - no story content found"
+            # For streaming, we return the raw output since frontend handles filtering
+            # The frontend will filter content between [BEGIN] and [END] markers in real-time
+            print("✅ Streaming itinerary generation completed successfully", file=sys.stderr)
+            return raw_output
                 
         except Exception as e:
             print(f"Qwen streaming model failed: {e}", file=sys.stderr)
