@@ -333,19 +333,10 @@ namespace Curato.Views
                     }
                 }
                 
-                // Check if this token contains the [END] marker BEFORE adding it to the builder
-                if (token.Contains("[END] "))
-                {
-                    Logger.LogInfo($"DEBUG: Token contains [END] marker: '{token}' - stopping display");
-                    // Add token to builder for tracking, but don't display it
-                    _streamingStoryBuilder.Append(token);
-                    return;
-                }
-                
                 // Add token to builder for complete story tracking
                 _streamingStoryBuilder.Append(token);
 
-                // Real-time frontend filtering: only show content between [BEGIN] and [END] markers
+                // Real-time frontend filtering: only show content after [BEGIN] marker
                 var filteredToken = FilterTokenForDisplay(token);
                 
                 if (!string.IsNullOrEmpty(filteredToken))
@@ -371,7 +362,7 @@ namespace Curato.Views
         }
         
         /// <summary>
-        /// Filters tokens to only show content between [BEGIN] and [END] markers
+        /// Filters tokens to only show content after [BEGIN] marker
         /// </summary>
         /// <param name="token">The raw token to filter</param>
         /// <returns>Filtered token content, or empty string if should not be displayed</returns>
@@ -380,7 +371,6 @@ namespace Curato.Views
             // Get the current state from the full content
             var fullContent = _streamingStoryBuilder.ToString();
             var hasBegin = fullContent.Contains("[BEGIN]: ");
-            var hasEnd = fullContent.Contains("[END] ");
             
             // Check if this token contains the [BEGIN] marker
             if (token.Contains("[BEGIN]: "))
@@ -396,27 +386,13 @@ namespace Curato.Views
                 return string.Empty; // Don't show the [BEGIN] marker itself
             }
             
-            // Check if this token contains the [END] marker
-            if (token.Contains("[END] "))
-            {
-                Logger.LogInfo($"DEBUG: Hiding token with [END] marker: '{token}'");
-                return string.Empty; // Don't show the [END] marker
-            }
-            
-            // This prevents any content after [END] from being displayed
-            if (hasEnd)
-            {
-                Logger.LogInfo($"DEBUG: Hiding content after [END] marker: '{token}'");
-                return string.Empty;
-            }
-            
-            // Only show content if we've found the [BEGIN] marker and haven't found the [END] marker
-            if (hasBegin && !hasEnd)
+            // Only show content if we've found the [BEGIN] marker
+            if (hasBegin)
             {
                 return token;
             }
             
-            // Don't show content before [BEGIN] or after [END]
+            // Don't show content before [BEGIN]
             return string.Empty;
         }
         
