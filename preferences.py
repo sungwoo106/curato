@@ -138,7 +138,7 @@ class Preferences:
             
             # Run the Phi model
             runner = GenieRunner(progress_callback=self.progress_callback)
-            raw_output = runner.run_phi(prompt)
+            raw_output = runner.run_phi(prompt, "phi_profile")
             
             # Validate Phi output
             if not raw_output:
@@ -253,11 +253,11 @@ class Preferences:
             
             # Use streaming method if available, fallback to regular method
             if hasattr(runner, 'run_qwen_streaming'):
-                raw_output = runner.run_qwen_streaming(prompt, streaming_callback)
+                raw_output = runner.run_qwen_streaming(prompt, streaming_callback, "qwen_streaming_profile")
             else:
                 # Fallback to non-streaming method
                 print("⚠️ Streaming not available, using regular generation", file=sys.stderr)
-                raw_output = runner.run_qwen(prompt)
+                raw_output = runner.run_qwen(prompt, "qwen_profile")
                 # Simulate streaming by sending the complete output
                 if stream_callback:
                     stream_callback(raw_output, True)
