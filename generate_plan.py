@@ -193,21 +193,21 @@ def main() -> None:
             planner.select_place_types(categories)
             send_progress_update(55, "Selecting place types...")
 
-            # Generate the route plan using Phi model
-            send_progress_update(65, "Collecting place candidates and generating route plan...")
+            # Generate the route plan using Qwen model (Phi model calls commented out)
+            send_progress_update(65, "Collecting place candidates and generating route plan with Qwen...")
             route_plan_json = planner.run_route_planner()
             
             if route_plan_json:
-                send_progress_update(75, "Route plan generated successfully")
-                print(f"✅ Route plan generated: {route_plan_json[:200]}...", file=sys.stderr)
-                send_phi_completion(route_plan_json) # Signal Phi completion
+                send_progress_update(75, "Route plan generated successfully with Qwen")
+                print(f"✅ Route plan generated with Qwen: {route_plan_json[:200]}...", file=sys.stderr)
+                send_phi_completion(route_plan_json) # Signal completion (keeping function name for compatibility)
             else:
                 send_progress_update(75, "Route plan generation failed")
                 print("❌ Route plan generation failed", file=sys.stderr)
 
             # Generate the comprehensive itinerary text using the Qwen model with streaming
             send_progress_update(80, "Generating comprehensive itinerary with Qwen model (streaming)...")
-            print("Generating AI-powered itinerary with streaming...", file=sys.stderr)
+            print("Generating AI-powered itinerary with Qwen streaming...", file=sys.stderr)
             
             # Use streaming method for real-time display
             def streaming_callback(token, is_final):

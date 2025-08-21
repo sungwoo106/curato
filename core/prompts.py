@@ -81,6 +81,70 @@ I'll select 4-5 places for your {companion_type.lower()} outing:
     return prompt
 
 # =============================================================================
+# SIMPLE QWEN PROMPT FOR RANDOM LOCATION SELECTION
+# =============================================================================
+
+def build_qwen_location_prompt(
+    start_location: tuple,
+    companion_type: str,
+    start_time: int,
+    budget_level: str,
+    recommendations_json: List[Dict],
+    location_name: str = "Seoul"
+) -> str:
+    """
+    Build a simple prompt for Qwen to randomly select 4-5 locations.
+    
+    Args:
+        start_location (tuple): Starting coordinates (latitude, longitude)
+        companion_type (str): Type of outing (Solo, Couple, Friends, Family)
+        start_time (int): Starting time in 24-hour format
+        budget_level (str): Budget level (low, medium, high)
+        recommendations_json (List[Dict]): List of 20 candidate places (parsed from Kakao API)
+        location_name (str): Human-readable location name
+        
+    Returns:
+        str: Simple prompt string for Qwen using ChatML format
+    """
+    
+    # Format the candidate places in RANDOM order to ensure Qwen doesn't just pick the first few
+    import random
+    
+    # Create a shuffled copy of the recommendations to randomize the order Qwen sees
+    shuffled_recommendations = recommendations_json.copy()
+    random.shuffle(shuffled_recommendations)
+    
+    places_text = ""
+    for i, place in enumerate(shuffled_recommendations, 1):
+        place_name = place.get('place_name', 'Unknown')
+        place_type = place.get('place_type', 'Unknown')
+        places_text += f"{i}. {place_name} ({place_type})\n"
+    
+    prompt = f"""<|im_start|>system
+You are a travel planner. Select exactly 4-5 places from the list below. Do not repeat places.
+<|im_end|>
+
+<|im_start|>user
+Select exactly 4-5 places from this list for a {companion_type.lower()} outing:
+
+{places_text}
+
+Rules:
+- Pick exactly 4-5 places (no more, no less)
+- IMPORTANT: Choose places from DIFFERENT positions in the list (not just the first few)
+- Mix selections from early, middle, and late positions for variety
+- Do not repeat any place
+- Use this format: 1. [Place Name] - [Brief reason]
+<|im_end|>
+
+<|im_start|>assistant
+I'll select 4-5 places for your {companion_type.lower()} outing:
+
+"""
+    
+    return prompt
+
+# =============================================================================
 # SIMPLE QWEN PROMPT FOR ITINERARY GENERATION
 # =============================================================================
 

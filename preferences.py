@@ -21,7 +21,7 @@ from models.genie_runner import GenieRunner
 from core.cache_manager import CacheManager
 from core.rate_limiter import APIRateLimiter
 from core.place_manager import PlaceManager
-from core.prompts import build_phi_location_prompt, build_qwen_itinerary_prompt
+from core.prompts import build_phi_location_prompt, build_qwen_location_prompt, build_qwen_itinerary_prompt
 from data.api_clients.kakao_api import format_kakao_places_for_prompt
 
 
@@ -124,7 +124,97 @@ class Preferences:
                 return None
             
             # Build the prompt for the Phi model
-            prompt = build_phi_location_prompt(
+            # prompt = build_phi_location_prompt(
+            #     self.start_location,
+            #     self.companion_type,
+            #     self.starting_time,
+            #     self.budget,
+            #     recommendations,
+            #     self.location_name
+            # )
+            
+            # if self.progress_callback:
+            #     self.progress_callback(70, "Running Phi model for route planning...")
+            
+            # # Run the Phi model
+            # runner = GenieRunner(progress_callback=self.progress_callback)
+            # raw_output = runner.run_phi(prompt, "phi_profile")
+            
+            # # Validate Phi output
+            # if not raw_output:
+            #     print("❌ Phi model returned no output", file=sys.stderr)
+            #     if self.progress_callback:
+            #         self.progress_callback(75, "Phi model failed - no output")
+            #     fallback_plan = self._create_simple_fallback_route_plan()
+            #     return fallback_plan
+            
+            # if self.progress_callback:
+            #     self.progress_callback(75, "Processing route planning results...")
+            
+            # # Extract the selected places from Phi's output
+            # selected_places = self._extract_places_from_phi_output(raw_output, recommendations)
+            
+            # if selected_places:
+            #     # Convert to JSON format for WPF
+            #     route_plan_json = self._convert_places_to_json(selected_places)
+            #     if route_plan_json:
+            #         print(f"✅ Successfully generated route plan with {len(selected_places)} places", file=sys.stderr)
+            #         return route_plan_json
+            #     else:
+            #         print("⚠️ JSON conversion failed, using fallback", file=sys.stderr)
+            #         fallback_plan = self._create_simple_fallback_route_plan()
+            #         return fallback_plan
+            
+            # # If Phi failed, create a simple fallback
+            # print("⚠️ Phi model failed, creating simple fallback route plan", file=sys.stderr)
+            # fallback_plan = self._create_simple_fallback_route_plan()
+            # return fallback_plan
+            
+            # PHI MODEL CALLS COMMENTED OUT - USING QWEN INSTEAD
+            # Call the new Qwen-based route planner
+            return self.run_qwen_route_planner()
+            
+        except Exception as e:
+            print(f"Route planner failed: {e}", file=sys.stderr)
+            if self.progress_callback:
+                self.progress_callback(75, "Route planning failed")
+            
+            # Try fallback as last resort
+            try:
+                fallback_plan = self._create_simple_fallback_route_plan()
+                return fallback_plan
+            except Exception as fallback_error:
+                print(f"Fallback route plan also failed: {fallback_error}", file=sys.stderr)
+                return None
+
+    def run_qwen_route_planner(self):
+        """Generate a route plan using the Qwen model."""
+        try:
+            # Collect place recommendations
+            if self.progress_callback:
+                self.progress_callback(60, "Collecting place recommendations...")
+            
+            self.collect_best_place()
+            
+            # Validate that we have places to work with
+            if not self.best_places:
+                print("❌ No places collected, cannot generate route plan", file=sys.stderr)
+                if self.progress_callback:
+                    self.progress_callback(75, "No places found")
+                return None
+            
+            # Format the recommendations for the prompt
+            recommendations = self.format_recommendations()
+            
+            # Validate recommendations
+            if not recommendations:
+                print("❌ No recommendations formatted, cannot generate route plan", file=sys.stderr)
+                if self.progress_callback:
+                    self.progress_callback(75, "Recommendations formatting failed")
+                return None
+            
+            # Build the prompt for the Qwen model
+            prompt = build_qwen_location_prompt(
                 self.start_location,
                 self.companion_type,
                 self.starting_time,
@@ -134,46 +224,46 @@ class Preferences:
             )
             
             if self.progress_callback:
-                self.progress_callback(70, "Running Phi model for route planning...")
+                self.progress_callback(70, "Running Qwen model for route planning...")
             
-            # Run the Phi model
+            # Run the Qwen model
             runner = GenieRunner(progress_callback=self.progress_callback)
-            raw_output = runner.run_phi(prompt, "phi_profile")
+            raw_output = runner.run_qwen(prompt, "qwen_place_selection_profile")
             
-            # Validate Phi output
+            # Validate Qwen output
             if not raw_output:
-                print("❌ Phi model returned no output", file=sys.stderr)
+                print("❌ Qwen model returned no output", file=sys.stderr)
                 if self.progress_callback:
-                    self.progress_callback(75, "Phi model failed - no output")
+                    self.progress_callback(75, "Qwen model failed - no output")
                 fallback_plan = self._create_simple_fallback_route_plan()
                 return fallback_plan
             
             if self.progress_callback:
                 self.progress_callback(75, "Processing route planning results...")
             
-            # Extract the selected places from Phi's output
-            selected_places = self._extract_places_from_phi_output(raw_output, recommendations)
+            # Extract the selected places from Qwen's output
+            selected_places = self._extract_places_from_qwen_output(raw_output, recommendations)
             
             if selected_places:
                 # Convert to JSON format for WPF
                 route_plan_json = self._convert_places_to_json(selected_places)
                 if route_plan_json:
-                    print(f"✅ Successfully generated route plan with {len(selected_places)} places", file=sys.stderr)
+                    print(f"✅ Successfully generated route plan with {len(selected_places)} places using Qwen", file=sys.stderr)
                     return route_plan_json
                 else:
                     print("⚠️ JSON conversion failed, using fallback", file=sys.stderr)
                     fallback_plan = self._create_simple_fallback_route_plan()
                     return fallback_plan
             
-            # If Phi failed, create a simple fallback
-            print("⚠️ Phi model failed, creating simple fallback route plan", file=sys.stderr)
+            # If Qwen failed, create a simple fallback
+            print("⚠️ Qwen model failed, creating simple fallback route plan", file=sys.stderr)
             fallback_plan = self._create_simple_fallback_route_plan()
             return fallback_plan
             
         except Exception as e:
-            print(f"Route planner failed: {e}", file=sys.stderr)
+            print(f"Qwen route planner failed: {e}", file=sys.stderr)
             if self.progress_callback:
-                self.progress_callback(75, "Route planning failed")
+                self.progress_callback(75, "Qwen route planning failed")
             
             # Try fallback as last resort
             try:
@@ -253,11 +343,11 @@ class Preferences:
             
             # Use streaming method if available, fallback to regular method
             if hasattr(runner, 'run_qwen_streaming'):
-                raw_output = runner.run_qwen_streaming(prompt, streaming_callback, "qwen_profile")
+                raw_output = runner.run_qwen_streaming(prompt, streaming_callback, "qwen_itinerary_profile")
             else:
                 # Fallback to non-streaming method
                 print("⚠️ Streaming not available, using regular generation", file=sys.stderr)
-                raw_output = runner.run_qwen(prompt, "qwen_profile")
+                raw_output = runner.run_qwen(prompt, "qwen_itinerary_profile")
                 # Simulate streaming by sending the complete output
                 if stream_callback:
                     stream_callback(raw_output, True)
@@ -282,6 +372,51 @@ class Preferences:
         
         Args:
             raw_output (str): Raw output text from Phi model
+            recommendations (List[Dict]): List of formatted place recommendations
+            
+        Returns:
+            List[Dict]: List of selected places with full metadata
+        """
+        if not raw_output:
+            return []
+        
+        selected_places = []
+        lines = raw_output.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            if line and line[0].isdigit() and '.' in line:
+                try:
+                    parts = line.split('.', 1)
+                    if len(parts) == 2:
+                        place_info = parts[1].strip()
+                        
+                        if ' - ' in place_info:
+                            place_name = place_info.split(' - ', 1)[0].strip()
+                        elif ' (' in place_info and place_info.endswith(')'):
+                            place_name = place_info.split(' (')[0].strip()
+                        else:
+                            place_name = place_info.strip()
+                        
+                        if place_name in ['[Place Name]', 'Place Name', 'Unknown']:
+                            continue
+                        
+                        matching_place = self._find_matching_place(place_name, recommendations)
+                        if matching_place:
+                            selected_places.append(matching_place)
+                            
+                except Exception as e:
+                    continue
+        
+        # Deduplicate places
+        return self._deduplicate_places(selected_places)
+
+    def _extract_places_from_qwen_output(self, raw_output: str, recommendations: List[Dict]) -> List[Dict]:
+        """
+        Extract selected places from Qwen's output.
+        
+        Args:
+            raw_output (str): Raw output text from Qwen model
             recommendations (List[Dict]): List of formatted place recommendations
             
         Returns:
