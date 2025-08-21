@@ -410,6 +410,14 @@ namespace Curato.Views
                 return string.Empty; // Don't show the [END] marker
             }
             
+            // Check if we've already found an [END] marker in the accumulated content
+            // This prevents any content after [END] from being displayed
+            if (hasEnd)
+            {
+                Logger.LogInfo($"DEBUG: Hiding content after [END] marker: '{token}'");
+                return string.Empty;
+            }
+            
             // Only show content if we've found the [BEGIN] marker and haven't found the [END] marker
             if (hasBegin && !hasEnd)
             {
