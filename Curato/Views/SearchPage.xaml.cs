@@ -616,6 +616,28 @@ namespace Curato.Views
             };
         }
 
+        private CustomPopupPlacement[] CompanionPopup_PlacementCallback(Size popupSize, Size targetSize, Point offset)
+        {
+            // Center the popup over the CompanionButton
+            double horizontalOffset = -(popupSize.Width - targetSize.Width) / 2;
+            return new CustomPopupPlacement[]
+            {
+                new CustomPopupPlacement(new Point(horizontalOffset, targetSize.Height + offset.Y), PopupPrimaryAxis.Vertical)
+            };
+        }
+
+        private CustomPopupPlacement[] LocationSuggestionPopup_PlacementCallback(Size popupSize, Size targetSize, Point offset)
+        {
+            // Position the popup below the search bar with proper alignment
+            double horizontalOffset = -(popupSize.Width - targetSize.Width) / 2;
+            return new CustomPopupPlacement[]
+            {
+                new CustomPopupPlacement(new Point(horizontalOffset, targetSize.Height + 10), PopupPrimaryAxis.Vertical)
+            };
+        }
+
+
+
         private async void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is not InputViewModel vm)

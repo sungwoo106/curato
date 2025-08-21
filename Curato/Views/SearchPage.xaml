@@ -181,8 +181,17 @@
 
             <!-- Header -->
             <Grid Background="White" Height="80" Grid.Row="0">
-                <TextBlock Text="Curato" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="75,0,0,0"
-                           FontSize="46" Foreground="#FFB31A"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="Curato" 
+                           VerticalAlignment="Center" 
+                           HorizontalAlignment="Left" 
+                           Margin="75,0,0,0"
+                           FontSize="46" 
+                           Foreground="#FFB31A"
                            FontFamily="{StaticResource SatoshiBold}"/>
             </Grid>
 
@@ -218,16 +227,15 @@
                                      Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      TextChanged="LocationTextBox_TextChanged"
                                      GotFocus="LocationTextBox_GotFocus"/>
-                            <Popup x:Name="LocationSuggestionPopup"
-                                PlacementTarget="{Binding ElementName=LocationTextBox}"
-                                Placement="Bottom"
-                                StaysOpen="False"
-                                AllowsTransparency="True"
-                                PopupAnimation="Slide"
-                                IsOpen="{Binding IsLocationPopupOpen}"
-                                MinWidth="600"
-                                HorizontalOffset="-57"
-                                VerticalOffset="60">
+                                                         <Popup x:Name="LocationSuggestionPopup"
+                                 PlacementTarget="{Binding ElementName=LocationTextBox}"
+                                 Placement="Custom"
+                                 CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
+                                 StaysOpen="False"
+                                 AllowsTransparency="True"
+                                 PopupAnimation="Slide"
+                                 IsOpen="{Binding IsLocationPopupOpen}"
+                                 MinWidth="600">
                                 <Border Background="White"
                                         Padding="5"
                                         CornerRadius="15"
@@ -275,9 +283,8 @@
                             </Button>
                             <Popup x:Name="CompanionPopup"
                                 PlacementTarget="{Binding ElementName=CompanionButton}"
-                                Placement="Bottom"
-                                VerticalOffset="40"
-                                HorizontalOffset="0"
+                                Placement="Custom"
+                                CustomPopupPlacementCallback="CompanionPopup_PlacementCallback"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -304,7 +311,7 @@
                                 PlacementTarget="{Binding ElementName=BudgetButton}"
                                 Placement="Custom"
                                 CustomPopupPlacementCallback="BudgetPopup_PlacementCallback"
-                                VerticalOffset="40"
+                                VerticalOffset="20"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -332,7 +339,7 @@
                             PlacementTarget="{Binding ElementName=TimeButton}"
                             Placement="Custom"
                             CustomPopupPlacementCallback="TimePopup_PlacementCallback"
-                            VerticalOffset="40"
+                            VerticalOffset="20"
                             StaysOpen="False"
                             AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -406,7 +413,7 @@
                             </Button>
 
                             <!-- Category dropdown -->
-                            <Popup
+                                                         <Popup
                             x:Name="CategoryPopup"
                             PlacementTarget="{Binding ElementName=CategoryButton}"
                             Placement="Custom"
@@ -416,7 +423,7 @@
                             PopupAnimation="Slide"
                             MinWidth="450"
                             MinHeight="240"
-                            VerticalOffset="40">
+                            VerticalOffset="20">
                             <Border
                                 Background="White"
                                 Padding="20"

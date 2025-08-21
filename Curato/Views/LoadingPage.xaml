@@ -21,7 +21,15 @@
 
         <!-- Header -->
         <Grid Background="White" Height="80" Grid.Row="0">
-            <TextBlock Text="Curato" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="75,0,0,0"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Curato" 
+                       VerticalAlignment="Center" 
+                       HorizontalAlignment="Left" 
+                       Margin="75,0,0,0"
                        FontSize="46"
                        FontFamily="{StaticResource SatoshiBold}"
                        Foreground="#FFB31A"/>

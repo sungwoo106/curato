@@ -63,7 +63,8 @@
                            Foreground="#FFB31A"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Left"
-                           Margin="75,0,0,0"/>
+                           Margin="45,0,0,0"
+                           Width="Auto"/>
 
                 <!-- Preferences -->
                 <Border Grid.Column="1"
@@ -97,10 +98,8 @@
                         Height="75"
                         Click="EditButton_Click"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Center">
-                    <Button.RenderTransform>
-                        <TranslateTransform X="-150"/>
-                    </Button.RenderTransform>
+                        VerticalAlignment="Center"
+                        Margin="0,0,20,0">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="White"/>
@@ -145,9 +144,6 @@
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
                         Margin="0,20,0,0">
-                    <Button.RenderTransform>
-                        <TranslateTransform X="-150"/>
-                    </Button.RenderTransform>
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="#FFB31A"/>
