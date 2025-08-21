@@ -420,8 +420,7 @@ namespace Curato.Views
                             scrollViewer.ScrollToBottom();
                         }
                     });
-                    
-
+                }
                 
                 // Log streaming stats periodically (every 10 tokens or so)
                 if (_streamingStoryBuilder.Length % 100 < token.Length)
