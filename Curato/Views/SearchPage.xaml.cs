@@ -628,10 +628,10 @@ namespace Curato.Views
 
         private CustomPopupPlacement[] LocationSuggestionPopup_PlacementCallback(Size popupSize, Size targetSize, Point offset)
         {
-            // Position the popup below the search icon, not the textbox
+            // Position the popup below the search bar with the same gap as preference popups (20px)
             return new CustomPopupPlacement[]
             {
-                new CustomPopupPlacement(new Point(-20, targetSize.Height + 10), PopupPrimaryAxis.Vertical)
+                new CustomPopupPlacement(new Point(0, targetSize.Height + 20), PopupPrimaryAxis.Vertical)
             };
         }
 

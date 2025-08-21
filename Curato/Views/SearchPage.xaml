@@ -203,7 +203,8 @@
                 BorderBrush="#EEEEEE"
                 BorderThickness="0"
                 MinHeight="340"
-                UseLayoutRounding="True" SnapsToDevicePixels="True">
+                UseLayoutRounding="True" SnapsToDevicePixels="True"
+                ClipToBounds="False">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
                 </Border.Effect>
@@ -229,15 +230,16 @@
                                      Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      TextChanged="LocationTextBox_TextChanged"
                                      GotFocus="LocationTextBox_GotFocus"/>
-                                                         <Popup x:Name="LocationSuggestionPopup"
-                                 PlacementTarget="{Binding ElementName=LocationTextBox}"
-                                 Placement="Custom"
-                                 CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
-                                 StaysOpen="False"
-                                 AllowsTransparency="True"
-                                 PopupAnimation="Slide"
-                                 IsOpen="{Binding IsLocationPopupOpen}"
-                                 MinWidth="600">
+                                                                                     <Popup x:Name="LocationSuggestionPopup"
+                                  PlacementTarget="{Binding ElementName=LocationTextBox}"
+                                  Placement="Custom"
+                                  CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
+                                  VerticalOffset="20"
+                                  StaysOpen="False"
+                                  AllowsTransparency="True"
+                                  PopupAnimation="Slide"
+                                  IsOpen="{Binding IsLocationPopupOpen}"
+                                  MinWidth="600">
                                 <Border Background="White"
                                         Padding="5"
                                         CornerRadius="15"
@@ -474,7 +476,7 @@
             </Border>
 
             <!-- Recommendations -->
-            <StackPanel Grid.Row="2" Margin="120,40,120,0">
+            <StackPanel Grid.Row="2" Margin="120,40,120,0" ClipToBounds="False">
                 <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,20,50"
                            FontFamily="{StaticResource SatoshiBold}"
                            HorizontalAlignment="Left"/>

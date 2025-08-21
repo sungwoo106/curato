@@ -42,15 +42,15 @@
         <!-- Top Bar (white, shadowed) -->
         <Border Grid.Row="0"
                 Background="White"
-                Padding="30,20"
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True"
-                MinHeight="230">
+                MinHeight="230"
+                ClipToBounds="False">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
             </Border.Effect>
 
-            <Grid>
+            <Grid Margin="75,20,30,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -65,7 +65,7 @@
                            Foreground="#FFB31A"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Left"
-                           Margin="45,0,0,0"
+                           Margin="0,0,0,0"
                            Width="Auto"/>
 
                 <!-- Preferences -->
@@ -102,7 +102,7 @@
                         Click="EditButton_Click"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        Margin="0,0,80,0">
+                        Margin="0,0,20,0">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="White"/>
