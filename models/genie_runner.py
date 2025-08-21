@@ -319,6 +319,15 @@ class GenieRunner:
                 "--profile", profile_file
             ]
             
+            # Check if profile file exists and delete it to prevent conflicts
+            profile_path = bundle_path / profile_file
+            if profile_path.exists():
+                try:
+                    profile_path.unlink()
+                    print(f"📊 Deleted existing profile file: {profile_file}", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not delete existing profile file {profile_file}: {e}", file=sys.stderr)
+            
             print(f"📊 Profiling enabled with file: {profile_file}", file=sys.stderr)
             print(f"🚀 Running command: {' '.join(cmd)}", file=sys.stderr)
             print(f"🚀 From directory: {bundle_path}", file=sys.stderr)
@@ -405,6 +414,15 @@ class GenieRunner:
                 "--prompt_file", str(prompt_path),
                 "--profile", profile_file
             ]
+            
+            # Check if profile file exists and delete it to prevent conflicts
+            profile_path = bundle_path / profile_file
+            if profile_path.exists():
+                try:
+                    profile_path.unlink()
+                    print(f"📊 Deleted existing profile file: {profile_file}", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not delete existing profile file {profile_file}: {e}", file=sys.stderr)
             
             print(f"📊 Profiling enabled with file: {profile_file}", file=sys.stderr)
             print(f"🚀 Running {model_type} model with true real-time streaming...", file=sys.stderr)
