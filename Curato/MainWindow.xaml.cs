@@ -1,19 +1,17 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Curato;
 
 /// <summary>
-/// Interaction logic for MainWindow.xaml
+/// Main application window
 /// </summary>
 public partial class MainWindow : Window
 {
+    /// <summary>
+    /// Initializes the main window
+    /// </summary>
     public MainWindow()
     {
         InitializeComponent();
@@ -21,6 +19,9 @@ public partial class MainWindow : Window
         MainFrame.Content = new Views.SearchPage();
     }
 
+    /// <summary>
+    /// Handles window loaded event to maximize window
+    /// </summary>
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         this.WindowState = WindowState.Normal;
@@ -30,14 +31,12 @@ public partial class MainWindow : Window
         this.Height = SystemParameters.WorkArea.Height;
     }
 
+    /// <summary>
+    /// Handles mouse drag to move window
+    /// </summary>
     private void DragWindow(object sender, MouseButtonEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
             this.DragMove();
-    }
-
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
-    {
-        this.Close();
     }
 }

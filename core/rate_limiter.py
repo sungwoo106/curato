@@ -7,7 +7,6 @@ and respect external service rate limits (e.g., Kakao Map API).
 
 import time
 from collections import deque
-from typing import Dict
 import sys
 
 class APIRateLimiter:
@@ -25,8 +24,8 @@ class APIRateLimiter:
         Initialize rate limiter.
         
         Args:
-            max_calls: Maximum calls allowed in the time window
-            time_window: Time window in seconds
+            max_calls (int): Maximum calls allowed in the time window
+            time_window (int): Time window in seconds
         """
         self.max_calls = max_calls
         self.time_window = time_window
@@ -37,7 +36,7 @@ class APIRateLimiter:
         Check if an API call can be made.
         
         Returns:
-            True if call is allowed, False otherwise
+            bool: True if call is allowed, False otherwise
         """
         now = time.time()
         
@@ -62,21 +61,4 @@ class APIRateLimiter:
                 print(f"⏳ Rate limit reached, waiting {wait_time:.1f} seconds...", file=sys.stderr)
                 time.sleep(wait_time)
     
-    def get_status(self) -> Dict:
-        """
-        Get current rate limiter status.
-        
-        Returns:
-            Status information including current calls and limits
-        """
-        now = time.time()
-        # Remove old calls
-        while self.calls and now - self.calls[0] > self.time_window:
-            self.calls.popleft()
-        
-        return {
-            "current_calls": len(self.calls),
-            "max_calls": self.max_calls,
-            "time_window": self.time_window,
-            "calls_remaining": max(0, self.max_calls - len(self.calls))
-        }
+

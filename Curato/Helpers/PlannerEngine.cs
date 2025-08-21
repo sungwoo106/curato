@@ -5,8 +5,17 @@ using Curato.Models;
 using Curato.Helpers;
 using System.Text;
 
+/// <summary>
+/// Engine for generating trip plans by calling Python backend
+/// </summary>
 public static class PlannerEngine
 {
+    /// <summary>
+    /// Generates a trip plan by calling the Python backend
+    /// </summary>
+    /// <param name="request">Trip request with user preferences</param>
+    /// <param name="progress">Progress reporter for real-time updates</param>
+    /// <returns>Generated trip plan with itinerary and places</returns>
     public static async Task<TripPlan> GenerateTripPlan(TripRequest request, IProgress<(int progress, string message)>? progress = null)
     {
         try

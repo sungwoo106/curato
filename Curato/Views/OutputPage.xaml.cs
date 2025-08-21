@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Input;
+
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Globalization;
@@ -25,8 +25,6 @@ namespace Curato.Views
 {
     public partial class OutputPage : UserControl
     {
-        public double Latitude { get; set; } = 37.5665; // default to Seoul
-        public double Longitude { get; set; } = 126.9780;
         private readonly StringBuilder _streamingStoryBuilder = new StringBuilder();
         private bool _isStreaming = false;
         private DateTime _streamingStartTime;
@@ -599,28 +597,6 @@ namespace Curato.Views
             var partialEnd = fullContent.Contains("[") && !fullContent.Contains("[END]");
             
             return !(partialBegin || partialEnd);
-        }
-        
-        /// <summary>
-        /// Checks if the streaming state is valid and logs any issues
-        /// </summary>
-        /// <param name="fullContent">The complete content received so far</param>
-        /// <param name="hasBegin">Whether [BEGIN] marker has been found</param>
-        /// <param name="hasEnd">Whether [END] marker has been found</param>
-        private void ValidateStreamingState(string fullContent, bool hasBegin, bool hasEnd)
-        {
-            // Validation logic can be added here if needed in the future
-        }
-        
-        /// <summary>
-        /// Logs the current streaming state for debugging
-        /// </summary>
-        /// <param name="fullContent">The complete content received so far</param>
-        /// <param name="hasBegin">Whether [BEGIN] marker has been found</param>
-        /// <param name="hasEnd">Whether [END] marker has been found</param>
-        private void LogCurrentStreamingState(string fullContent, bool hasBegin, bool hasEnd)
-        {
-            // Detailed streaming state logging can be added here if needed in the future
         }
         
         /// <summary>

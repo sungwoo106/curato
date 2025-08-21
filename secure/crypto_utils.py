@@ -71,13 +71,10 @@ def get_kakao_map_api_key(
         - Encrypted API key file
     """
     # Load the encrypted API key from the binary file
-    # The encrypted key is stored as raw bytes for security
     with open(encrypted_key_path, "rb") as f:
         encrypted_key = f.read()
 
     # Load the private key from the PEM file
-    # The private key is used to decrypt the API key
-    # password=None indicates the private key is not password-protected
     with open(private_key_path, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
@@ -85,7 +82,6 @@ def get_kakao_map_api_key(
         )
 
     # Decrypt the API key using the private key
-    # This reverses the encryption process to recover the original API key
     decrypted_key = private_key.decrypt(
         encrypted_key,
         padding.OAEP(
@@ -96,5 +92,4 @@ def get_kakao_map_api_key(
     )
 
     # Convert the decrypted bytes to a UTF-8 string
-    # The API key is now ready for use in HTTP requests
     return decrypted_key.decode('utf-8')

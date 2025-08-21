@@ -9,11 +9,17 @@ import random
 import time
 import sys
 from typing import List, Dict
-from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, VARIETY_PLACE_TYPES, DEFAULT_PLACE_TYPES
+from constants import COMPANION_PLACE_TYPES, VARIETY_PLACE_TYPES, DEFAULT_PLACE_TYPES
 from data.api_clients.kakao_api import search_multiple_place_types
 
 def _log(level: str, message: str):
-    """Simple logging function."""
+    """
+    Simple logging function.
+    
+    Args:
+        level (str): Log level (e.g., "SUCCESS", "WARNING", "ERROR")
+        message (str): Log message to display
+    """
     timestamp = time.strftime("%H:%M:%S")
     print(f"[{timestamp}] {level} - {message}", file=sys.stderr)
 
@@ -46,8 +52,8 @@ class PlaceManager:
         Select appropriate place types based on companion type and user preferences.
         
         Args:
-            user_selected_types: User's manually selected place types
-            companion_type: Type of outing (Solo, Couple, Friends, Family)
+            user_selected_types (List[str], optional): User's manually selected place types
+            companion_type (str): Type of outing (Solo, Couple, Friends, Family)
         """
         # Start with user-selected types as highest priority
         if user_selected_types:
@@ -91,9 +97,9 @@ class PlaceManager:
         Collect place recommendations using batch API calls.
         
         Args:
-            start_location: Starting coordinates (lat, lng)
-            max_distance_km: Maximum search radius in kilometers
-            location_name: Human-readable location name for caching
+            start_location (tuple): Starting coordinates (lat, lng)
+            max_distance_km (float): Maximum search radius in kilometers
+            location_name (str): Human-readable location name for caching
         """
         # Check cache first
         cache_key = self.cache_manager._generate_cache_key(
@@ -160,10 +166,10 @@ class PlaceManager:
         Reduce the list of places to 20 candidates using random selection.
         
         Args:
-            all_places: List of all places found
+            all_places (List[Dict]): List of all places found
             
         Returns:
-            Dictionary with place types as keys and reduced lists as values
+            Dict[str, List[Dict]]: Dictionary with place types as keys and reduced lists as values
         """
         if not all_places:
             return {}

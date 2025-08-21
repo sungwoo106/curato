@@ -16,7 +16,6 @@ single, more maintainable solution.
 """
 
 import subprocess
-import tempfile
 import os
 import json
 import sys
@@ -27,12 +26,7 @@ from typing import Literal, Optional, Callable
 ModelType = Literal["phi", "qwen"]
 
 class GenieRunner:
-    """
-    Unified runner for Genie-based models (Phi and Qwen).
-    
-    This class provides a clean interface to run different model types
-    using the genie-t2t-run executable and your pre-configured model bundles.
-    """
+    """Unified runner for Genie-based models (Phi and Qwen)."""
     
     def __init__(self, 
                  phi_genie_executable: str = None,
@@ -44,48 +38,11 @@ class GenieRunner:
         """
         Initialize the Genie runner with model bundle paths.
         
-        Args:
-            phi_genie_executable (str): Path to the genie-t2t-run executable for Phi model (auto-detected if None)
-            qwen_genie_executable (str): Path to the genie-t2t-run executable for Qwen model (auto-detected if None)
-            phi_bundle_path (str): Path to the Phi model bundle directory (auto-detected if None)
-            qwen_bundle_path (str): Path to the Qwen model bundle directory (auto-detected if None)
-            working_dir (str): Working directory for temporary files (optional)
-            progress_callback (Callable): Optional callback function for progress updates (progress, message)
-        
         Configuration Priority (highest to lowest):
         1. Explicit paths passed to constructor
         2. Environment variables (PHI_BUNDLE_PATH, QWEN_BUNDLE_PATH, PHI_GENIE_EXECUTABLE_PATH, QWEN_GENIE_EXECUTABLE_PATH)
         3. config.py fallback paths
         4. Auto-detection in common locations
-        
-        Examples for different devices:
-        
-        # Windows Device 1:
-        runner = GenieRunner(
-            phi_bundle_path=r"C:\curato\phi_bundle",
-            qwen_bundle_path=r"C:\curato\qwen_bundle",
-            phi_genie_executable=r"C:\curato\phi_bundle\genie-t2t-run.exe",
-            qwen_genie_executable=r"C:\curato\qwen_bundle\genie-t2t-run.exe"
-        )
-        
-        # Windows Device 2 (different paths):
-        runner = GenieRunner(
-            phi_bundle_path=r"D:\ai_models\phi_bundle",
-            qwen_bundle_path=r"D:\ai_models\qwen_bundle",
-            phi_genie_executable=r"D:\ai_models\phi_bundle\genie-t2t-run.exe",
-            qwen_genie_executable=r"D:\ai_models\qwen_bundle\genie-t2t-run.exe"
-        )
-        
-        # macOS/Linux Device:
-        runner = GenieRunner(
-            phi_bundle_path="/home/user/ai_models/phi_bundle",
-            qwen_bundle_path="/home/user/ai_models/qwen_bundle",
-            phi_genie_executable="/home/user/ai_models/phi_bundle/genie-t2t-run",
-            qwen_genie_executable="/home/user/ai_models/qwen_bundle/genie-t2t-run"
-        )
-        
-        # Auto-detection (recommended for development):
-        runner = GenieRunner()  # Will auto-detect all paths
         """
         self.working_dir = Path(working_dir) if working_dir else Path.cwd()
         self.progress_callback = progress_callback
@@ -109,25 +66,7 @@ class GenieRunner:
         self._validate_paths()
     
     def _auto_detect_phi_bundle(self) -> str:
-        """
-        Auto-detect the Phi bundle path.
-        
-        Detection order:
-        1. Environment variable PHI_BUNDLE_PATH
-        2. config.py fallback paths
-        3. Common locations (./phi_bundle, ../phi_bundle, etc.)
-        
-        To customize for different devices:
-        - Set PHI_BUNDLE_PATH environment variable, OR
-        - Modify config.py with your device paths, OR
-        - Place bundles in common locations (./phi_bundle)
-        
-        Common locations checked:
-        - ./phi_bundle (current directory)
-        - ../phi_bundle (parent directory)
-        - ~/curato/phi_bundle (user home)
-        - C:\curato\phi_bundle (Windows default)
-        """
+        """Auto-detect the Phi bundle path."""
         # Check environment variable first
         env_path = os.environ.get('PHI_BUNDLE_PATH')
         if env_path and os.path.exists(env_path):
@@ -166,25 +105,7 @@ class GenieRunner:
         return default_path
     
     def _auto_detect_qwen_bundle(self) -> str:
-        """
-        Auto-detect the Qwen bundle path.
-        
-        Detection order:
-        1. Environment variable QWEN_BUNDLE_PATH
-        2. config.py fallback paths
-        3. Common locations (./qwen_bundle, ../qwen_bundle, etc.)
-        
-        To customize for different devices:
-        - Set QWEN_BUNDLE_PATH environment variable, OR
-        - Modify config.py with your device paths, OR
-        - Place bundles in common locations (./qwen_bundle)
-        
-        Common locations checked:
-        - ./qwen_bundle (current directory)
-        - ../qwen_bundle (parent directory)
-        - ~/curato/qwen_bundle (user home)
-        - C:\curato\qwen_bundle (Windows default)
-        """
+        """Auto-detect the Qwen bundle path."""
         # Check environment variable first
         env_path = os.environ.get('QWEN_BUNDLE_PATH')
         if env_path and os.path.exists(env_path):
@@ -223,25 +144,7 @@ class GenieRunner:
         return default_path
     
     def _auto_detect_phi_genie_executable(self, phi_bundle_path: str) -> str:
-        """
-        Auto-detect the genie-t2t-run executable for Phi model.
-        
-        Detection order:
-        1. Environment variable PHI_GENIE_EXECUTABLE_PATH
-        2. config.py fallback paths
-        3. Inside phi_bundle directory (most likely location)
-        4. Common locations (./genie-t2t-run.exe, etc.)
-        
-        To customize for different devices:
-        - Set PHI_GENIE_EXECUTABLE_PATH environment variable, OR
-        - Modify config.py with your device paths, OR
-        - Place executable in phi_bundle directory
-        
-        Common locations checked:
-        - Inside phi_bundle directory (recommended)
-        - ./genie-t2t-run.exe (current directory)
-        - C:\curato\genie-t2t-run.exe (Windows default)
-        """
+        """Auto-detect the genie-t2t-run executable for Phi model."""
         # Check environment variable first
         env_path = os.environ.get('PHI_GENIE_EXECUTABLE_PATH')
         if env_path and os.path.exists(env_path):
@@ -284,25 +187,7 @@ class GenieRunner:
         return default_path
     
     def _auto_detect_qwen_genie_executable(self, qwen_bundle_path: str) -> str:
-        """
-        Auto-detect the genie-t2t-run executable for Qwen model.
-        
-        Detection order:
-        1. Environment variable QWEN_GENIE_EXECUTABLE_PATH
-        2. config.py fallback paths
-        3. Inside qwen_bundle directory (most likely location)
-        4. Common locations (./genie-t2t-run.exe, etc.)
-        
-        To customize for different devices:
-        - Set QWEN_GENIE_EXECUTABLE_PATH environment variable, OR
-        - Modify config.py with your device paths, OR
-        - Place executable in qwen_bundle directory
-        
-        Common locations checked:
-        - Inside qwen_bundle directory (recommended)
-        - ./genie-t2t-run.exe (current directory)
-        - C:\curato\genie-t2t-run.exe (Windows default)
-        """
+        """Auto-detect the genie-t2t-run executable for Qwen model."""
         # Check environment variable first
         env_path = os.environ.get('QWEN_GENIE_EXECUTABLE_PATH')
         if env_path and os.path.exists(env_path):
@@ -371,62 +256,19 @@ class GenieRunner:
             print("   Make sure qwen_bundle directory exists or set QWEN_BUNDLE_PATH environment variable")
     
     def run_phi(self, prompt: str) -> str:
-        """
-        Run the Phi model with the given prompt.
-        
-        Args:
-            prompt (str): The complete prompt to send to the Phi model
-            
-        Returns:
-            str: The generated route plan from the Phi model
-            
-        Raises:
-            RuntimeError: If the Phi model fails to run
-            FileNotFoundError: If the Phi bundle is not found
-        """
+        """Run the Phi model with the given prompt."""
         return self._run_model("phi", prompt)
     
     def run_qwen(self, prompt: str) -> str:
-        """
-        Run the Qwen model with the given prompt.
-        
-        Args:
-            prompt (str): The complete prompt to send to the Qwen model
-            
-        Returns:
-            str: The generated emotional itinerary text from the Qwen model
-            
-        Raises:
-            RuntimeError: If the Qwen model fails to run
-            FileNotFoundError: If the Qwen bundle is not found
-        """
+        """Run the Qwen model with the given prompt."""
         return self._run_model("qwen", prompt)
     
     def run_qwen_streaming(self, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
-        """
-        Run the Qwen model with streaming support for real-time output.
-        
-        Args:
-            prompt (str): The complete prompt to send to the Qwen model
-            stream_callback (Callable[[str, bool], None]): Callback function for streaming tokens
-                                                       First param: token text, Second param: is_final
-            
-        Returns:
-            str: The complete generated output from the Qwen model
-        """
+        """Run the Qwen model with streaming support for real-time output."""
         return self._run_model_streaming("qwen", prompt, stream_callback)
     
     def _run_model(self, model_type: ModelType, prompt: str) -> str:
-        """
-        Internal method to run a specific model type.
-        
-        Args:
-            model_type (ModelType): Type of model to run ("phi" or "qwen")
-            prompt (str): The prompt to send to the model
-            
-        Returns:
-            str: The generated output from the model
-        """
+        """Internal method to run a specific model type."""
         # Determine which bundle to use
         if model_type == "phi":
             bundle_path = self.phi_bundle_path
@@ -469,8 +311,6 @@ class GenieRunner:
                 self.progress_callback(85, f"Running {model_type} model on NPU...")
             
             # Execute the genie-t2t-run executable with the correct parameters
-            # Format: genie-t2t-run.exe -c genie_config.json --prompt_file prompt.txt
-            # Note: We run from the bundle directory so it can find its config and model files
             cmd = [
                 executable,
                 "-c", "genie_config.json",
@@ -502,8 +342,6 @@ class GenieRunner:
                 self.progress_callback(90, f"{model_type} model completed successfully")
             
             # Check if the command was successful
-            
-            # Check if the command was successful
             result.check_returncode()
             
             # Return the generated output, stripping whitespace
@@ -526,21 +364,7 @@ class GenieRunner:
                 pass  # Ignore cleanup errors
     
     def _run_model_streaming(self, model_type: ModelType, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
-        """
-        Internal method to run a specific model type with true real-time streaming support.
-        
-        This method captures output from genie-t2t-run.exe in real-time as it's generated,
-        providing immediate token-by-token streaming just like running the executable directly
-        in the terminal or using ChatGPT.
-        
-        Args:
-            model_type (ModelType): Type of model to run ("phi" or "qwen")
-            prompt (str): The prompt to send to the model
-            stream_callback (Callable[[str, bool], None]): Callback for streaming tokens
-            
-        Returns:
-            str: The complete generated output from the model
-        """
+        """Internal method to run a specific model type with true real-time streaming support."""
         # Determine which bundle to use
         if model_type == "phi":
             bundle_path = self.phi_bundle_path
@@ -572,8 +396,6 @@ class GenieRunner:
                 self.progress_callback(85, f"Running {model_type} model on NPU with streaming...")
             
             # Execute the genie-t2t-run executable with the correct parameters
-            # Format: genie-t2t-run.exe -c genie_config.json --prompt_file prompt.txt
-            # Note: We run from the bundle directory so it can find its config and model files
             cmd = [
                 executable,
                 "-c", "genie_config.json",
@@ -674,102 +496,7 @@ class GenieRunner:
             except Exception:
                 pass  # Ignore cleanup errors
     
-    def validate_setup(self) -> bool:
-        """
-        Validate that all required components are available.
-        
-        Returns:
-            bool: True if setup is valid, False otherwise
-        """
-        try:
-            # Check Phi genie executable
-            if not os.path.exists(self.phi_genie_executable):
-                print(f"❌ Phi genie executable not found: {self.phi_genie_executable}")
-                return False
-            
-            # Check Qwen genie executable
-            if not os.path.exists(self.qwen_genie_executable):
-                print(f"❌ Qwen genie executable not found: {self.qwen_genie_executable}")
-                return False
-            
-            # Check Phi bundle
-            if not self.phi_bundle_path.exists():
-                print(f"❌ Phi bundle not found: {self.phi_bundle_path}")
-                return False
-            
-            # Check Qwen bundle
-            if not self.qwen_bundle_path.exists():
-                print(f"❌ Qwen bundle not found: {self.qwen_bundle_path}")
-                return False
-            
-            # Check genie config in Phi bundle
-            phi_config_path = self.phi_bundle_path / "genie_config.json"
-            if not phi_config_path.exists():
-                print(f"❌ Genie config not found in Phi bundle: {phi_config_path}")
-                return False
-            
-            # Check genie config in Qwen bundle
-            qwen_config_path = self.qwen_bundle_path / "genie_config.json"
-            if not qwen_config_path.exists():
-                print(f"❌ Genie config not found in Qwen bundle: {qwen_config_path}")
-                return False
-            
-            print("✅ Genie setup validation successful!")
-            print(f"   Phi executable: {self.phi_genie_executable}")
-            print(f"   Qwen executable: {self.qwen_genie_executable}")
-            print(f"   Phi bundle: {self.phi_bundle_path}")
-            print(f"   Qwen bundle: {self.qwen_bundle_path}")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Setup validation failed: {e}")
-            return False
 
 
-# Convenience functions for backward compatibility
-def run_phi_runner(prompt: str) -> str:
-    """
-    Convenience function to run Phi model (maintains backward compatibility).
-    
-    Args:
-        prompt (str): The prompt to send to the Phi model
-        
-    Returns:
-        str: The generated output from the Phi model
-    """
-    # Try to auto-detect paths or use environment variables
-    runner = GenieRunner()
-    return runner.run_phi(prompt)
 
 
-def run_qwen_runner(prompt: str) -> str:
-    """
-    Convenience function to run Qwen model.
-    
-    Args:
-        prompt (str): The prompt to send to the Qwen model
-        
-    Returns:
-        str: The generated output from the Qwen model
-    """
-    # Try to auto-detect paths or use environment variables
-    runner = GenieRunner()
-    return runner.run_qwen(prompt)
-
-
-def run_llama_runner(prompt: str) -> str:
-    """
-    Convenience function to run Qwen model (maintains backward compatibility).
-    
-    Note: This function is named 'llama_runner' for backward compatibility,
-    but it actually runs the Qwen model as per your current setup.
-    
-    Args:
-        prompt (str): The prompt to send to the Qwen model
-        
-    Returns:
-        str: The generated output from the Qwen model
-    """
-    # Try to auto-detect paths or use environment variables
-    runner = GenieRunner()
-    return runner.run_qwen(prompt)

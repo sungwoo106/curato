@@ -20,7 +20,6 @@ import requests
 import time
 from typing import List, Tuple, Optional, Dict
 from secure.crypto_utils import get_kakao_map_api_key
-from .kakao_api import _smart_cache
 
 def get_location_coordinates(location_name: str):
     """
@@ -30,20 +29,17 @@ def get_location_coordinates(location_name: str):
     and returns the corresponding latitude and longitude coordinates. It uses the
     Kakao Map API to perform the search and extracts coordinates from the first result.
     
-    The old implementation prompted the user to select from search results.
-    For automated scripts like "main.py" we instead simply return the
-    coordinates of the first result. "None" is returned if the query yields
-    no results or if the request fails.
-    
     Args:
         location_name (str): Name of the location to search for.
                            Can be in Korean or English.
                            Examples: "홍대입구", "Gangnam", "이태원", "Itaewon"
     
     Returns:
-        tuple: (latitude, longitude) coordinates as floats, or None on failure.
-               Coordinates are returned as (y, x) from Kakao API, which corresponds
-               to (latitude, longitude) in standard geographic notation.
+        Optional[Tuple[float, float]]: (latitude, longitude) coordinates as floats, 
+                                      or None on failure.
+                                      Coordinates are returned as (y, x) from Kakao API, 
+                                      which corresponds to (latitude, longitude) in 
+                                      standard geographic notation.
     
     Raises:
         None: All exceptions are caught and handled gracefully, returning None instead.
@@ -59,21 +55,15 @@ def get_location_coordinates(location_name: str):
         None
     """
     # Fetch the API key from secure storage
-    # Note: The API key is encrypted and needs to be decrypted using the private key.
-    # This ensures the API key is not exposed in plain text in the code.
     api_key = get_kakao_map_api_key()
     
     # Kakao Map API endpoint for keyword-based location search
-    # This endpoint searches for places based on text queries
     url = "https://dapi.kakao.com/v2/local/search/keyword.json"
     
     # Set up the request headers with the API key
-    # Kakao API requires the key to be prefixed with "KakaoAK "
     headers = {"Authorization": f"KakaoAK {api_key}"}
     
     # Set up the search parameters
-    # - query: The location name to search for
-    # - size: Number of results to return (we only need the first one)
     params = {"query": location_name, "size": 1}
     
     try:
@@ -81,14 +71,12 @@ def get_location_coordinates(location_name: str):
         response = requests.get(url, headers=headers, params=params)
         
         # Raise an exception for HTTP error status codes (4xx, 5xx)
-        # This helps identify API issues, authentication problems, etc.
         response.raise_for_status()
         
         # Parse the JSON response from the API
         data = response.json()
         
         # Extract the documents array from the response
-        # This contains the actual location results
         documents = data.get("documents", [])
         
         # Check if any results were returned
@@ -106,16 +94,7 @@ def get_location_coordinates(location_name: str):
         
     except Exception:
         # Catch all exceptions to ensure graceful failure
-        # This includes:
-        # - HTTP errors (4xx, 5xx status codes)
-        # - Network connection issues
-        # - JSON parsing errors
-        # - API key authentication failures
-        # - Rate limiting or quota exceeded
-        
         # On any failure return None so callers can fall back to defaults
-        # This ensures the application continues to function even if the
-        # location service is temporarily unavailable
         return None
 
 def get_multiple_location_coordinates(location_names: List[str], 

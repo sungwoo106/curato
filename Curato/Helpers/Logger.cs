@@ -5,11 +5,19 @@ using System.Windows;
 
 namespace Curato.Helpers
 {
+    /// <summary>
+    /// Static logger for debugging and error reporting
+    /// </summary>
     public static class Logger
     {
         private static readonly string LogFilePath = Path.Combine(AppContext.BaseDirectory, "curato_debug.log");
         private static readonly object LogLock = new object();
 
+        /// <summary>
+        /// Logs a message to file and optionally shows a message box
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        /// <param name="showMessageBox">Whether to show message box</param>
         public static void Log(string message, bool showMessageBox = false)
         {
             try
@@ -49,17 +57,30 @@ namespace Curato.Helpers
             }
         }
 
+        /// <summary>
+        /// Logs an error message with optional exception details
+        /// </summary>
+        /// <param name="message">Error message</param>
+        /// <param name="ex">Optional exception</param>
         public static void LogError(string message, Exception? ex = null)
         {
             var fullMessage = ex != null ? $"{message}\nException: {ex.Message}\nStackTrace: {ex.StackTrace}" : message;
             Log(fullMessage, true);
         }
 
+        /// <summary>
+        /// Logs an informational message
+        /// </summary>
+        /// <param name="message">Info message</param>
         public static void LogInfo(string message)
         {
             Log(message, false);
         }
 
+        /// <summary>
+        /// Gets the contents of the log file
+        /// </summary>
+        /// <returns>Log file contents or error message</returns>
         public static string GetLogContents()
         {
             try
@@ -76,6 +97,9 @@ namespace Curato.Helpers
             }
         }
 
+        /// <summary>
+        /// Clears the log file
+        /// </summary>
         public static void ClearLog()
         {
             try

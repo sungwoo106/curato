@@ -24,7 +24,7 @@ def build_phi_location_prompt(
     companion_type: str,
     start_time: int,
     budget_level: str,
-    recommendations_json: List[Dict],  # This is List[Dict] from parsed Kakao API data
+    recommendations_json: List[Dict],
     location_name: str = "Seoul"
 ) -> str:
     """

@@ -140,22 +140,7 @@ def get_qwen_genie_executable_path():
         WINDOWS_PATHS["genie_executables"]["qwen"] if IS_WINDOWS else UNIX_PATHS["genie_executables"]["qwen"]
     )
 
-def get_genie_executables():
-    """
-    Get a dictionary of all genie executable paths.
-    
-    Returns:
-        dict: Dictionary with 'phi' and 'qwen' keys containing executable paths
-    
-    Example:
-        >>> executables = get_genie_executables()
-        >>> phi_path = executables['phi']
-        >>> qwen_path = executables['qwen']
-    """
-    return {
-        "phi": get_phi_genie_executable_path(),
-        "qwen": get_qwen_genie_executable_path()
-    }
+
 
 # =============================================================================
 # DEPLOYMENT SCENARIOS
@@ -216,6 +201,5 @@ __all__ = [
     'get_qwen_bundle_path', 
     'get_phi_genie_executable_path',
     'get_qwen_genie_executable_path',
-    'get_genie_executables',
     'IS_WINDOWS'
 ]

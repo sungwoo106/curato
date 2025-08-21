@@ -1,14 +1,12 @@
 using System;
 using System.Windows.Input;
-using System.Windows;
-
-// <summary>
-// RelayCommand allows for command binding in WPF applications.
-// It implements ICommand and provides a way to execute actions and determine if they can be executed.
-// </summary>
 
 namespace Curato.Helpers
 {
+    /// <summary>
+    /// RelayCommand allows for command binding in WPF applications.
+    /// It implements ICommand and provides a way to execute actions and determine if they can be executed.
+    /// </summary>
     public class RelayCommand : ICommand
     {
         private readonly Action<object> _execute;

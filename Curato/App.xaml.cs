@@ -1,8 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using Curato.ViewModels;
-
+﻿using System.Windows;
 
 namespace Curato;
 

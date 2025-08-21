@@ -10,7 +10,13 @@ from typing import Dict, List, Optional
 import sys
 
 def _log(level: str, message: str):
-    """Simple logging function."""
+    """
+    Simple logging function.
+    
+    Args:
+        level (str): Log level (e.g., "SUCCESS", "WARNING", "ERROR")
+        message (str): Log message to display
+    """
     timestamp = time.strftime("%H:%M:%S")
     print(f"[{timestamp}] {level} - {message}", file=sys.stderr)
 
@@ -38,10 +44,10 @@ class CacheManager:
         Generate a cache key based on search parameters.
         
         Args:
-            location_name: Human-readable location name
-            place_types: List of place types to search for
-            start_location: Starting coordinates (lat, lng)
-            max_distance_km: Search radius in kilometers
+            location_name (str): Human-readable location name
+            place_types (List[str]): List of place types to search for
+            start_location (tuple): Starting coordinates (lat, lng)
+            max_distance_km (float): Search radius in kilometers
             
         Returns:
             str: Unique cache key for this search
@@ -65,10 +71,10 @@ class CacheManager:
         Retrieve cached results if available and not expired.
         
         Args:
-            cache_key: Cache key for the search
+            cache_key (str): Cache key for the search
             
         Returns:
-            Cached results or None if not found/expired
+            Optional[Dict[str, List[Dict]]]: Cached results or None if not found/expired
         """
         try:
             if cache_key in self._cache:
@@ -94,8 +100,8 @@ class CacheManager:
         Cache the search results for future use.
         
         Args:
-            cache_key: Cache key for the search
-            results: Results to cache
+            cache_key (str): Cache key for the search
+            results (Dict[str, List[Dict]]): Results to cache
         """
         try:
             # Store results and timestamp
@@ -139,16 +145,4 @@ class CacheManager:
         except Exception as e:
             _log("WARNING", f"⚠️ Cache cleanup failed: {e}")
     
-    def get_cache_stats(self) -> dict:
-        """Get cache statistics for monitoring."""
-        current_time = time.time()
-        expired_entries = sum(1 for ts in self._cache_timestamps.values() 
-                           if current_time - ts > self._cache_ttl)
-        
-        return {
-            "total_cached_entries": len(self._cache),
-            "cache_size_limit": self._max_cache_size,
-            "cache_utilization_percent": (len(self._cache) / self._max_cache_size) * 100,
-            "expired_entries": expired_entries,
-            "active_entries": len(self._cache) - expired_entries
-        }
+

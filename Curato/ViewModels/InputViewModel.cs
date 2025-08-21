@@ -12,12 +12,11 @@ using System.Text;
 using Curato.Models;
 using Curato.Helpers;
 
-// <summary>
-// InputViewModel manages the input data and commands for the application.
-// </summary>
-
 namespace Curato.ViewModels
 {
+    /// <summary>
+    /// InputViewModel manages the input data and commands for the application.
+    /// </summary>
     public class InputViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<PopularPlace> PopularPlaces { get; set; } = new ObservableCollection<PopularPlace>();
@@ -366,7 +365,6 @@ namespace Curato.ViewModels
         }
 
         // Represents the result of the plan generation
-        // This is a simplified version, adjust as needed based on actual output structure
         private class PlanResult
         {
             public string? Itinerary { get; set; }

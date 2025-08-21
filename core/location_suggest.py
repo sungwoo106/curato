@@ -25,14 +25,12 @@ import io
 # ENCODING SETUP
 # =============================================================================
 # Ensure proper UTF-8 encoding for Korean text output
-# This is crucial for handling Korean location names correctly
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # =============================================================================
 # PATH SETUP
 # =============================================================================
 # Add project root to Python path so we can import from other modules
-# This allows us to use the kakao_api module for location autocomplete
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(ROOT_DIR)
 
@@ -79,7 +77,6 @@ def suggest_locations(query):
     """
     try:
         # Call the Kakao API autocomplete service with the query
-        # This returns a list of potential location matches
         results = autocomplete_location(query)
         
         # Initialize the suggestions list to store processed results
@@ -101,18 +98,10 @@ def suggest_locations(query):
                 })
 
         # Output the suggestions as JSON to stdout
-        # This allows external applications to capture the results
         print(json.dumps(suggestions, ensure_ascii=False))
         
     except Exception as e:
-        # If any error occurs during the suggestion process:
-        # - API failures
-        # - Network issues
-        # - Data parsing errors
-        # - Authentication problems
-        
         # Return an empty array to indicate no suggestions available
-        # This ensures the calling application doesn't crash
         print(json.dumps([], ensure_ascii=False))
 
 # =============================================================================
@@ -125,8 +114,6 @@ if __name__ == "__main__":
         print(json.dumps([], ensure_ascii=False))
     else:
         # Extract the query from command line arguments
-        # The first argument (sys.argv[0]) is the script name
-        # The second argument (sys.argv[1]) is the location query
         query = sys.argv[1]
         
         # Generate and output location suggestions for the query
