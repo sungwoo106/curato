@@ -230,7 +230,7 @@
                                      Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      TextChanged="LocationTextBox_TextChanged"
                                      GotFocus="LocationTextBox_GotFocus"/>
-                                                                                     <Popup x:Name="LocationSuggestionPopup"
+                                <Popup x:Name="LocationSuggestionPopup"
                                   PlacementTarget="{Binding ElementName=LocationTextBox}"
                                   Placement="Custom"
                                   CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"

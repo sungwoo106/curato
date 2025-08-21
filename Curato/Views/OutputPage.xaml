@@ -60,7 +60,7 @@
                                Height="80"
                                Foreground="#FFB31A"
                                Canvas.Left="75"
-                               Canvas.Top="0"
+                               Canvas.Top="5"
                                Width="Auto"/>
                 </Canvas>
 
@@ -81,7 +81,7 @@
                         VerticalAlignment="Center"
                         MinWidth="1100"
                         Height="75"
-                        Margin="0,0,0,0"
+                        Margin="100,0,0,0"
                         UseLayoutRounding="True" SnapsToDevicePixels="True">
                     <TextBlock x:Name="PreferencesSummaryLabel"
                                Text="{Binding PreferencesSummary, FallbackValue='Loading preferences...'}"
