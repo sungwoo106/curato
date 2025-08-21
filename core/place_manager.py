@@ -7,6 +7,7 @@ for trip planning and itinerary generation.
 
 import random
 import time
+import sys
 from typing import List, Dict
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_PLACE_TYPES, VARIETY_PLACE_TYPES, DEFAULT_PLACE_TYPES
 from data.api_clients.kakao_api import search_multiple_place_types
