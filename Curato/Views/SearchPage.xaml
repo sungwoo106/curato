@@ -297,7 +297,7 @@
                                 PopupAnimation="Slide"
                                 Width="192"
                                 MinHeight="210">
-                                                                 <Border Background="White" CornerRadius="50" Padding="12" Margin="8" Effect="{DynamicResource ShadowEffect}" ClipToBounds="False">
+                                    <Border Background="White" CornerRadius="50" Padding="12" Margin="8" Effect="{DynamicResource ShadowEffect}" ClipToBounds="False">
                                     <ItemsControl x:Name="CompanionItemsControl"/>
                                 </Border>
                             </Popup>
@@ -324,7 +324,7 @@
                                 PopupAnimation="Slide"
                                 Width="192"
                                 MinHeight="200">
-                                                                 <Border Background="White" Padding="12" Effect="{DynamicResource ShadowEffect}" CornerRadius="50" BorderBrush="#DDD" BorderThickness="1" Margin="8" ClipToBounds="False">
+                                    <Border Background="White" Padding="12" Effect="{DynamicResource ShadowEffect}" CornerRadius="50" BorderBrush="#DDD" BorderThickness="1" Margin="8" ClipToBounds="False">
                                     <ItemsControl x:Name="BudgetItemsControl" />
                                 </Border>
                             </Popup>
@@ -352,7 +352,7 @@
                                 PopupAnimation="Slide"
                                 MinWidth="890"
                                 MinHeight="97">
-                                                         <Border
+                                <Border
                                  Background="White"
                                  Padding="12"
                                  CornerRadius="40"
@@ -422,7 +422,7 @@
                             </Button>
 
                             <!-- Category dropdown -->
-                                                         <Popup
+                            <Popup
                             x:Name="CategoryPopup"
                             PlacementTarget="{Binding ElementName=CategoryButton}"
                             Placement="Custom"
@@ -433,7 +433,7 @@
                             MinWidth="450"
                             MinHeight="240"
                             VerticalOffset="20">
-                                                         <Border
+                            <Border
                                  Background="White"
                                  Padding="20"
                                  Margin="20,0,20,0"

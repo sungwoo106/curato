@@ -631,7 +631,7 @@ namespace Curato.Views
             // Position the popup below the search bar, starting at the left edge of the search bar border
             return new CustomPopupPlacement[]
             {
-                new CustomPopupPlacement(new Point(-55, targetSize.Height + 20), PopupPrimaryAxis.Vertical)
+                new CustomPopupPlacement(new Point(-65, targetSize.Height + 20), PopupPrimaryAxis.Vertical)
             };
         }
 
