@@ -385,4 +385,4 @@ namespace Curato.Views
             return null;
         }
     }
-
+}
