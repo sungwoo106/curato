@@ -529,6 +529,11 @@ class GenieRunner:
         """
         Internal method to run a specific model type with streaming support.
         
+        Since genie-t2t-run.exe doesn't support real-time streaming, we simulate it by:
+        1. Running the model to completion
+        2. Breaking the output into tokens/words
+        3. Streaming each token with a small delay for realistic effect
+        
         Args:
             model_type (ModelType): Type of model to run ("phi" or "qwen")
             prompt (str): The prompt to send to the model
@@ -564,8 +569,6 @@ class GenieRunner:
                 raise ValueError(f"Unsupported model type: {model_type}")
             
             # Send progress update if callback is available
-            
-            # Send progress update if callback is available
             if self.progress_callback:
                 self.progress_callback(85, f"Running {model_type} model on NPU with streaming...")
             
@@ -578,42 +581,29 @@ class GenieRunner:
                 "--prompt_file", str(prompt_path)
             ]
             
-
+            print(f"🚀 Running {model_type} model with simulated streaming...", file=sys.stderr)
+            print(f"📁 Bundle path: {bundle_path}", file=sys.stderr)
+            print(f"📁 Working directory: {self.working_dir}", file=sys.stderr)
+            print(f"🔧 Executable: {executable}", file=sys.stderr)
+            
+            # Show NPU processing information
+            print("🚀 Starting NPU inference...", file=sys.stderr)
+            print("⏳ Model is now processing on your NPU...", file=sys.stderr)
+            print("💡 Monitor NPU usage in Task Manager > Performance tab", file=sys.stderr)
+            print("🔍 You can also check GPU-Z or similar tools for detailed NPU stats", file=sys.stderr)
             
             # Add progress indicator
             import time
             start_time = time.time()
             
-            # Use Popen for real-time streaming
-            process = subprocess.Popen(
+            # Run the model to completion first
+            result = subprocess.run(
                 cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
+                text=True,
                 cwd=bundle_path,  # Run from the bundle directory
-                encoding="utf-8",
-                bufsize=1,
-                universal_newlines=True
+                encoding="utf-8"
             )
-            
-            # Stream output in real-time
-            full_output = ""
-            
-            while True:
-                # Read output in chunks for better performance
-                chunk = process.stdout.read(1)  # Read one character at a time for smooth streaming
-                if not chunk:
-                    break
-                
-                full_output += chunk
-                
-                # Send individual characters for real-time streaming
-                stream_callback(chunk, False)
-                
-                # Flush to ensure immediate display
-                sys.stdout.flush()
-            
-            # Wait for process to complete
-            process.wait()
             
             end_time = time.time()
             processing_time = end_time - start_time
@@ -625,18 +615,48 @@ class GenieRunner:
                 self.progress_callback(90, f"{model_type} model completed successfully")
             
             # Check if the command was successful
-            if process.returncode != 0:
-                stderr_output = process.stderr.read()
-                error_msg = f"Model {model_type} failed to run (exit code {process.returncode}): {stderr_output}"
-                print(f"❌ Error: {error_msg}", file=sys.stderr)
-                raise RuntimeError(error_msg)
+            result.check_returncode()
+            
+            # Get the complete output
+            full_output = result.stdout.strip()
+            
+            if not full_output:
+                print(f"⚠️ Warning: {model_type} model returned empty output", file=sys.stderr)
+                stream_callback("", True)
+                return ""
+            
+            # Simulate streaming by breaking output into tokens and streaming them
+            print(f"🔄 Simulating real-time streaming for {len(full_output)} characters...", file=sys.stderr)
+            
+            # Break output into words/tokens for realistic streaming
+            import re
+            tokens = re.findall(r'\S+|\s+', full_output)  # Split into words and whitespace
+            
+            # Stream each token with a small delay
+            for i, token in enumerate(tokens):
+                # Send the token
+                stream_callback(token, False)
+                
+                # Add a small delay to simulate real-time generation
+                # Adjust this value to control streaming speed
+                time.sleep(0.05)  # 50ms delay between tokens
+                
+                # Show progress every 10 tokens
+                if i % 10 == 0:
+                    progress = (i / len(tokens)) * 100
+                    print(f"📊 Streaming progress: {progress:.1f}% ({i}/{len(tokens)} tokens)", file=sys.stderr)
             
             # Send final completion signal
             stream_callback("", True)
+            print("✅ Simulated streaming completed successfully", file=sys.stderr)
             
             # Return the complete output
-            return full_output.strip()
+            return full_output
             
+        except subprocess.CalledProcessError as e:
+            error_msg = f"Model {model_type} failed to run (exit code {e.returncode}): {e.stderr}"
+            print(f"❌ Error: {error_msg}", file=sys.stderr)
+            raise RuntimeError(error_msg) from e
         except Exception as e:
             error_msg = f"Unexpected error running {model_type} model with streaming: {e}"
             print(f"❌ Error: {error_msg}", file=sys.stderr)
