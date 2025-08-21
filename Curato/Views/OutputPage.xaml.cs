@@ -284,17 +284,14 @@ namespace Curato.Views
                     var completeStory = _streamingStoryBuilder.ToString();
                     Logger.LogInfo($"Complete story received: {completeStory.Substring(0, Math.Min(200, completeStory.Length))}...");
                     
-                    // Clean up any remaining content after [END] marker
-                    var cleanedStory = CleanupStoryAfterEnd(completeStory);
-                    
-                    // Update the final story in AppState if we have a complete story
-                    if (!string.IsNullOrWhiteSpace(cleanedStory))
+                    // Save the complete story to AppState (real-time filtering already handled display)
+                    if (!string.IsNullOrWhiteSpace(completeStory))
                     {
                         if (AppState.SharedTripPlan != null)
                         {
-                            AppState.SharedTripPlan.EmotionalNarrative = cleanedStory;
+                            AppState.SharedTripPlan.EmotionalNarrative = completeStory;
                         }
-                        Logger.LogInfo($"Final cleaned story saved to AppState: {cleanedStory.Substring(0, Math.Min(100, cleanedStory.Length))}...");
+                        Logger.LogInfo($"Complete story saved to AppState: {completeStory.Substring(0, Math.Min(100, completeStory.Length))}...");
                     }
                     return;
                 }
@@ -374,20 +371,7 @@ namespace Curato.Views
             // Get the current state from the full content
             var fullContent = _streamingStoryBuilder.ToString();
             var hasBegin = fullContent.Contains("[BEGIN]: ");
-            var hasEnd = fullContent.Contains("[END] ") || fullContent.Contains("[END]"); // Check for both formats
-            
-            // Debug logging for marker detection
-            if (token.Contains("[END"))
-            {
-                Logger.LogInfo($"DEBUG: Token contains END marker: '{token}'");
-                Logger.LogInfo($"DEBUG: Full content has BEGIN: {hasBegin}, has END: {hasEnd}");
-            }
-            
-            // Handle malformed markers
-            if (!HandleMalformedMarkers(fullContent))
-            {
-                // Continue with caution if markers are malformed
-            }
+            var hasEnd = fullContent.Contains("[END] ");
             
             // Check if this token contains the [BEGIN] marker
             if (token.Contains("[BEGIN]: "))
@@ -403,14 +387,6 @@ namespace Curato.Views
                 return string.Empty; // Don't show the [BEGIN] marker itself
             }
             
-            // Check if this token contains the [END] marker (both formats)
-            if (token.Contains("[END] ") || token.Contains("[END]"))
-            {
-                Logger.LogInfo($"DEBUG: Hiding token with END marker: '{token}'");
-                return string.Empty; // Don't show the [END] marker
-            }
-            
-            // Check if we've already found an [END] marker in the accumulated content
             // This prevents any content after [END] from being displayed
             if (hasEnd)
             {
@@ -437,49 +413,6 @@ namespace Curato.Views
             {
                 EmotionalItineraryTextBlock.Inlines.Clear();
             });
-        }
-        
-        /// <summary>
-        /// Handles malformed or partial markers
-        /// </summary>
-        /// <param name="fullContent">The complete content received so far</param>
-        /// <returns>True if markers are properly formed, false otherwise</returns>
-        private bool HandleMalformedMarkers(string fullContent)
-        {
-            // Check for partial markers that might cause issues
-            var partialBegin = fullContent.Contains("[") && !fullContent.Contains("[BEGIN]: ");
-            var partialEnd = fullContent.Contains("[") && !(fullContent.Contains("[END] ") || fullContent.Contains("[END]"));
-            
-            return !(partialBegin || partialEnd);
-        }
-        
-        /// <summary>
-        /// Cleans up the story by removing content after [END] marker
-        /// </summary>
-        /// <param name="completeStory">The complete story with all markers</param>
-        /// <returns>Cleaned story content</returns>
-        private string CleanupStoryAfterEnd(string completeStory)
-        {
-            // Check for [END] marker with space first
-            var endIndex = completeStory.IndexOf("[END] ");
-            if (endIndex >= 0)
-            {
-                var cleanedStory = completeStory.Substring(0, endIndex);
-                Logger.LogInfo($"DEBUG: Cleaned story after [END] marker at index {endIndex}");
-                return cleanedStory;
-            }
-            
-            // Check for [END] marker without space (fallback)
-            var endIndexNoSpace = completeStory.IndexOf("[END]");
-            if (endIndexNoSpace >= 0)
-            {
-                var cleanedStory = completeStory.Substring(0, endIndexNoSpace);
-                Logger.LogInfo($"DEBUG: Cleaned story after [END] marker (no space) at index {endIndexNoSpace}");
-                return cleanedStory;
-            }
-            
-            Logger.LogInfo("DEBUG: No [END] marker found in complete story");
-            return completeStory;
         }
         
         /// <summary>
