@@ -59,7 +59,7 @@
                        TextWrapping="Wrap"
                        MaxWidth="800"
                        TextAlignment="Center"
-                       Margin="0,40,0,0"/>
+                       Margin="0,25,0,0"/>
 
             <!-- Progress Bar Container -->
             <StackPanel Margin="0,40,0,0" HorizontalAlignment="Center">
