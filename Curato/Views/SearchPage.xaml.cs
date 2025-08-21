@@ -55,7 +55,7 @@ namespace Curato.Views
             }
         }
 
-        private void LocationTimer_Tick(object? sender, EventArgs e)
+        private async void LocationTimer_Tick(object? sender, EventArgs e)
         {
             _locationTimer.Stop();
             if (DataContext is not InputViewModel vm)
@@ -648,9 +648,10 @@ namespace Curato.Views
                         // Log the result
                         Logger.LogInfo($"Generated trip plan: {tripPlan?.EmotionalNarrative}");
                         
-                        // Save coordinates from ViewModel
-                        double lat = vm.SelectedLocationCoordinates?.Latitude ?? 37.5665;
-                        double lng = vm.SelectedLocationCoordinates?.Longitude ?? 126.9780;
+                        // Save coordinates from ViewModel (capture vm before lambda)
+                        var selectedCoords = vm.SelectedLocationCoordinates;
+                        double lat = selectedCoords?.Latitude ?? 37.5665;
+                        double lng = selectedCoords?.Longitude ?? 126.9780;
 
                         Logger.LogInfo($"LoadingPage callback - Creating OutputPage with coordinates: lat={lat}, lng={lng}");
 

@@ -100,19 +100,18 @@ public static class PlannerEngine
                             progress?.Report((progressValue, message));
                             // Removed duplicate logging - progress is already logged in SearchPage.xaml.cs
                         }
-                        else if (type == "phi_completion")
-                        {
-                            // Phi model completed - we can show the output page now
-                            if (progressData.TryGetProperty("route_plan", out var routePlanElement))
-                            {
-                                finalRoutePlan = routePlanElement.GetString();
-                                phiCompleted = true;
-                                
-                                // Report Phi completion with route plan data to show output page immediately
-                                // Send the route plan data separately to avoid corrupting the JSON
-                                progress?.Report((85, $"phi_completion|{finalRoutePlan}"));
-                            }
-                        }
+                                                 else if (type == "phi_completion")
+                         {
+                             // Phi model completed - we can show the output page now
+                             if (progressData.TryGetProperty("route_plan", out var routePlanElement))
+                             {
+                                 finalRoutePlan = routePlanElement.GetString();
+                                 
+                                 // Report Phi completion with route plan data to show output page immediately
+                                 // Send the route plan data separately to avoid corrupting the JSON
+                                 progress?.Report((85, $"phi_completion|{finalRoutePlan}"));
+                             }
+                         }
                         else if (type == "streaming_token")
                         {
                             // Handle streaming tokens for real-time story display

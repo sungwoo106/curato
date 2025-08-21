@@ -267,7 +267,7 @@ namespace Curato.Views
             try
             {
                 // Wait for the async operation to complete with progress tracking
-                var result = await _onFinishedAsync?.Invoke();
+                var result = _onFinishedAsync != null ? await _onFinishedAsync.Invoke() : null;
                 
                 // If we haven't shown the output page yet (Phi didn't complete), show it now
                 if (!_phiCompleted)
