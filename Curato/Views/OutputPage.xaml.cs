@@ -333,6 +333,15 @@ namespace Curato.Views
                     }
                 }
                 
+                // Check if this token contains the [END] marker BEFORE adding it to the builder
+                if (token.Contains("[END] "))
+                {
+                    Logger.LogInfo($"DEBUG: Token contains [END] marker: '{token}' - stopping display");
+                    // Add token to builder for tracking, but don't display it
+                    _streamingStoryBuilder.Append(token);
+                    return;
+                }
+                
                 // Add token to builder for complete story tracking
                 _streamingStoryBuilder.Append(token);
 
@@ -385,6 +394,13 @@ namespace Curato.Views
                     return !string.IsNullOrWhiteSpace(contentAfterBegin) ? contentAfterBegin : string.Empty;
                 }
                 return string.Empty; // Don't show the [BEGIN] marker itself
+            }
+            
+            // Check if this token contains the [END] marker
+            if (token.Contains("[END] "))
+            {
+                Logger.LogInfo($"DEBUG: Hiding token with [END] marker: '{token}'");
+                return string.Empty; // Don't show the [END] marker
             }
             
             // This prevents any content after [END] from being displayed
