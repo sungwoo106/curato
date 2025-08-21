@@ -265,8 +265,6 @@ namespace Curato.Views
             }
         }
 
-
-
         /// <summary>
         /// Receives streaming tokens for real-time story display with frontend filtering
         /// </summary>
@@ -338,13 +336,9 @@ namespace Curato.Views
                     }
                 }
                 
-
-                
                 // Add token to builder for complete story tracking
                 _streamingStoryBuilder.Append(token);
-                
 
-                
                 // Real-time frontend filtering: only show content between [BEGIN] and [END] markers
                 var filteredToken = FilterTokenForDisplay(token);
                 
@@ -363,9 +357,6 @@ namespace Curato.Views
                         }
                     });
                 }
-                
-
-                
             }
             catch (Exception ex)
             {
@@ -374,15 +365,25 @@ namespace Curato.Views
         }
         
         /// <summary>
-        /// Simple token filtering - since Qwen output is already clean, just show the token
+        /// Filters tokens to only show content between [BEGIN] and [END] markers
         /// </summary>
-        /// <param name="token">The token to display</param>
-        /// <returns>The token content to display</returns>
+        /// <param name="token">The raw token to filter</param>
+        /// <returns>Filtered token content, or empty string if should not be displayed</returns>
         private string FilterTokenForDisplay(string token)
         {
-            // Qwen model already produces clean output, so just return the token
-            // Only handle basic [BEGIN] marker clearing
-            if (token.Contains("[BEGIN]"))
+            // Get the current state from the full content
+            var fullContent = _streamingStoryBuilder.ToString();
+            var hasBegin = fullContent.Contains("[BEGIN]: ");
+            var hasEnd = fullContent.Contains("[END] ");
+            
+            // Handle malformed markers
+            if (!HandleMalformedMarkers(fullContent))
+            {
+                // Continue with caution if markers are malformed
+            }
+            
+            // Check if this token contains the [BEGIN] marker
+            if (token.Contains("[BEGIN]: "))
             {
                 ClearLoadingMessage();
                 // Extract content after [BEGIN] marker if any
@@ -392,10 +393,23 @@ namespace Curato.Views
                     var contentAfterBegin = token.Substring(beginIndex + "[BEGIN]: ".Length);
                     return !string.IsNullOrWhiteSpace(contentAfterBegin) ? contentAfterBegin : string.Empty;
                 }
+                return string.Empty; // Don't show the [BEGIN] marker itself
             }
             
-            // Show the token directly (Qwen output is already clean)
-            return token;
+            // Check if this token contains the [END] marker
+            if (token.Contains("[END]"))
+            {
+                return string.Empty; // Don't show the [END] marker
+            }
+            
+            // Only show content if we've found the [BEGIN] marker and haven't found the [END] marker
+            if (hasBegin && !hasEnd)
+            {
+                return token;
+            }
+            
+            // Don't show content before [BEGIN] or after [END]
+            return string.Empty;
         }
         
         /// <summary>
@@ -407,6 +421,20 @@ namespace Curato.Views
             {
                 EmotionalItineraryTextBlock.Inlines.Clear();
             });
+        }
+        
+        /// <summary>
+        /// Handles malformed or partial markers
+        /// </summary>
+        /// <param name="fullContent">The complete content received so far</param>
+        /// <returns>True if markers are properly formed, false otherwise</returns>
+        private bool HandleMalformedMarkers(string fullContent)
+        {
+            // Check for partial markers that might cause issues
+            var partialBegin = fullContent.Contains("[") && !fullContent.Contains("[BEGIN]: ");
+            var partialEnd = fullContent.Contains("[") && !fullContent.Contains("[END] ");
+            
+            return !(partialBegin || partialEnd);
         }
         
         /// <summary>
@@ -425,12 +453,6 @@ namespace Curato.Views
             
             return completeStory;
         }
-        
-
-        
-
-        
-
         
         /// <summary>
         /// Finds the ScrollViewer parent of the EmotionalItineraryTextBlock
