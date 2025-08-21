@@ -189,6 +189,8 @@ namespace Curato.Views
             }
         }
 
+        }
+
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             var mainWindow = Window.GetWindow(this) as MainWindow;
@@ -389,5 +391,5 @@ namespace Curato.Views
             return null;
         }
     }
-
+}
 
