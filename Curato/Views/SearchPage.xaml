@@ -162,17 +162,17 @@
       BlurRadius="20"
       ShadowDepth="4"/>
     
-    <DropShadowEffect x:Key="StrongShadowEffect"
-        BlurRadius="25"
-        ShadowDepth="8"
-        Direction="270"
-        Opacity="0.6"
-        Color="Black" />
+         <DropShadowEffect x:Key="StrongShadowEffect"
+         BlurRadius="25"
+         ShadowDepth="8"
+         Direction="270"
+         Opacity="0.4"
+         Color="Black" />
     </UserControl.Resources>
 
 
     <Viewbox Stretch="Fill">
-        <Grid Width="1920" Height="1080" Background="#FAFAFA">
+        <Grid Width="1920" Height="1080" Background="#FAFAFA" ClipToBounds="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -297,7 +297,7 @@
                                 PopupAnimation="Slide"
                                 Width="192"
                                 MinHeight="210">
-                                <Border Background="White" CornerRadius="50" Padding="12" Margin="8" Effect="{DynamicResource ShadowEffect}">
+                                                                 <Border Background="White" CornerRadius="50" Padding="12" Margin="8" Effect="{DynamicResource ShadowEffect}" ClipToBounds="False">
                                     <ItemsControl x:Name="CompanionItemsControl"/>
                                 </Border>
                             </Popup>
@@ -324,7 +324,7 @@
                                 PopupAnimation="Slide"
                                 Width="192"
                                 MinHeight="200">
-                                <Border Background="White" Padding="12" Effect="{DynamicResource ShadowEffect}" CornerRadius="50" BorderBrush="#DDD" BorderThickness="1" Margin="8">
+                                                                 <Border Background="White" Padding="12" Effect="{DynamicResource ShadowEffect}" CornerRadius="50" BorderBrush="#DDD" BorderThickness="1" Margin="8" ClipToBounds="False">
                                     <ItemsControl x:Name="BudgetItemsControl" />
                                 </Border>
                             </Popup>
@@ -352,14 +352,15 @@
                                 PopupAnimation="Slide"
                                 MinWidth="890"
                                 MinHeight="97">
-                            <Border
-                                Background="White"
-                                Padding="12"
-                                CornerRadius="40"
-                                BorderBrush="#DDD"
-                                BorderThickness="1"
-                                Margin="8"
-                                Effect="{DynamicResource ShadowEffect}">
+                                                         <Border
+                                 Background="White"
+                                 Padding="12"
+                                 CornerRadius="40"
+                                 BorderBrush="#DDD"
+                                 BorderThickness="1"
+                                 Margin="8"
+                                 Effect="{DynamicResource ShadowEffect}"
+                                 ClipToBounds="False">
                                 <Grid>
                                 <Grid.RowDefinitions>
                                     <!-- Row for the four period buttons: same height as your toggle buttons (67) -->
@@ -432,14 +433,15 @@
                             MinWidth="450"
                             MinHeight="240"
                             VerticalOffset="20">
-                            <Border
-                                Background="White"
-                                Padding="20"
-                                Margin="20,0,20,0"
-                                CornerRadius="40"
-                                BorderBrush="#DDD"
-                                BorderThickness="1"
-                                Effect="{StaticResource ShadowEffect}">
+                                                         <Border
+                                 Background="White"
+                                 Padding="20"
+                                 Margin="20,0,20,0"
+                                 CornerRadius="40"
+                                 BorderBrush="#DDD"
+                                 BorderThickness="1"
+                                 Effect="{StaticResource ShadowEffect}"
+                                 ClipToBounds="False">
                                 <Grid x:Name="CategoryGrid" 
                                     HorizontalAlignment="Center" 
                                     VerticalAlignment="Center">
