@@ -629,9 +629,7 @@ class GenieRunner:
                 
                 # Check if we have a complete word or sentence
                 if char in ' \n\t.,!?;:':
-                    # Send any buffered content
-                    if buffer.strip():
-                        print(f"📝 Streamed: '{buffer.strip()}'", file=sys.stderr)
+                    # Clear buffer when we hit word boundaries
                     buffer = ""
             
             # Wait for process to complete
