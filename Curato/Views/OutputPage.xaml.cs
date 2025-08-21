@@ -182,12 +182,12 @@ namespace Curato.Views
 
                 await MapWebView.EnsureCoreWebView2Async();
                 MapWebView.NavigateToString(finalHtml);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Failed to load map: {ex.Message}", ex);
+                }
             }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Failed to load map: {ex.Message}", ex);
-            }
-        }
 
         }
 
