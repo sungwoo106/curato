@@ -380,7 +380,6 @@ namespace Curato.Views
                     var elapsedSeconds = (DateTime.Now - _streamingStartTime).TotalSeconds;
                     if (elapsedSeconds > BEGIN_MARKER_TIMEOUT_SECONDS)
                     {
-                        Logger.LogInfo($"Timeout waiting for [BEGIN] marker after {elapsedSeconds:F1} seconds. Showing content anyway.");
                         // Show a warning message
                         Dispatcher.Invoke(() =>
                         {
@@ -390,13 +389,9 @@ namespace Curato.Views
                             EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
                         });
                     }
-                    else if (elapsedSeconds > BEGIN_MARKER_TIMEOUT_SECONDS * 0.8) // Log when approaching timeout
-                    {
-                        Logger.LogInfo($"Approaching timeout: {elapsedSeconds:F1}s elapsed, timeout at {BEGIN_MARKER_TIMEOUT_SECONDS}s");
-                    }
                 }
                 
-                Logger.LogInfo($"Received streaming token: '{token.Substring(0, Math.Min(50, token.Length))}...'");
+
                 
                 // Add token to builder for complete story tracking
                 _streamingStoryBuilder.Append(token);
@@ -428,12 +423,7 @@ namespace Curato.Views
                         }
                     });
                     
-                    Logger.LogInfo($"Displayed filtered token: {filteredToken.Substring(0, Math.Min(50, filteredToken.Length))}...");
-                }
-                else
-                {
-                    Logger.LogInfo($"Filtered out token: {token.Substring(0, Math.Min(50, token.Length))}...");
-                }
+
                 
                 // Log streaming stats periodically (every 10 tokens or so)
                 if (_streamingStoryBuilder.Length % 100 < token.Length)
@@ -458,27 +448,17 @@ namespace Curato.Views
             // Get the current state from the full content
             var fullContent = _streamingStoryBuilder.ToString();
             var hasBegin = fullContent.Contains("[BEGIN]: ");
-            var hasEnd = fullContent.Contains("[END]");
-            
-            // Log the current state for debugging
-            LogCurrentStreamingState(fullContent, hasBegin, hasEnd);
-            
-            // Validate the streaming state
-            ValidateStreamingState(fullContent, hasBegin, hasEnd);
+            var hasEnd = fullContent.Contains("[END] ");
             
             // Handle malformed markers
             if (!HandleMalformedMarkers(fullContent))
             {
-                Logger.LogInfo("Malformed markers detected, proceeding with caution");
+                // Continue with caution if markers are malformed
             }
-            
-            Logger.LogInfo($"Filtering token: hasBegin={hasBegin}, hasEnd={hasEnd}, token='{token.Substring(0, Math.Min(30, token.Length))}...'");
             
             // Check if this token contains the [BEGIN] marker
             if (token.Contains("[BEGIN]"))
             {
-                Logger.LogInfo("Found [BEGIN] marker in token");
-                
                 // Clear the loading message when we find [BEGIN]
                 ClearLoadingMessage();
                 
@@ -489,26 +469,21 @@ namespace Curato.Views
                 // Only show content after [BEGIN] if it's not empty
                 if (!string.IsNullOrWhiteSpace(contentAfterBegin))
                 {
-                    Logger.LogInfo($"Returning content after [BEGIN]: '{contentAfterBegin.Substring(0, Math.Min(30, contentAfterBegin.Length))}...'");
                     return contentAfterBegin;
                 }
-                Logger.LogInfo("No content after [BEGIN] marker");
                 return string.Empty;
             }
             
             // Check if this token contains the [END] marker
-            if (token.Contains("[END]"))
+            if (token.Contains("[END] "))
             {
-                Logger.LogInfo("Found [END] marker in token");
                 // Extract content before [END] marker
                 var endIndex = token.IndexOf("[END] ");
                 if (endIndex > 0)
                 {
                     var contentBeforeEnd = token.Substring(0, endIndex);
-                    Logger.LogInfo($"Returning content before [END]: '{contentBeforeEnd.Substring(0, Math.Min(30, contentBeforeEnd.Length))}...'");
                     return contentBeforeEnd;
                 }
-                Logger.LogInfo("No content before [END] marker");
                 return string.Empty;
             }
             
@@ -518,11 +493,9 @@ namespace Curato.Views
                 var partialBegin = fullContent.EndsWith("[") && token.StartsWith("BEGIN]");
                 if (partialBegin)
                 {
-                    Logger.LogInfo("Found partial [BEGIN] marker completion");
                     var contentAfterBegin = token.Substring("BEGIN]: ".Length);
                     if (!string.IsNullOrWhiteSpace(contentAfterBegin))
                     {
-                        Logger.LogInfo($"Returning content after completed [BEGIN]: '{contentAfterBegin.Substring(0, Math.Min(30, contentAfterBegin.Length))}...'");
                         return contentAfterBegin;
                     }
                     return string.Empty;
@@ -531,7 +504,6 @@ namespace Curato.Views
                 var partialEnd = fullContent.EndsWith("[") && token.StartsWith("END]");
                 if (partialEnd)
                 {
-                    Logger.LogInfo("Found partial [END] marker completion");
                     return string.Empty;
                 }
             }
@@ -540,7 +512,6 @@ namespace Curato.Views
             if (hasBegin && !hasEnd)
             {
                 // We're between [BEGIN] and [END] - show this token
-                Logger.LogInfo("Token is between [BEGIN] and [END] - displaying");
                 return token;
             }
             
@@ -550,13 +521,11 @@ namespace Curato.Views
                 var elapsedSeconds = (DateTime.Now - _streamingStartTime).TotalSeconds;
                 if (elapsedSeconds > BEGIN_MARKER_TIMEOUT_SECONDS)
                 {
-                    Logger.LogInfo($"Timeout reached, showing token despite missing [BEGIN] marker");
                     return token;
                 }
             }
             
             // We're either before [BEGIN] or after [END] - don't show
-            Logger.LogInfo($"Token filtered out: before [BEGIN]={!hasBegin}, after [END]={hasEnd}");
             return string.Empty;
         }
         
@@ -568,7 +537,6 @@ namespace Curato.Views
             Dispatcher.Invoke(() =>
             {
                 EmotionalItineraryTextBlock.Inlines.Clear();
-                Logger.LogInfo("Cleared loading message, ready to display story content");
             });
         }
         
@@ -583,11 +551,9 @@ namespace Curato.Views
             if (endIndex >= 0)
             {
                 var cleanedStory = completeStory.Substring(0, endIndex);
-                Logger.LogInfo($"Cleaned story after [END] marker. Original length: {completeStory.Length}, Cleaned length: {cleanedStory.Length}");
                 return cleanedStory;
             }
             
-            Logger.LogInfo("No [END] marker found in complete story, returning as-is");
             return completeStory;
         }
         
@@ -600,10 +566,8 @@ namespace Curato.Views
             {
                 var elapsed = DateTime.Now - _streamingStartTime;
                 var contentLength = _streamingStoryBuilder.Length;
-                var hasBegin = _streamingStoryBuilder.ToString().Contains("[BEGIN]: ");
-                var hasEnd = _streamingStoryBuilder.ToString().Contains("[END]");
                 
-                Logger.LogInfo($"Streaming Stats - Elapsed: {elapsed.TotalSeconds:F1}s, Content: {contentLength} chars, [BEGIN]: {hasBegin}, [END]: {hasEnd}");
+                Logger.LogInfo($"Streaming Stats - Elapsed: {elapsed.TotalSeconds:F1}s, Content: {contentLength} chars");
             }
         }
         
@@ -631,16 +595,10 @@ namespace Curato.Views
         private bool HandleMalformedMarkers(string fullContent)
         {
             // Check for partial markers that might cause issues
-            var partialBegin = fullContent.Contains("[") && !fullContent.Contains("[BEGIN]");
+            var partialBegin = fullContent.Contains("[") && !fullContent.Contains("[BEGIN]: ");
             var partialEnd = fullContent.Contains("[") && !fullContent.Contains("[END]");
             
-            if (partialBegin || partialEnd)
-            {
-                Logger.LogInfo($"Found partial markers: partialBegin={partialBegin}, partialEnd={partialEnd}");
-                return false;
-            }
-            
-            return true;
+            return !(partialBegin || partialEnd);
         }
         
         /// <summary>
@@ -651,21 +609,7 @@ namespace Curato.Views
         /// <param name="hasEnd">Whether [END] marker has been found</param>
         private void ValidateStreamingState(string fullContent, bool hasBegin, bool hasEnd)
         {
-            // Check for potential issues
-            if (hasEnd && !hasBegin)
-            {
-                Logger.LogInfo("Found [END] marker without [BEGIN] marker - this shouldn't happen");
-            }
-            
-            if (fullContent.Contains("[BEGIN]: ") && fullContent.Contains("[END]"))
-            {
-                var beginIndex = fullContent.IndexOf("[BEGIN]: ");
-                var endIndex = fullContent.IndexOf("[END]");
-                if (endIndex < beginIndex)
-                {
-                    Logger.LogInfo("[END] marker appears before [BEGIN] marker - this shouldn't happen");
-                }
-            }
+            // Validation logic can be added here if needed in the future
         }
         
         /// <summary>
@@ -676,23 +620,7 @@ namespace Curato.Views
         /// <param name="hasEnd">Whether [END] marker has been found</param>
         private void LogCurrentStreamingState(string fullContent, bool hasBegin, bool hasEnd)
         {
-            var contentLength = fullContent.Length;
-            var beginIndex = fullContent.IndexOf("[BEGIN]: ");
-            var endIndex = fullContent.IndexOf("[END]");
-            
-            Logger.LogInfo($"Streaming State - Content Length: {contentLength}, [BEGIN] at: {beginIndex}, [END] at: {endIndex}");
-            
-            if (beginIndex >= 0)
-            {
-                var beforeBegin = fullContent.Substring(0, beginIndex);
-                Logger.LogInfo($"Content before [BEGIN]: '{beforeBegin.Substring(0, Math.Min(50, beforeBegin.Length))}...'");
-            }
-            
-            if (endIndex >= 0 && beginIndex >= 0)
-            {
-                var betweenMarkers = fullContent.Substring(beginIndex + "[BEGIN]".Length, endIndex - beginIndex - "[BEGIN]".Length);
-                Logger.LogInfo($"Content between markers: '{betweenMarkers.Substring(0, Math.Min(100, betweenMarkers.Length))}...'");
-            }
+            // Detailed streaming state logging can be added here if needed in the future
         }
         
         /// <summary>
