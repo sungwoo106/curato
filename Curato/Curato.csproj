@@ -52,22 +52,6 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-  <None Include="Resources\MockData\mock_phi_hd_output.json">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </None>
-  <None Include="Resources\MockData\mock_phi_bc_output.json">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </None>
-  <None Include="Resources\MockData\mock_phi_gn_output.json">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </None>
-  <None Include="Resources\MockData\mock_phi_it_output.json">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </None>
-  <None Include="Resources\MockData\mock_phi_ss_output.json">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </None>
-  </ItemGroup>
+
 
 </Project>
