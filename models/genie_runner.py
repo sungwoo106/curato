@@ -527,12 +527,11 @@ class GenieRunner:
     
     def _run_model_streaming(self, model_type: ModelType, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
         """
-        Internal method to run a specific model type with streaming support.
+        Internal method to run a specific model type with true real-time streaming support.
         
-        Since genie-t2t-run.exe doesn't support real-time streaming, we simulate it by:
-        1. Running the model to completion
-        2. Breaking the output into tokens/words
-        3. Streaming each token with a small delay for realistic effect
+        This method captures output from genie-t2t-run.exe in real-time as it's generated,
+        providing immediate token-by-token streaming just like running the executable directly
+        in the terminal or using ChatGPT.
         
         Args:
             model_type (ModelType): Type of model to run ("phi" or "qwen")
@@ -581,7 +580,7 @@ class GenieRunner:
                 "--prompt_file", str(prompt_path)
             ]
             
-            print(f"🚀 Running {model_type} model with simulated streaming...", file=sys.stderr)
+            print(f"🚀 Running {model_type} model with true real-time streaming...", file=sys.stderr)
             print(f"📁 Bundle path: {bundle_path}", file=sys.stderr)
             print(f"📁 Working directory: {self.working_dir}", file=sys.stderr)
             print(f"🔧 Executable: {executable}", file=sys.stderr)
@@ -596,14 +595,47 @@ class GenieRunner:
             import time
             start_time = time.time()
             
-            # Run the model to completion first
-            result = subprocess.run(
+            # Use Popen for true real-time streaming
+            print(f"🔄 Starting true real-time streaming...", file=sys.stderr)
+            
+            process = subprocess.Popen(
                 cmd,
-                capture_output=True,
-                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 cwd=bundle_path,  # Run from the bundle directory
-                encoding="utf-8"
+                encoding="utf-8",
+                bufsize=1,  # Line buffered
+                universal_newlines=True
             )
+            
+            # Stream output in real-time as it's generated
+            full_output = ""
+            buffer = ""
+            
+            while True:
+                # Read one character at a time for immediate streaming
+                char = process.stdout.read(1)
+                if not char:
+                    break
+                
+                full_output += char
+                buffer += char
+                
+                # Stream the character immediately
+                stream_callback(char, False)
+                
+                # Flush to ensure immediate display
+                sys.stdout.flush()
+                
+                # Check if we have a complete word or sentence
+                if char in ' \n\t.,!?;:':
+                    # Send any buffered content
+                    if buffer.strip():
+                        print(f"📝 Streamed: '{buffer.strip()}'", file=sys.stderr)
+                    buffer = ""
+            
+            # Wait for process to complete
+            process.wait()
             
             end_time = time.time()
             processing_time = end_time - start_time
@@ -615,43 +647,18 @@ class GenieRunner:
                 self.progress_callback(90, f"{model_type} model completed successfully")
             
             # Check if the command was successful
-            result.check_returncode()
-            
-            # Get the complete output
-            full_output = result.stdout.strip()
-            
-            if not full_output:
-                print(f"⚠️ Warning: {model_type} model returned empty output", file=sys.stderr)
-                stream_callback("", True)
-                return ""
-            
-            # Simulate streaming by breaking output into tokens and streaming them
-            print(f"🔄 Simulating real-time streaming for {len(full_output)} characters...", file=sys.stderr)
-            
-            # Break output into words/tokens for realistic streaming
-            import re
-            tokens = re.findall(r'\S+|\s+', full_output)  # Split into words and whitespace
-            
-            # Stream each token with a small delay
-            for i, token in enumerate(tokens):
-                # Send the token
-                stream_callback(token, False)
-                
-                # Add a small delay to simulate real-time generation
-                # Adjust this value to control streaming speed
-                time.sleep(0.05)  # 50ms delay between tokens
-                
-                # Show progress every 10 tokens
-                if i % 10 == 0:
-                    progress = (i / len(tokens)) * 100
-                    print(f"📊 Streaming progress: {progress:.1f}% ({i}/{len(tokens)} tokens)", file=sys.stderr)
+            if process.returncode != 0:
+                stderr_output = process.stderr.read()
+                error_msg = f"Model {model_type} failed to run (exit code {process.returncode}): {stderr_output}"
+                print(f"❌ Error: {error_msg}", file=sys.stderr)
+                raise RuntimeError(error_msg)
             
             # Send final completion signal
             stream_callback("", True)
-            print("✅ Simulated streaming completed successfully", file=sys.stderr)
+            print("✅ True real-time streaming completed successfully", file=sys.stderr)
             
             # Return the complete output
-            return full_output
+            return full_output.strip()
             
         except subprocess.CalledProcessError as e:
             error_msg = f"Model {model_type} failed to run (exit code {e.returncode}): {e.stderr}"
