@@ -104,12 +104,9 @@ namespace Curato.Views
                 // Get the plan from AppState
                 var JSplan = AppState.SharedTripPlan ?? new TripPlan();
                 
-                                // Use the actual suggested places from the generated plan
+                // Use the actual suggested places from the generated plan
                 if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Count > 0)
                 {
-                    
-                    
-                    
                     // Find the first valid coordinate set
                     var firstValidPlace = JSplan.SuggestedPlaces.FirstOrDefault(p => 
                         p.Latitude != 0 && p.Longitude != 0 && 
@@ -163,16 +160,15 @@ namespace Curato.Views
                         p.Name != "Kakao Map URL"
                     ).ToList();
                     
-                        if (validPlaces.Any())
-                        {
-                            coordArray = "["
-                                + string.Join(",", validPlaces
-                                    .Select((p, i) =>
-                                        $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
-                                + "]";
-                        }
-
-
+                    if (validPlaces.Any())
+                    {
+                        coordArray = "["
+                            + string.Join(",", validPlaces
+                                .Select((p, i) =>
+                                    $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
+                            + "]";
+                    }
+                }
 
                 var finalHtml = htmlTemplate
                     .Replace("{API_KEY}", kakaoMapKey)
@@ -182,13 +178,11 @@ namespace Curato.Views
 
                 await MapWebView.EnsureCoreWebView2Async();
                 MapWebView.NavigateToString(finalHtml);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Failed to load map: {ex.Message}", ex);
-                }
             }
-
+            catch (Exception ex)
+            {
+                Logger.LogError($"Failed to load map: {ex.Message}", ex);
+            }
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
@@ -391,5 +385,4 @@ namespace Curato.Views
             return null;
         }
     }
-}
 
