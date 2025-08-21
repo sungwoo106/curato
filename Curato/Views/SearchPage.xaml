@@ -181,7 +181,7 @@
 
             <!-- Header -->
             <Grid Background="White" Height="80" Grid.Row="0">
-                <TextBlock Text="Curato" VerticalAlignment="Center" Margin="75,40,0,0"
+                <TextBlock Text="Curato" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="75,0,0,0"
                            FontSize="46" Foreground="#FFB31A"
                            FontFamily="{StaticResource SatoshiBold}"/>
             </Grid>
@@ -214,6 +214,7 @@
                                      Foreground="#575757"
                                      FontFamily="{StaticResource SatoshiMedium}"
                                      VerticalAlignment="Center"
+                                     Margin="20,0,0,0"
                                      Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      TextChanged="LocationTextBox_TextChanged"
                                      GotFocus="LocationTextBox_GotFocus"/>
@@ -276,6 +277,7 @@
                                 PlacementTarget="{Binding ElementName=CompanionButton}"
                                 Placement="Bottom"
                                 VerticalOffset="40"
+                                HorizontalOffset="0"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -300,7 +302,8 @@
                             </Button>        
                             <Popup x:Name="BudgetPopup"
                                 PlacementTarget="{Binding ElementName=BudgetButton}"
-                                Placement="Bottom"
+                                Placement="Custom"
+                                CustomPopupPlacementCallback="BudgetPopup_PlacementCallback"
                                 VerticalOffset="40"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
@@ -326,15 +329,15 @@
                             </Button>
                             <Popup
                             x:Name="TimePopup"
-                            PlacementTarget="{Binding ElementName=BudgetButton}"
-                            Placement="Bottom"
-                            HorizontalOffset="-50"
+                            PlacementTarget="{Binding ElementName=TimeButton}"
+                            Placement="Custom"
+                            CustomPopupPlacementCallback="TimePopup_PlacementCallback"
                             VerticalOffset="40"
                             StaysOpen="False"
                             AllowsTransparency="True"
-                            PopupAnimation="Slide"
-                            MinWidth="890"
-                            MinHeight="97">
+                                PopupAnimation="Slide"
+                                MinWidth="890"
+                                MinHeight="97">
                             <Border
                                 Background="White"
                                 Padding="12"
@@ -405,8 +408,9 @@
                             <!-- Category dropdown -->
                             <Popup
                             x:Name="CategoryPopup"
-                            PlacementTarget="{Binding ElementName=TimeButton}"
-                            Placement="Bottom"
+                            PlacementTarget="{Binding ElementName=CategoryButton}"
+                            Placement="Custom"
+                            CustomPopupPlacementCallback="CategoryPopup_PlacementCallback"
                             StaysOpen="False"
                             AllowsTransparency="True"
                             PopupAnimation="Slide"

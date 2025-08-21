@@ -62,7 +62,8 @@
                            Height="80"
                            Foreground="#FFB31A"
                            VerticalAlignment="Center"
-                           Margin="40,-100,0,0"/>
+                           HorizontalAlignment="Left"
+                           Margin="75,0,0,0"/>
 
                 <!-- Preferences -->
                 <Border Grid.Column="1"
@@ -142,8 +143,8 @@
                         Height="50"
                         Click="ViewLogButton_Click"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Margin="0,0,0,90">
+                        VerticalAlignment="Top"
+                        Margin="0,20,0,0">
                     <Button.RenderTransform>
                         <TranslateTransform X="-150"/>
                     </Button.RenderTransform>

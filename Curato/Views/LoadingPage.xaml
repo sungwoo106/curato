@@ -21,7 +21,7 @@
 
         <!-- Header -->
         <Grid Background="White" Height="80" Grid.Row="0">
-            <TextBlock Text="Curato" VerticalAlignment="Center" Margin="75,40,0,0"
+            <TextBlock Text="Curato" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="75,0,0,0"
                        FontSize="46"
                        FontFamily="{StaticResource SatoshiBold}"
                        Foreground="#FFB31A"/>
@@ -50,10 +50,10 @@
                        TextWrapping="Wrap"
                        MaxWidth="800"
                        TextAlignment="Center"
-                       Margin="0,20,0,0"/>
+                       Margin="0,40,0,0"/>
 
             <!-- Progress Bar Container -->
-            <StackPanel Margin="0,70,0,0" HorizontalAlignment="Center">
+            <StackPanel Margin="0,40,0,0" HorizontalAlignment="Center">
                 <!-- Progress Bar (smooth animation) -->
                 <Border Width="800" Height="24"
                         Background="#FFF5F5F5"

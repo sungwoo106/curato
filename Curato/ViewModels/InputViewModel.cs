@@ -213,7 +213,7 @@ namespace Curato.ViewModels
             SelectedBudget,
             string.IsNullOrWhiteSpace(SelectedSubTime) ? null : $"Start at {SelectedSubTime}",
             SelectedCategoriesText
-        }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        }.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s + "\t"));
 
 
 
