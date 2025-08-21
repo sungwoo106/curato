@@ -10,6 +10,7 @@ The module works by:
 2. Calling the local genie-t2t-run executable with the correct command syntax
 3. Capturing and returning the generated output
 4. Supporting streaming progress updates for real-time UI feedback
+5. Supporting benchmarking with profile files using the --profile option
 
 This replaces the separate phi_runner.py and llama_runner.py modules with a
 single, more maintainable solution.
@@ -255,19 +256,19 @@ class GenieRunner:
             print(f"⚠️ Warning: Qwen bundle not found at: {self.qwen_bundle_path}")
             print("   Make sure qwen_bundle directory exists or set QWEN_BUNDLE_PATH environment variable")
     
-    def run_phi(self, prompt: str) -> str:
+    def run_phi(self, prompt: str, profile_file: Optional[str] = None) -> str:
         """Run the Phi model with the given prompt."""
-        return self._run_model("phi", prompt)
+        return self._run_model("phi", prompt, profile_file)
     
-    def run_qwen(self, prompt: str) -> str:
+    def run_qwen(self, prompt: str, profile_file: Optional[str] = None) -> str:
         """Run the Qwen model with the given prompt."""
-        return self._run_model("qwen", prompt)
+        return self._run_model("qwen", prompt, profile_file)
     
-    def run_qwen_streaming(self, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
+    def run_qwen_streaming(self, prompt: str, stream_callback: Callable[[str, bool], None], profile_file: Optional[str] = None) -> str:
         """Run the Qwen model with streaming support for real-time output."""
-        return self._run_model_streaming("qwen", prompt, stream_callback)
+        return self._run_model_streaming("qwen", prompt, stream_callback, profile_file)
     
-    def _run_model(self, model_type: ModelType, prompt: str) -> str:
+    def _run_model(self, model_type: ModelType, prompt: str, profile_file: Optional[str] = None) -> str:
         """Internal method to run a specific model type."""
         # Determine which bundle to use
         if model_type == "phi":
@@ -310,12 +311,17 @@ class GenieRunner:
             if self.progress_callback:
                 self.progress_callback(85, f"Running {model_type} model on NPU...")
             
-            # Execute the genie-t2t-run executable with the correct parameters
+            # Build the command with optional profile support
             cmd = [
                 executable,
                 "-c", "genie_config.json",
                 "--prompt_file", str(prompt_path)
             ]
+            
+            # Add profile file if specified
+            if profile_file:
+                cmd.extend(["--profile", profile_file])
+                print(f"📊 Using profile file: {profile_file}", file=sys.stderr)
             
             print(f"🚀 Running command: {' '.join(cmd)}", file=sys.stderr)
             print(f"🚀 From directory: {bundle_path}", file=sys.stderr)
@@ -363,7 +369,7 @@ class GenieRunner:
             except Exception:
                 pass  # Ignore cleanup errors
     
-    def _run_model_streaming(self, model_type: ModelType, prompt: str, stream_callback: Callable[[str, bool], None]) -> str:
+    def _run_model_streaming(self, model_type: ModelType, prompt: str, stream_callback: Callable[[str, bool], None], profile_file: Optional[str] = None) -> str:
         """Internal method to run a specific model type with true real-time streaming support."""
         # Determine which bundle to use
         if model_type == "phi":
@@ -395,12 +401,17 @@ class GenieRunner:
             if self.progress_callback:
                 self.progress_callback(85, f"Running {model_type} model on NPU with streaming...")
             
-            # Execute the genie-t2t-run executable with the correct parameters
+            # Build the command with optional profile support
             cmd = [
                 executable,
                 "-c", "genie_config.json",
                 "--prompt_file", str(prompt_path)
             ]
+            
+            # Add profile file if specified
+            if profile_file:
+                cmd.extend(["--profile", profile_file])
+                print(f"📊 Using profile file: {profile_file}", file=sys.stderr)
             
             print(f"🚀 Running {model_type} model with true real-time streaming...", file=sys.stderr)
             print(f"📁 Bundle path: {bundle_path}", file=sys.stderr)
