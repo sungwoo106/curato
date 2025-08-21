@@ -96,8 +96,7 @@ namespace Curato.ViewModels
         // Helper for style trigger
         public bool BudgetSelected => !string.IsNullOrEmpty(SelectedBudget);
 
-        // Selected time for the trip
-        public string SelectedTime { get; set; } = string.Empty;
+
 
         // The list of time options
         // Main options: Midnight, Morning, Afternoon, Evening
@@ -358,7 +357,7 @@ namespace Curato.ViewModels
                     PlanText = output;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 PlanText = "Failed to generate plan.";
             }
@@ -394,7 +393,7 @@ namespace Curato.ViewModels
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
                 }) ?? new List<string>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new List<string> { "tSolo", "tCouple", "tFriends", "tFamily" };
             }
@@ -424,7 +423,7 @@ namespace Curato.ViewModels
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
                 }) ?? new List<string>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new List<string> { "Cafe", "Restaurant", "Park" };
             }

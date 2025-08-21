@@ -63,13 +63,13 @@ namespace Curato.Views
             _progressTracker.ProgressChanged += OnProgressUpdate;
         }
 
-        private void DotTimer_Tick(object sender, EventArgs e)
+        private void DotTimer_Tick(object? sender, EventArgs e)
         {
             dotCount = (dotCount + 1) % 4;
             LoadingTextBlock.Text = baseText + new string('.', dotCount);
         }
 
-        private void SmoothProgressTimer_Tick(object sender, EventArgs e)
+        private void SmoothProgressTimer_Tick(object? sender, EventArgs e)
         {
             // Smooth interpolation between current and target progress
             if (Math.Abs(smoothProgress - targetProgress) > 0.5)
@@ -181,7 +181,7 @@ namespace Curato.Views
             });
         }
         
-        private async void ShowOutputPageEarly()
+        private void ShowOutputPageEarly()
         {
             try
             {

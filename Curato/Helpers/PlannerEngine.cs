@@ -71,7 +71,6 @@ public static class PlannerEngine
             string? finalItinerary = null;
             string? finalRoutePlan = null;
             bool hasCompleted = false;
-            bool phiCompleted = false;
             
             // Handle streaming output for progress updates
             process.OutputDataReceived += (sender, e) =>

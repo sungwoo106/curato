@@ -29,6 +29,10 @@ namespace Curato.Views
         private bool _isStreaming = false;
         private DateTime _streamingStartTime;
         private const int BEGIN_MARKER_TIMEOUT_SECONDS = 30; // 30 seconds timeout for [BEGIN] marker
+        
+        // Properties for map coordinates (used by Kakao Map API)
+        public double Latitude { get; set; } = 37.5665; // Default to Seoul
+        public double Longitude { get; set; } = 126.9780; // Default to Seoul
 
         public OutputPage()
         {
@@ -99,7 +103,7 @@ namespace Curato.Views
             double lat = 37.5665; // default to Seoul
             double lng = 126.9780;
 
-            var coords = AppState.SharedInputViewModel.SelectedLocationCoordinates;
+            var coords = AppState.SharedInputViewModel?.SelectedLocationCoordinates;
             if (coords.HasValue)
             {
                 lat = coords.Value.Latitude;

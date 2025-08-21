@@ -55,7 +55,7 @@ namespace Curato.Views
             }
         }
 
-        private async void LocationTimer_Tick(object? sender, EventArgs e)
+        private void LocationTimer_Tick(object? sender, EventArgs e)
         {
             _locationTimer.Stop();
             if (DataContext is not InputViewModel vm)
@@ -610,7 +610,7 @@ namespace Curato.Views
                 Location = vm.LocationQuery,
                 Companion = vm.SelectedCompanion,
                 Budget = vm.SelectedBudget,
-                StartTime = vm.SelectedTime,
+                StartTime = vm.SelectedSubTime ?? "12:00", // Use SelectedSubTime instead of SelectedTime
                 PreferredPlaceTypes = vm.SelectedCategories.ToList(),
             };
 
@@ -654,7 +654,7 @@ namespace Curato.Views
 
                         Logger.LogInfo($"LoadingPage callback - Creating OutputPage with coordinates: lat={lat}, lng={lng}");
 
-                        // Create and return OutputPage
+                        // Create and return OutputPage with coordinates
                         return new OutputPage
                         {
                             Latitude = lat,
