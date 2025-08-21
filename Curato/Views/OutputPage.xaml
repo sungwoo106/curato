@@ -50,26 +50,26 @@
                 <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
             </Border.Effect>
 
-            <Grid Margin="0,20,30,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <!-- Logo -->
-                <TextBlock Grid.Column="0"
-                           Text="Curato"
+            <!-- Logo positioned absolutely with Canvas -->
+            <Canvas>
+                <TextBlock Text="Curato"
                            FontSize="46"
                            FontFamily="{StaticResource SatoshiBold}"
                            Height="80"
                            Foreground="#FFB31A"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Left"
-                           Margin="75,0,0,0"
+                           Canvas.Left="75"
+                           Canvas.Top="20"
                            Width="Auto"/>
+            </Canvas>
 
+            <Grid Margin="0,20,30,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
                 <!-- Preferences -->
-                <Border Grid.Column="1"
+                <Border Grid.Column="0"
                         Background="White"
                         BorderBrush="#DDD"
                         BorderThickness="1"
@@ -79,7 +79,7 @@
                         VerticalAlignment="Center"
                         MinWidth="1100"
                         Height="75"
-                        Margin="-100,0,0,0"
+                        Margin="0,0,0,0"
                         UseLayoutRounding="True" SnapsToDevicePixels="True">
                     <TextBlock x:Name="PreferencesSummaryLabel"
                                Text="{Binding PreferencesSummary, FallbackValue='Loading preferences...'}"
@@ -93,7 +93,7 @@
                 </Border>
 
                 <!-- Edit Plan Button -->
-                <Button Grid.Column="2" Content="Edit Plan"
+                <Button Grid.Column="1" Content="Edit Plan"
                         FontSize="18"
                         FontFamily="{StaticResource SatoshiMedium}"
                         Padding="12,6"
@@ -102,7 +102,7 @@
                         Click="EditButton_Click"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        Margin="0,0,50,0">
+                        Margin="0,0,20,0">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="White"/>
@@ -137,7 +137,7 @@
                 </Button>
 
                 <!-- View Log Button -->
-                <Button Grid.Column="2" Content="View Log"
+                <Button Grid.Column="1" Content="View Log"
                         FontSize="16"
                         FontFamily="{StaticResource SatoshiMedium}"
                         Padding="10,6"
