@@ -62,7 +62,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 # =============================================================================
 from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
-from preferences_compat import Preferences
+from preferences import Preferences
 from models.genie_runner import GenieRunner
 from core.prompts import build_phi_location_prompt, build_qwen_itinerary_prompt
 

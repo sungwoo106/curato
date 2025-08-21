@@ -18,7 +18,7 @@ Key Features:
 import random
 from data.api_clients.location_fetcher import get_location_coordinates
 from constants import USER_SELECTABLE_PLACE_TYPES, COMPANION_TYPES, BUDGET, LOCATION, STARTING_TIME
-from preferences_compat import Preferences
+from preferences import Preferences
 import json
 
 # =============================================================================

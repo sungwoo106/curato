@@ -33,7 +33,7 @@
   <!-- Copy required Python files next to the executable -->
   <ItemGroup>
     <Content Include="..\generate_plan.py" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\preferences.py" CopyToOutputDirectory="PreserveNewest" />
+
     <Content Include="..\constants.py" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\core\**\*.*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\data\**\*.*" CopyToOutputDirectory="PreserveNewest" />
