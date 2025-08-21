@@ -66,13 +66,10 @@ namespace Curato.Views
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
-                // Clean the content to remove prompt instructions
-                var cleanedContent = CleanStoryContent(plan.EmotionalNarrative);
-                
+                // Display the content directly (Qwen output is already clean)
                 EmotionalItineraryTextBlock.Inlines.Clear();
-                foreach (var para in cleanedContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var para in plan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    EmotionalItineraryTextBlock.Inlines.Clear();
                     EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
                     EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
@@ -87,11 +84,9 @@ namespace Curato.Views
                 var retryPlan = AppState.SharedTripPlan;
                 if (retryPlan != null && !string.IsNullOrWhiteSpace(retryPlan.EmotionalNarrative))
                 {
-                    // Clean the content to remove prompt instructions
-                    var cleanedRetryContent = CleanStoryContent(retryPlan.EmotionalNarrative);
-                    
+                    // Display the content directly (Qwen output is already clean)
                     EmotionalItineraryTextBlock.Inlines.Clear();
-                    foreach (var para in cleanedRetryContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                    foreach (var para in retryPlan.EmotionalNarrative.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                     {
                         EmotionalItineraryTextBlock.Inlines.Add(new Run(para.Trim()));
                         EmotionalItineraryTextBlock.Inlines.Add(new LineBreak());
@@ -270,57 +265,7 @@ namespace Curato.Views
             }
         }
 
-        /// <summary>
-        /// Cleans the story content by removing prompt instructions and technical markers
-        /// </summary>
-        /// <param name="rawContent">Raw content from the AI model</param>
-        /// <returns>Cleaned content suitable for display</returns>
-        private string CleanStoryContent(string rawContent)
-        {
-            if (string.IsNullOrWhiteSpace(rawContent))
-                return rawContent;
 
-            var lines = rawContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var cleanedLines = new List<string>();
-
-            foreach (var line in lines)
-            {
-                var trimmedLine = line.Trim();
-                
-                // Skip lines that contain prompt instructions
-                if (trimmedLine.StartsWith("You are a professional travel writer") ||
-                    trimmedLine.StartsWith("Create a comprehensive itinerary") ||
-                    trimmedLine.StartsWith("IMPORTANT:") ||
-                    trimmedLine.StartsWith("Context:") ||
-                    trimmedLine.StartsWith("Requirements:") ||
-                    trimmedLine.StartsWith("Output Format:") ||
-                    trimmedLine.StartsWith("Selected Locations:") ||
-                    trimmedLine.StartsWith("I'll create a comprehensive itinerary") ||
-                    trimmedLine.StartsWith("I have now covered all") ||
-                    trimmedLine.StartsWith("[BEGIN]:") ||
-                    trimmedLine.StartsWith("[END]") ||
-                    trimmedLine.StartsWith("1.") && trimmedLine.Contains("Place Name") ||
-                    trimmedLine.StartsWith("2.") && trimmedLine.Contains("Place Name") ||
-                    trimmedLine.StartsWith("3.") && trimmedLine.Contains("Place Name") ||
-                    trimmedLine.StartsWith("4.") && trimmedLine.Contains("Place Name") ||
-                    trimmedLine.StartsWith("5.") && trimmedLine.Contains("Place Name"))
-                {
-                    continue; // Skip this line
-                }
-
-                // Skip empty lines and technical markers
-                if (string.IsNullOrWhiteSpace(trimmedLine) || 
-                    trimmedLine.StartsWith("\\") ||
-                    trimmedLine.StartsWith("Continue this format"))
-                {
-                    continue;
-                }
-
-                cleanedLines.Add(trimmedLine);
-            }
-
-            return string.Join("\n", cleanedLines);
-        }
 
         /// <summary>
         /// Receives streaming tokens for real-time story display with frontend filtering
@@ -398,14 +343,7 @@ namespace Curato.Views
                 // Add token to builder for complete story tracking
                 _streamingStoryBuilder.Append(token);
                 
-                // Check for extremely long content and truncate if needed
-                var currentContent = _streamingStoryBuilder.ToString();
-                if (currentContent.Length > 10000)
-                {
-                    Logger.LogInfo("Content length exceeds 10,000 characters, truncating");
-                    _streamingStoryBuilder.Clear();
-                    _streamingStoryBuilder.Append(TruncateLongContent(currentContent));
-                }
+
                 
                 // Real-time frontend filtering: only show content between [BEGIN] and [END] markers
                 var filteredToken = FilterTokenForDisplay(token);
@@ -426,11 +364,7 @@ namespace Curato.Views
                     });
                 }
                 
-                // Log streaming stats periodically (every 10 tokens or so)
-                if (_streamingStoryBuilder.Length % 100 < token.Length)
-                {
-                    LogStreamingStats();
-                }
+
                 
             }
             catch (Exception ex)
@@ -440,94 +374,28 @@ namespace Curato.Views
         }
         
         /// <summary>
-        /// Filters tokens to only show content between [BEGIN] and [END] markers
+        /// Simple token filtering - since Qwen output is already clean, just show the token
         /// </summary>
-        /// <param name="token">The raw token to filter</param>
-        /// <returns>Filtered token content, or empty string if should not be displayed</returns>
+        /// <param name="token">The token to display</param>
+        /// <returns>The token content to display</returns>
         private string FilterTokenForDisplay(string token)
         {
-            // Get the current state from the full content
-            var fullContent = _streamingStoryBuilder.ToString();
-            var hasBegin = fullContent.Contains("[BEGIN]: ");
-            var hasEnd = fullContent.Contains("[END] ");
-            
-            // Handle malformed markers
-            if (!HandleMalformedMarkers(fullContent))
-            {
-                // Continue with caution if markers are malformed
-            }
-            
-            // Check if this token contains the [BEGIN] marker
+            // Qwen model already produces clean output, so just return the token
+            // Only handle basic [BEGIN] marker clearing
             if (token.Contains("[BEGIN]"))
             {
-                // Clear the loading message when we find [BEGIN]
                 ClearLoadingMessage();
-                
-                // Extract content after [BEGIN] marker
+                // Extract content after [BEGIN] marker if any
                 var beginIndex = token.IndexOf("[BEGIN]: ");
-                var contentAfterBegin = token.Substring(beginIndex + "[BEGIN]: ".Length);
-                
-                // Only show content after [BEGIN] if it's not empty
-                if (!string.IsNullOrWhiteSpace(contentAfterBegin))
+                if (beginIndex >= 0)
                 {
-                    return contentAfterBegin;
-                }
-                return string.Empty;
-            }
-            
-            // Check if this token contains the [END] marker
-            if (token.Contains("[END] "))
-            {
-                // Extract content before [END] marker
-                var endIndex = token.IndexOf("[END] ");
-                if (endIndex > 0)
-                {
-                    var contentBeforeEnd = token.Substring(0, endIndex);
-                    return contentBeforeEnd;
-                }
-                return string.Empty;
-            }
-            
-            // Handle edge case: check if this token completes a partial [BEGIN] marker
-            if (!hasBegin && !hasEnd)
-            {
-                var partialBegin = fullContent.EndsWith("[") && token.StartsWith("BEGIN]");
-                if (partialBegin)
-                {
-                    var contentAfterBegin = token.Substring("BEGIN]: ".Length);
-                    if (!string.IsNullOrWhiteSpace(contentAfterBegin))
-                    {
-                        return contentAfterBegin;
-                    }
-                    return string.Empty;
-                }
-                
-                var partialEnd = fullContent.EndsWith("[") && token.StartsWith("END]");
-                if (partialEnd)
-                {
-                    return string.Empty;
+                    var contentAfterBegin = token.Substring(beginIndex + "[BEGIN]: ".Length);
+                    return !string.IsNullOrWhiteSpace(contentAfterBegin) ? contentAfterBegin : string.Empty;
                 }
             }
             
-            // If we're between [BEGIN] and [END], show the token
-            if (hasBegin && !hasEnd)
-            {
-                // We're between [BEGIN] and [END] - show this token
-                return token;
-            }
-            
-            // Handle timeout case: if we've been waiting too long, show content anyway
-            if (!hasBegin)
-            {
-                var elapsedSeconds = (DateTime.Now - _streamingStartTime).TotalSeconds;
-                if (elapsedSeconds > BEGIN_MARKER_TIMEOUT_SECONDS)
-                {
-                    return token;
-                }
-            }
-            
-            // We're either before [BEGIN] or after [END] - don't show
-            return string.Empty;
+            // Show the token directly (Qwen output is already clean)
+            return token;
         }
         
         /// <summary>
@@ -548,7 +416,7 @@ namespace Curato.Views
         /// <returns>Cleaned story content</returns>
         private string CleanupStoryAfterEnd(string completeStory)
         {
-            var endIndex = completeStory.IndexOf("[END]");
+            var endIndex = completeStory.IndexOf("[END] ");
             if (endIndex >= 0)
             {
                 var cleanedStory = completeStory.Substring(0, endIndex);
@@ -558,49 +426,11 @@ namespace Curato.Views
             return completeStory;
         }
         
-        /// <summary>
-        /// Logs streaming statistics for performance monitoring
-        /// </summary>
-        private void LogStreamingStats()
-        {
-            if (_isStreaming)
-            {
-                var elapsed = DateTime.Now - _streamingStartTime;
-                var contentLength = _streamingStoryBuilder.Length;
-                
-                Logger.LogInfo($"Streaming Stats - Elapsed: {elapsed.TotalSeconds:F1}s, Content: {contentLength} chars");
-            }
-        }
+
         
-        /// <summary>
-        /// Truncates extremely long content to prevent memory issues
-        /// </summary>
-        /// <param name="content">The content to check</param>
-        /// <param name="maxLength">Maximum allowed length</param>
-        /// <returns>Truncated content if needed</returns>
-        private string TruncateLongContent(string content, int maxLength = 10000)
-        {
-            if (content.Length > maxLength)
-            {
-                Logger.LogInfo($"Content length ({content.Length}) exceeds maximum ({maxLength}), truncating");
-                return content.Substring(0, maxLength) + "... [TRUNCATED]";
-            }
-            return content;
-        }
+
         
-        /// <summary>
-        /// Handles malformed or partial markers
-        /// </summary>
-        /// <param name="fullContent">The complete content received so far</param>
-        /// <returns>True if markers are properly formed, false otherwise</returns>
-        private bool HandleMalformedMarkers(string fullContent)
-        {
-            // Check for partial markers that might cause issues
-            var partialBegin = fullContent.Contains("[") && !fullContent.Contains("[BEGIN]: ");
-            var partialEnd = fullContent.Contains("[") && !fullContent.Contains("[END]");
-            
-            return !(partialBegin || partialEnd);
-        }
+
         
         /// <summary>
         /// Finds the ScrollViewer parent of the EmotionalItineraryTextBlock

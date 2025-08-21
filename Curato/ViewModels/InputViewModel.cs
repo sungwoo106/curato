@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Linq;
 using System.IO;
-using System.Windows.Input;
 using System.Text;
 using Curato.Models;
 using Curato.Helpers;
@@ -216,22 +215,9 @@ namespace Curato.ViewModels
             SelectedCategoriesText
         }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
-        // Generated Emotional Story
-        private string? _planText;
-        public string? PlanText
-        {
-            get => _planText;
-            set
-            {
-                if (_planText != value)
-                {
-                    _planText = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
 
-        public ICommand GeneratePlanCommand { get; }
+
+
 
         public InputViewModel()
         {
@@ -287,87 +273,12 @@ namespace Curato.ViewModels
                 }
             };
 
-            GeneratePlanCommand = new RelayCommand(_ => GeneratePlan());
+
         }
 
-        private void GeneratePlan()
-        {
-            try
-            {
-                var payload = new
-                {
-                    companion_type = SelectedCompanion ?? "Solo",
-                    budget = SelectedBudget switch
-                    {
-                        "$" => "low",
-                        "$$" => "medium",
-                        "$$$" => "high",
-                        _ => "low"
-                    },
-                    starting_time = string.IsNullOrWhiteSpace(SelectedSubTime) ? 12 : int.Parse(SelectedSubTime.Split(':')[0]),
-                    location_query = string.IsNullOrWhiteSpace(LocationQuery) || LocationQuery == "Search Location" ? null : LocationQuery,
-                    categories = SelectedCategories.ToList()
-                };
 
-                string json = JsonSerializer.Serialize(payload, new JsonSerializerOptions 
-                { 
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
-                });
 
-                var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
-                
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "python",
-                    Arguments = scriptPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = AppContext.BaseDirectory
-                };
 
-                // Ensure proper UTF-8 encoding for Korean text
-                psi.StandardOutputEncoding = Encoding.UTF8;
-                psi.StandardErrorEncoding = Encoding.UTF8;
-
-                psi.Environment["INPUT_JSON"] = json;
-
-                using var process = Process.Start(psi)!;
-                string output = process.StandardOutput.ReadToEnd();
-                string err = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-
-                if (process.ExitCode != 0)
-                {
-                    PlanText = $"Failed to generate plan. Exit code: {process.ExitCode}. Error: {err}";
-                    return;
-                }
-
-                try
-                {
-                    var result = JsonSerializer.Deserialize<PlanResult>(output, new JsonSerializerOptions 
-                    { 
-                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
-                    });
-                    PlanText = result?.Itinerary ?? output;
-                }
-                catch
-                {
-                    PlanText = output;
-                }
-            }
-            catch (Exception)
-            {
-                PlanText = "Failed to generate plan.";
-            }
-        }
-
-        // Represents the result of the plan generation
-        private class PlanResult
-        {
-            public string? Itinerary { get; set; }
-        }
 
         private IEnumerable<string> FetchCompanionTypes()
         {

@@ -566,32 +566,18 @@ namespace Curato.Views
 
         private void PopularPlace_Click(object sender, RoutedEventArgs e)
         {
-
             try
             {
                 if (sender is Button btn && btn.DataContext is PopularPlace place && DataContext is InputViewModel vm)
                 {
-
-                    string normalized = place.Title?.ToLowerInvariant() ?? "";
-                    if (normalized.Contains("seongsu"))
-                        vm.LocationQuery = "Seongsu";
-                    else if (normalized.Contains("hongdae"))
-                        vm.LocationQuery = "Hongdae";
-                    else if (normalized.Contains("gangnam"))
-                        vm.LocationQuery = "Gangnam";
-                    else if (normalized.Contains("itaewon"))
-                        vm.LocationQuery = "Itaewon";
-                    else if (normalized.Contains("bukchon"))
-                        vm.LocationQuery = "Bukchon";
+                    // Extract location name from title (remove any additional text)
+                    var locationName = place.Title?.Split('・')[0]?.Trim() ?? place.Title ?? "";
+                    vm.LocationQuery = locationName;
 
                     // Restart popup timer to fetch suggestions for the new location
                     vm.IsLocationPopupOpen = false;
                     _locationTimer.Stop();
                     _locationTimer.Start();
-                }
-                else
-                {
-
                 }
             }
             catch (Exception ex)
