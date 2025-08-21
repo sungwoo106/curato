@@ -123,12 +123,6 @@ Cover these {len(selected_places)} locations:
 {places_text}
 
 Write 3-4 engaging sentences for each place, suitable for {companion_type.lower()} outings with {budget_level} budget.
-
-IMPORTANT REQUIREMENTS:
-- Write your response in English
-- Keep all Korean place names in their original Korean form (do not translate to Chinese)
-- Preserve the authentic Korean names exactly as they appear in the input
-- Use English for all descriptions and explanations
 <|im_end|>
 
 <|im_start|>assistant

@@ -30,53 +30,11 @@ from collections import deque
 # CENTRALIZED LOGGING UTILITY
 # =============================================================================
 
-class Logger:
-    """
-    Centralized logging utility to prevent duplicate logs and provide consistent formatting.
-    """
-    
-    def __init__(self, name: str = "Preferences"):
-        self.name = name
-        self._logged_messages = set()  # Track logged messages to prevent duplicates
-    
-    def _log(self, level: str, message: str, allow_duplicates: bool = False):
-        """Internal logging method with duplicate prevention."""
-        if not allow_duplicates and message in self._logged_messages:
-            return  # Skip duplicate messages
-        
-        timestamp = time.strftime("%H:%M:%S")
-        formatted_message = f"[{timestamp}] {level} - {message}"
-        print(formatted_message, file=sys.stderr)
-        
-        if not allow_duplicates:
-            self._logged_messages.add(message)
-    
-    def info(self, message: str, allow_duplicates: bool = False):
-        """Log informational message."""
-        self._log("INFO", message, allow_duplicates)
-    
-    def success(self, message: str, allow_duplicates: bool = False):
-        """Log success message."""
-        self._log("✅", message, allow_duplicates)
-    
-    def warning(self, message: str, allow_duplicates: bool = False):
-        """Log warning message."""
-        self._log("⚠️", message, allow_duplicates)
-    
-    def error(self, message: str, allow_duplicates: bool = False):
-        """Log error message."""
-        self._log("❌", message, allow_duplicates)
-    
-    def debug(self, message: str, allow_duplicates: bool = False):
-        """Log debug message."""
-        self._log("🔍", message, allow_duplicates)
-    
-    def clear_duplicate_tracker(self):
-        """Clear the duplicate message tracker."""
-        self._logged_messages.clear()
-
-# Initialize global logger instance
-_logger = Logger()
+# Simple logging utility
+def _log(level: str, message: str):
+    """Simple logging function."""
+    timestamp = time.strftime("%H:%M:%S")
+    print(f"[{timestamp}] {level} - {message}", file=sys.stderr)
 
 class RateLimiter:
     """
@@ -241,7 +199,7 @@ class Preferences:
         """
         if not self._models_initialized:
             try:
-                _logger.info("🚀 Initializing AI model instances for better performance...")
+                _log("INFO", "🚀 Initializing AI model instances for better performance...")
                 
                 # Create reusable model instances
                 self._phi_runner = GenieRunner(progress_callback=self.progress_callback)
@@ -250,15 +208,15 @@ class Preferences:
                 # Validate the setup
                 if self._phi_runner.validate_setup() and self._qwen_runner.validate_setup():
                     self._models_initialized = True
-                    _logger.success("✅ AI model instances initialized successfully")
-                    _logger.info(f"   Phi bundle: {self._phi_runner.phi_bundle_path}")
-                    _logger.info(f"   Qwen bundle: {self._qwen_runner.qwen_bundle_path}")
+                    _log("SUCCESS", "✅ AI model instances initialized successfully")
+                    _log("INFO", f"   Phi bundle: {self._phi_runner.phi_bundle_path}")
+                    _log("INFO", f"   Qwen bundle: {self._qwen_runner.qwen_bundle_path}")
                 else:
-                    _logger.warning("⚠️ Some model validation failed, but continuing...")
+                    _log("WARNING", "⚠️ Some model validation failed, but continuing...")
                     self._models_initialized = True  # Still mark as initialized to avoid repeated attempts
                     
             except Exception as e:
-                _logger.error(f"❌ Failed to initialize AI model instances: {e}")
+                _log("ERROR", f"❌ Failed to initialize AI model instances: {e}")
                 # Fall back to creating new instances each time
                 self._models_initialized = True  # Prevent repeated initialization attempts
                 self._phi_runner = None
@@ -276,7 +234,7 @@ class Preferences:
         
         if self._phi_runner is None:
             # Fallback: create new instance if initialization failed
-            _logger.warning("⚠️ Using fallback Phi runner (new instance)")
+            _log("WARNING", "⚠️ Using fallback Phi runner (new instance)")
             return GenieRunner(progress_callback=self.progress_callback)
         
         return self._phi_runner
@@ -293,35 +251,12 @@ class Preferences:
         
         if self._qwen_runner is None:
             # Fallback: create new instance if initialization failed
-            _logger.warning("⚠️ Using fallback Qwen runner (new instance)")
+            _log("WARNING", "⚠️ Using fallback Qwen runner (new instance)")
             return GenieRunner(progress_callback=self.progress_callback)
         
         return self._qwen_runner
     
-    def pre_warm_models(self):
-        """
-        Pre-warm the AI models by initializing them early.
-        
-        This method can be called during app startup to eliminate
-        the first-time initialization delay when generating plans.
-        
-        Returns:
-            bool: True if models were successfully pre-warmed
-        """
-        try:
-            _logger.info("🔥 Pre-warming AI models for optimal performance...")
-            self._initialize_models()
-            
-            if self._models_initialized and self._phi_runner and self._qwen_runner:
-                _logger.success("✅ Models pre-warmed successfully")
-                return True
-            else:
-                _logger.warning("⚠️ Model pre-warming incomplete")
-                return False
-                
-        except Exception as e:
-            _logger.error(f"❌ Model pre-warming failed: {e}")
-            return False
+
     
     def get_performance_stats(self):
         """
@@ -420,7 +355,7 @@ class Preferences:
         cached_results = self._get_cached_results(cache_key)
         
         if cached_results:
-            _logger.success(f"Using cached results for location {self.location_name}")
+            _log("SUCCESS", f"Using cached results for location {self.location_name}")
             self.best_places = cached_results
             return
         
@@ -456,18 +391,18 @@ class Preferences:
                         
                         all_places.extend(places)
                     else:
-                        _logger.warning(f"No results found for {place_type}")
+                        _log("WARNING", f"No results found for {place_type}")
             
                 # Add small delay between batches to respect API rate limits
                 if batch_idx < len(place_type_batches) - 1:
                     time.sleep(0.2)  # 200ms delay between batches
             
             except Exception as e:
-                _logger.warning(f"Failed to search for batch {place_types_batch}: {e}")
+                _log("WARNING", f"Failed to search for batch {place_types_batch}: {e}")
                 continue
         
         if not all_places:
-            _logger.error("No places found for any type")
+            _log("ERROR", "No places found for any type")
             return
         
         # Reduce to 20 candidates ensuring variety
@@ -521,7 +456,7 @@ class Preferences:
                 cache_ttl = 3600  # 1 hour cache TTL
                 
                 if current_time - timestamp < cache_ttl:
-                    _logger.success(f"Cache hit for key: {cache_key[:50]}...")
+                    _log("SUCCESS", f"Cache hit for key: {cache_key[:50]}...")
                     return self._cache[cache_key]
                 else:
                     # Cache expired, remove it
@@ -531,7 +466,7 @@ class Preferences:
             return None
             
         except Exception as e:
-            _logger.warning(f"Cache retrieval failed: {e}")
+            _log("WARNING", f"Cache retrieval failed: {e}")
             return None
 
     def _cache_results(self, cache_key: str, results: Dict[str, List[Dict]]):
@@ -557,7 +492,7 @@ class Preferences:
                 self._cleanup_cache()
                 
         except Exception as e:
-            _logger.warning(f"Caching failed: {e}")
+            _log("WARNING", f"Caching failed: {e}")
 
     def _cleanup_cache(self):
         """
@@ -593,123 +528,11 @@ class Preferences:
                     del self._cache_timestamps[key]
                 
         except Exception as e:
-            _logger.warning(f"⚠️ Cache cleanup failed: {e}")
+            _log("WARNING", f"⚠️ Cache cleanup failed: {e}")
 
-    def get_performance_stats(self) -> dict:
-        """
-        Get comprehensive performance statistics for monitoring and optimization.
-        
-        Returns:
-            dict: Performance statistics including cache hits, API calls, and rate limiting
-        """
-        stats = {
-            "cache_stats": {},
-            "rate_limiter_stats": {},
-            "api_call_efficiency": {}
-        }
-        
-        # Cache statistics
-        if hasattr(self, '_cache'):
-            stats["cache_stats"] = {
-                "total_cached_entries": len(self._cache),
-                "cache_size_limit": 50,
-                "cache_utilization_percent": (len(self._cache) / 50) * 100
-            }
-            
-            # Calculate cache hit rate if we have timestamps
-            if hasattr(self, '_cache_timestamps'):
-                current_time = time.time()
-                expired_entries = sum(1 for ts in self._cache_timestamps.values() 
-                                   if current_time - ts > 3600)
-                stats["cache_stats"]["expired_entries"] = expired_entries
-                stats["cache_stats"]["active_entries"] = len(self._cache) - expired_entries
-        else:
-            stats["cache_stats"] = {"status": "Cache not initialized"}
-        
-        # Rate limiter statistics
-        if hasattr(self, 'rate_limiter'):
-            rate_stats = self.rate_limiter.get_status()
-            stats["rate_limiter_stats"] = {
-                "current_calls": rate_stats["current_calls"],
-                "max_calls": rate_stats["max_calls"],
-                "calls_remaining": rate_stats["calls_remaining"],
-                "utilization_percent": (rate_stats["current_calls"] / rate_stats["max_calls"]) * 100,
-                "time_window_seconds": rate_stats["time_window"]
-            }
-        else:
-            stats["rate_limiter_stats"] = {"status": "Rate limiter not initialized"}
-        
-        # API call efficiency
-        if hasattr(self, 'selected_types'):
-            total_place_types = len(self.selected_types)
-            batch_size = 3
-            total_batches = (total_place_types + batch_size - 1) // batch_size
-            
-            stats["api_call_efficiency"] = {
-                "total_place_types": total_place_types,
-                "batch_size": batch_size,
-                "total_batches": total_batches,
-                "api_calls_per_itinerary": total_batches,
-                "improvement_from_individual": f"{((total_place_types - total_batches) / total_place_types) * 100:.1f}%"
-            }
-        
-        return stats
 
-    def clear_cache(self):
-        """
-        Clear all cached results to force fresh API calls.
-        Useful for testing or when you want to refresh data.
-        """
-        if hasattr(self, '_cache'):
-            self._cache.clear()
-            self._cache_timestamps.clear()
-        else:
-            pass
 
-    def get_cache_status(self) -> dict:
-        """
-        Get detailed cache status information.
-        
-        Returns:
-            dict: Cache status including size, utilization, and entry details
-        """
-        if not hasattr(self, '_cache'):
-            return {"status": "Cache not initialized"}
-        
-        current_time = time.time()
-        cache_ttl = 3600  # 1 hour
-        
-        # Analyze cache entries
-        active_entries = 0
-        expired_entries = 0
-        entry_details = []
-        
-        for key, timestamp in self._cache_timestamps.items():
-            age = current_time - timestamp
-            if age < cache_ttl:
-                active_entries += 1
-                entry_details.append({
-                    "key": key[:50] + "..." if len(key) > 50 else key,
-                    "age_seconds": int(age),
-                    "status": "active"
-                })
-            else:
-                expired_entries += 1
-                entry_details.append({
-                    "key": key[:50] + "..." if len(key) > 50 else key,
-                    "age_seconds": int(age),
-                    "status": "expired"
-                })
-        
-        return {
-            "total_entries": len(self._cache),
-            "active_entries": active_entries,
-            "expired_entries": expired_entries,
-            "cache_utilization_percent": (len(self._cache) / 50) * 100,
-            "cache_size_limit": 50,
-            "cache_ttl_seconds": cache_ttl,
-            "entry_details": entry_details[:10]  # Show first 10 entries
-        }
+
 
     def _reduce_to_20_candidates(self, all_places: List[Dict]) -> Dict[str, List[Dict]]:
         """
@@ -1387,56 +1210,5 @@ class Preferences:
             print(f"🔍 Content preview (last 300 chars): {content[-300:] if len(content) > 300 else content}...", file=sys.stderr)
             return None
     
-    def get_cleaning_stats(self, raw_output: str) -> dict:
-        """
-        Get statistics about what was cleaned from the output.
-        
-        Args:
-            raw_output (str): The raw output from the model
-            
-        Returns:
-            dict: Statistics about what was cleaned
-        """
-        if not raw_output:
-            return {"error": "No output provided"}
-        
-        stats = {
-            "total_lines": len(raw_output.split('\n')),
-            "cleaned_output": None,
-            "removed_lines": 0,
-            "kept_lines": 0,
-            "removed_patterns": []
-        }
-        
-        # Get cleaned output
-        cleaned = self._clean_story_content(raw_output)
-        stats["cleaned_output"] = cleaned
-        
-        if cleaned:
-            stats["kept_lines"] = len(cleaned.split('\n'))
-            stats["removed_lines"] = stats["total_lines"] - stats["kept_lines"]
-        
-        # Analyze what was removed
-        lines = raw_output.split('\n')
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Check for removed patterns (focusing on the new extraction approach)
-            if (line.startswith('<|im_start|>') or
-                line.startswith('<|im_end|>') or
-                line.startswith('<|system|>') or
-                line.startswith('<|user|>') or
-                line.startswith('[PROMPT]:') or
-                line.startswith('Using libGenie.so') or
-                line.startswith('[KPIS]:') or
-                line.startswith('Init Time:') or
-                line.startswith('Token Generation Time:') or
-                line.startswith('Prompt Processing Time:') or
-                line.startswith('Token Generation Rate:') or
-                line.startswith('Prompt Processing Rate:')):
-                stats["removed_patterns"].append(line[:50] + "..." if len(line) > 50 else line)
-        
-        return stats
+
     

@@ -62,7 +62,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 # =============================================================================
 from constants import LOCATION, COMPANION_TYPES, BUDGET, STARTING_TIME
 from data.api_clients.location_fetcher import get_location_coordinates
-from preferences import Preferences
+from preferences_compat import Preferences
 from models.genie_runner import GenieRunner
 from core.prompts import build_phi_location_prompt, build_qwen_itinerary_prompt
 
@@ -139,18 +139,7 @@ def send_completion_update(route_plan_json: str, emotional_itinerary: str):
 # =============================================================================
 
 def _format_sentences(text: str) -> str:
-    """
-    Format text by placing each sentence on a separate line.
-    
-    This function splits text on sentence-ending punctuation marks (.!?) and
-    formats each sentence on its own line for better readability.
-    
-    Args:
-        text (str): Input text to format
-        
-    Returns:
-        str: Formatted text with one sentence per line
-    """
+    """Format text by placing each sentence on a separate line."""
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     return "\n".join(s.strip() for s in sentences if s.strip())
 
