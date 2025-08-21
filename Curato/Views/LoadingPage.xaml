@@ -13,11 +13,12 @@
                           BlurRadius="10"
                           ShadowDepth="2"/>
     </UserControl.Resources>
-    <Grid Background="White">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Viewbox Stretch="Fill">
+        <Grid Width="1920" Height="1080" Background="White">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
         <!-- Header -->
         <Grid Background="White" Height="80" Grid.Row="0">
@@ -67,6 +68,7 @@
                         Background="#FFF5F5F5"
                         CornerRadius="20"
                         SnapsToDevicePixels="True"
+                        UseLayoutRounding="True"
                         Effect="{StaticResource ShadowEffect}">
                     <Border x:Name="ProgressBarFill"
                             Width="0"
@@ -93,5 +95,6 @@
                            Margin="0,20,0,0"/>
             </StackPanel>
         </StackPanel>
-    </Grid>
+        </Grid>
+    </Viewbox>
 </UserControl>

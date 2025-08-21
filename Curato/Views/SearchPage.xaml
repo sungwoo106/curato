@@ -202,7 +202,8 @@
                 Grid.Row="1"
                 BorderBrush="#EEEEEE"
                 BorderThickness="0"
-                MinHeight="340">
+                MinHeight="340"
+                UseLayoutRounding="True" SnapsToDevicePixels="True">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
                 </Border.Effect>
@@ -210,7 +211,8 @@
 
                     <!-- Search box -->
                     <Border Background="White" CornerRadius="40" Padding="15,10" Margin="0,0,20,0" Height="97" Width="494"
-                            BorderBrush="#E0E0E0" BorderThickness="1">
+                            BorderBrush="#E0E0E0" BorderThickness="1"
+                            UseLayoutRounding="True" SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
                         </Border.Effect>
@@ -264,7 +266,8 @@
                     </Border>
 
                     <!-- Preferences -->
-                    <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97">
+                    <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97"
+                            UseLayoutRounding="True" SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
                         </Border.Effect>
@@ -285,6 +288,7 @@
                                 PlacementTarget="{Binding ElementName=CompanionButton}"
                                 Placement="Custom"
                                 CustomPopupPlacementCallback="CompanionPopup_PlacementCallback"
+                                VerticalOffset="20"
                                 StaysOpen="False"
                                 AllowsTransparency="True"
                                 PopupAnimation="Slide"
@@ -486,7 +490,8 @@
                                 Padding="0"
                                 Margin="10"
                                 Click="PopularPlace_Click"
-                                Cursor="Hand">
+                                Cursor="Hand"
+                                UseLayoutRounding="True" SnapsToDevicePixels="True">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Background" Value="White"/>
@@ -512,14 +517,15 @@
                                     </Style>
                                 </Button.Style>
                                 
-                                <Border CornerRadius="20" Padding="10">
+                                <Border CornerRadius="20" Padding="10" UseLayoutRounding="True" SnapsToDevicePixels="True">
                                     <StackPanel VerticalAlignment="Top">
                                         <Grid>
                                             <Border Height="350"
                                                     CornerRadius="40"
                                                     ClipToBounds="True"
                                                     HorizontalAlignment="Stretch"
-                                                    Background="Transparent">
+                                                    Background="Transparent"
+                                                    UseLayoutRounding="True" SnapsToDevicePixels="True">
                                                 <Image Source="{Binding ImagePath}"
                                                     Stretch="UniformToFill" StretchDirection="Both"
                                                     HorizontalAlignment="Center"
@@ -527,7 +533,8 @@
                                                     SnapsToDevicePixels="True"
                                                     RenderOptions.BitmapScalingMode="HighQuality"/>
                                             </Border>
-                                            <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0">
+                                            <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0"
+                                                    UseLayoutRounding="True" SnapsToDevicePixels="True">
                                                 <Border.Effect>
                                                     <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
                                                 </Border.Effect>

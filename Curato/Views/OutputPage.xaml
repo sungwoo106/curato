@@ -32,17 +32,19 @@
     </UserControl.Resources>
     
 
-    <Grid Background="White">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Viewbox Stretch="Fill">
+        <Grid Width="1920" Height="1080" Background="White">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
         <!-- Top Bar (white, shadowed) -->
         <Border Grid.Row="0"
                 Background="White"
                 Padding="30,20"
                 SnapsToDevicePixels="True"
+                UseLayoutRounding="True"
                 MinHeight="230">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
@@ -63,7 +65,7 @@
                            Foreground="#FFB31A"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Left"
-                           Margin="45,0,0,0"
+                           Margin="75,0,0,0"
                            Width="Auto"/>
 
                 <!-- Preferences -->
@@ -77,7 +79,8 @@
                         VerticalAlignment="Center"
                         MinWidth="1100"
                         Height="75"
-                        Margin="-100,0,0,0">
+                        Margin="-100,0,0,0"
+                        UseLayoutRounding="True" SnapsToDevicePixels="True">
                     <TextBlock x:Name="PreferencesSummaryLabel"
                                Text="{Binding PreferencesSummary, FallbackValue='Loading preferences...'}"
                                FontSize="20"
@@ -99,7 +102,7 @@
                         Click="EditButton_Click"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        Margin="0,0,20,0">
+                        Margin="0,0,50,0">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="White"/>
@@ -186,7 +189,8 @@
             </Grid.ColumnDefinitions>
 
             <!-- WebView Map -->
-            <Border Grid.Column="0" CornerRadius="30" Margin="0,0,10,0">
+            <Border Grid.Column="0" CornerRadius="30" Margin="0,0,10,0"
+                    UseLayoutRounding="True" SnapsToDevicePixels="True">
                 <wv2:WebView2 x:Name="MapWebView"
                     Width="Auto"
                     Height="Auto"
@@ -208,5 +212,6 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
-    </Grid>
+        </Grid>
+    </Viewbox>
 </UserControl>
