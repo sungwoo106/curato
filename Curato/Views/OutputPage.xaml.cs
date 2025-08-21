@@ -374,7 +374,7 @@ namespace Curato.Views
             // Get the current state from the full content
             var fullContent = _streamingStoryBuilder.ToString();
             var hasBegin = fullContent.Contains("[BEGIN]: ");
-            var hasEnd = fullContent.Contains("[END] "); // Check for [END] with space
+            var hasEnd = fullContent.Contains("[END] ") || fullContent.Contains("[END]"); // Check for both formats
             
             // Debug logging for marker detection
             if (token.Contains("[END"))
@@ -403,8 +403,8 @@ namespace Curato.Views
                 return string.Empty; // Don't show the [BEGIN] marker itself
             }
             
-            // Check if this token contains the [END] marker
-            if (token.Contains("[END] "))
+            // Check if this token contains the [END] marker (both formats)
+            if (token.Contains("[END] ") || token.Contains("[END]"))
             {
                 Logger.LogInfo($"DEBUG: Hiding token with END marker: '{token}'");
                 return string.Empty; // Don't show the [END] marker
@@ -448,7 +448,7 @@ namespace Curato.Views
         {
             // Check for partial markers that might cause issues
             var partialBegin = fullContent.Contains("[") && !fullContent.Contains("[BEGIN]: ");
-            var partialEnd = fullContent.Contains("[") && !fullContent.Contains("[END] ");
+            var partialEnd = fullContent.Contains("[") && !(fullContent.Contains("[END] ") || fullContent.Contains("[END]"));
             
             return !(partialBegin || partialEnd);
         }
@@ -460,12 +460,21 @@ namespace Curato.Views
         /// <returns>Cleaned story content</returns>
         private string CleanupStoryAfterEnd(string completeStory)
         {
-            // Check for [END] marker with space
+            // Check for [END] marker with space first
             var endIndex = completeStory.IndexOf("[END] ");
             if (endIndex >= 0)
             {
                 var cleanedStory = completeStory.Substring(0, endIndex);
                 Logger.LogInfo($"DEBUG: Cleaned story after [END] marker at index {endIndex}");
+                return cleanedStory;
+            }
+            
+            // Check for [END] marker without space (fallback)
+            var endIndexNoSpace = completeStory.IndexOf("[END]");
+            if (endIndexNoSpace >= 0)
+            {
+                var cleanedStory = completeStory.Substring(0, endIndexNoSpace);
+                Logger.LogInfo($"DEBUG: Cleaned story after [END] marker (no space) at index {endIndexNoSpace}");
                 return cleanedStory;
             }
             
