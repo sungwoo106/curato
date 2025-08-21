@@ -60,7 +60,7 @@
                                Height="80"
                                Foreground="#FFB31A"
                                Canvas.Left="75"
-                               Canvas.Top="5"
+                               Canvas.Top="10"
                                Width="Auto"/>
                 </Canvas>
 
