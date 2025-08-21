@@ -135,35 +135,21 @@ namespace Curato.Views
                 {
                     _phiCompleted = true;
                     
-                    Logger.LogInfo($"LoadingPage - Received phi_completion message: {update.message}");
-                    Logger.LogInfo($"LoadingPage - Message length: {update.message.Length}");
-                    
                     // Extract the route plan data from the message using pipe separator
                     var routePlanData = update.message.Substring("phi_completion|".Length);
-                    Logger.LogInfo($"LoadingPage - Extracted route plan data length: {routePlanData.Length}");
                     
                     if (!string.IsNullOrEmpty(routePlanData))
                     {
                         _routePlanData = routePlanData;
-                        Logger.LogInfo($"LoadingPage - Route plan data preview: {routePlanData.Substring(0, Math.Min(200, routePlanData.Length))}...");
-                        
-                        // Log the first and last few characters to see the exact format
-                        if (routePlanData.Length > 10)
-                        {
-                            Logger.LogInfo($"LoadingPage - First 10 chars: '{routePlanData.Substring(0, 10)}'");
-                            Logger.LogInfo($"LoadingPage - Last 10 chars: '{routePlanData.Substring(routePlanData.Length - 10)}'");
-                        }
                         
                         // Validate JSON format
                         try
                         {
                             var testParse = System.Text.Json.JsonDocument.Parse(routePlanData);
-                            Logger.LogInfo($"LoadingPage - JSON validation successful, root element type: {testParse.RootElement.ValueKind}");
                         }
                         catch (Exception jsonEx)
                         {
                             Logger.LogError($"LoadingPage - JSON validation failed: {jsonEx.Message}", jsonEx);
-                            Logger.LogInfo($"LoadingPage - Raw route plan data for debugging: '{routePlanData}'");
                         }
                     }
                     else
@@ -199,25 +185,16 @@ namespace Curato.Views
         {
             try
             {
-                Logger.LogInfo("LoadingPage - Phi completed, showing output page early");
-                Logger.LogInfo($"LoadingPage - _routePlanData is null: {_routePlanData == null}");
-                Logger.LogInfo($"LoadingPage - _routePlanData is empty: {string.IsNullOrEmpty(_routePlanData)}");
-                
                 // Parse the route plan data and populate AppState before showing OutputPage
                 if (!string.IsNullOrEmpty(_routePlanData))
                 {
-                    Logger.LogInfo($"LoadingPage - Attempting to parse route plan data: {_routePlanData.Length} characters");
-                    Logger.LogInfo($"LoadingPage - Raw data: '{_routePlanData}'");
-                    
                     try
                     {
                         // Parse the route plan JSON - it's an array of places, not a TripPlan object
-                        Logger.LogInfo("LoadingPage - Starting JSON deserialization of places array...");
                         var placesArray = System.Text.Json.JsonSerializer.Deserialize<List<PhiPlace>>(_routePlanData, new JsonSerializerOptions 
                         { 
                             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
                         });
-                        Logger.LogInfo("LoadingPage - JSON deserialization of places array completed");
                         
                         if (placesArray != null && placesArray.Count > 0)
                         {
@@ -231,7 +208,6 @@ namespace Curato.Views
                             
                             // Set the route plan in AppState so the map can access it
                             AppState.SharedTripPlan = routePlan;
-                            Logger.LogInfo($"LoadingPage - Route plan created and set in AppState: {routePlan.SuggestedPlaces?.Count ?? 0} places");
                         }
                         else
                         {
@@ -242,7 +218,6 @@ namespace Curato.Views
                     catch (Exception ex)
                     {
                         Logger.LogError($"Failed to parse route plan data: {ex.Message}", ex);
-                        Logger.LogInfo($"LoadingPage - Raw route plan data: '{_routePlanData}'");
                         
                         // Create a default TripPlan to prevent crashes
                         AppState.SharedTripPlan = new TripPlan();
@@ -270,7 +245,6 @@ namespace Curato.Views
                     
                     // Continue monitoring progress for story streaming
                     // The story will be streamed to the OutputPage in real-time
-                    Logger.LogInfo("LoadingPage - Output page shown, continuing to monitor story streaming");
                 }
             }
             catch (Exception ex)
@@ -281,7 +255,6 @@ namespace Curato.Views
 
         private async void LoadingPage_LoadedAsync(object sender, EventArgs e)
         {
-            Logger.LogInfo("LoadingPage_LoadedAsync - Starting");
             dotTimer.Start();
             smoothProgressTimer.Start();
 
@@ -293,12 +266,8 @@ namespace Curato.Views
 
             try
             {
-                Logger.LogInfo("LoadingPage_LoadedAsync - Waiting for async operation");
-                
                 // Wait for the async operation to complete with progress tracking
                 var result = await _onFinishedAsync?.Invoke();
-                
-                Logger.LogInfo($"LoadingPage_LoadedAsync - Async operation completed, result type: {result?.GetType().Name}");
                 
                 // If we haven't shown the output page yet (Phi didn't complete), show it now
                 if (!_phiCompleted)
@@ -313,20 +282,16 @@ namespace Curato.Views
                     dotTimer.Stop();
                     smoothProgressTimer.Stop();
 
-                    Logger.LogInfo("LoadingPage_LoadedAsync - Navigating to result page");
-
                     // Navigate to the result page
                     if (_parentWindow != null)
                     {
                         _parentWindow.MainFrame.Content = result ?? new OutputPage();
-                        Logger.LogInfo("LoadingPage_LoadedAsync - Navigation completed");
                     }
                 }
                 else
                 {
                     // Phi already completed and output page is shown
                     // Just ensure the final result is properly set
-                    Logger.LogInfo("LoadingPage_LoadedAsync - Phi already completed, output page already shown");
                     
                     // Stop the timers
                     dotTimer.Stop();

@@ -357,7 +357,6 @@ class Preferences:
         # Start with user-selected types as highest priority
         if user_selected_types:
             self.selected_types = user_selected_types.copy()
-            _logger.debug(f"User selected place types: {self.selected_types}")
         else:
             self.selected_types = []
         
@@ -372,7 +371,6 @@ class Preferences:
                 num_to_add = min(max_companion_types, len(available_companion_types))
                 additional_types = available_companion_types[:num_to_add]
                 self.selected_types.extend(additional_types)
-                _logger.debug(f"Added {len(additional_types)} companion-specific types: {additional_types}")
         
         # Add variety types for rich experience
         from constants import VARIETY_PLACE_TYPES
@@ -383,7 +381,6 @@ class Preferences:
             num_variety = min(2, len(available_variety))
             selected_variety = available_variety[:num_variety]
             self.selected_types.extend(selected_variety)
-            _logger.debug(f"Added {len(selected_variety)} variety types: {selected_variety}")
         
         # Ensure we have at least 6 types for rich variety
         if len(self.selected_types) < 6:
@@ -391,16 +388,12 @@ class Preferences:
             for default_type in DEFAULT_PLACE_TYPES:
                 if default_type not in self.selected_types and len(self.selected_types) < 6:
                     self.selected_types.append(default_type)
-            _logger.debug(f"Added default types to ensure minimum variety: {self.selected_types}")
         
         # Limit total types to prevent overwhelming the search
         if len(self.selected_types) > 10:
             user_types = [t for t in self.selected_types if t in (user_selected_types or [])]
             other_types = [t for t in self.selected_types if t not in user_types]
             self.selected_types = user_types + other_types[:7]
-            _logger.debug(f"Limited total types to prevent search overload: {self.selected_types}")
-        
-        _logger.debug(f"Final selected place types: {self.selected_types} (Total: {len(self.selected_types)})")
 
     # =============================================================================
     # SIMPLIFIED PLACE RECOMMENDATION COLLECTION
@@ -420,7 +413,7 @@ class Preferences:
         Returns:
             dict: Dictionary where keys are place types and values are lists of places
         """
-        _logger.debug(f"Collecting places for types: {self.selected_types}")
+
         
         # Check if we have cached results for this location and place types
         cache_key = self._generate_cache_key()
@@ -440,13 +433,8 @@ class Preferences:
         place_type_batches = [self.selected_types[i:i + batch_size] 
                             for i in range(0, len(self.selected_types), batch_size)]
         
-        _logger.debug(f"Processing {len(self.selected_types)} place types in {len(place_type_batches)} batches")
-        
         for batch_idx, place_types_batch in enumerate(place_type_batches):
             try:
-                _logger.debug(f"Processing batch {batch_idx + 1}: {place_types_batch}")
-                
-                # Check rate limits before making API call
                 self.rate_limiter.wait_if_needed()
                 
                 # Make a single API call for multiple place types
@@ -458,10 +446,6 @@ class Preferences:
                     15  # Get 15 places per type
                 )
                 
-                # Log rate limiter status
-                status = self.rate_limiter.get_status()
-                _logger.debug(f"Rate limiter status: {status['current_calls']}/{status['max_calls']} calls in {status['time_window']}s window")
-                
                 # Process results for each place type in the batch
                 for place_type in place_types_batch:
                     if place_type in search_result:
@@ -471,18 +455,13 @@ class Preferences:
                             place['place_type'] = place_type
                         
                         all_places.extend(places)
-                        _logger.debug(f"Found {len(places)} places for {place_type}")
-                        
-                        # Debug: show first place structure
-                        if places:
-                            _logger.debug(f"Sample place structure: {list(places[0].keys())}")
                     else:
                         _logger.warning(f"No results found for {place_type}")
-                
+            
                 # Add small delay between batches to respect API rate limits
                 if batch_idx < len(place_type_batches) - 1:
                     time.sleep(0.2)  # 200ms delay between batches
-                
+            
             except Exception as e:
                 _logger.warning(f"Failed to search for batch {place_types_batch}: {e}")
                 continue
@@ -491,14 +470,8 @@ class Preferences:
             _logger.error("No places found for any type")
             return
         
-        _logger.debug(f"Total places found: {len(all_places)}")
-        
         # Reduce to 20 candidates ensuring variety
         self.best_places = self._reduce_to_20_candidates(all_places)
-        
-        _logger.debug(f"Reduced to {len(self.best_places)} place types with variety")
-        for place_type, places in self.best_places.items():
-            _logger.debug(f"{place_type}: {len(places)} places")
         
         # Cache the results for future use
         self._cache_results(cache_key, self.best_places)
@@ -552,7 +525,6 @@ class Preferences:
                     return self._cache[cache_key]
                 else:
                     # Cache expired, remove it
-                    _logger.debug(f"Cache expired for key: {cache_key[:50]}...")
                     del self._cache[cache_key]
                     del self._cache_timestamps[cache_key]
             
@@ -578,8 +550,6 @@ class Preferences:
             # Store results and timestamp
             self._cache[cache_key] = results
             self._cache_timestamps[cache_key] = time.time()
-            
-            _logger.debug(f"Cached results for key: {cache_key[:50]}...")
             
             # Implement cache size limit to prevent memory issues
             max_cache_size = 50
@@ -621,8 +591,6 @@ class Preferences:
                 for key in keys_to_remove:
                     del self._cache[key]
                     del self._cache_timestamps[key]
-                
-                _logger.debug(f"🧹 Cleaned up cache, removed {len(keys_to_remove)} old entries")
                 
         except Exception as e:
             _logger.warning(f"⚠️ Cache cleanup failed: {e}")
@@ -693,12 +661,10 @@ class Preferences:
         Useful for testing or when you want to refresh data.
         """
         if hasattr(self, '_cache'):
-            cache_size = len(self._cache)
             self._cache.clear()
             self._cache_timestamps.clear()
-            _logger.debug(f"🧹 Cleared {cache_size} cached entries")
         else:
-            _logger.debug("ℹ️ No cache to clear")
+            pass
 
     def get_cache_status(self) -> dict:
         """
@@ -761,25 +727,17 @@ class Preferences:
         if not all_places:
             return {}
         
-        _logger.debug(f"🔍 Total places available for random selection: {len(all_places)}")
-        
         # Show distribution of place types before selection
         type_counts = {}
         for place in all_places:
             place_type = place.get('place_type', 'Unknown')
             type_counts[place_type] = type_counts.get(place_type, 0) + 1
         
-        _logger.debug(f"🔍 Place type distribution before selection:")
-        for place_type, count in sorted(type_counts.items()):
-            _logger.debug(f"🔍   {place_type}: {count} places")
-        
         # IMPORTANT: Shuffle ALL places randomly for true randomness
         random.shuffle(all_places)
-        _logger.debug(f"🔍 Randomly shuffled all {len(all_places)} places")
         
         # Take the first 20 places from the shuffled list
         selected_places = all_places[:20]
-        _logger.debug(f"🔍 Randomly selected first 20 places from shuffled pool")
         
         # Group the selected places by type for the return format
         reduced_places = {}
@@ -789,14 +747,6 @@ class Preferences:
                 reduced_places[place_type] = []
             reduced_places[place_type].append(place)
         
-        # Show final distribution after random selection
-        _logger.debug(f"🔍 Final random selection results:")
-        total_selected = 0
-        for place_type, places in reduced_places.items():
-            _logger.debug(f"🔍   {place_type}: {len(places)} places")
-            total_selected += len(places)
-        
-        _logger.debug(f"✅ Randomly selected {total_selected} total candidates across {len(reduced_places)} place types")
         return reduced_places
 
     def format_recommendations(self):
@@ -845,12 +795,6 @@ class Preferences:
                     self.progress_callback(75, "No places found")
                 return None
             
-            # Log the expected behavior
-            print(f"🔍 Expected: Phi should select 4-5 unique places from {len(self.best_places)} total candidates", file=sys.stderr)
-            
-            if self.progress_callback:
-                self.progress_callback(65, "Building route planning prompt...")
-            
             # Format the recommendations for the prompt
             recommendations = self.format_recommendations()
             
@@ -860,13 +804,6 @@ class Preferences:
                 if self.progress_callback:
                     self.progress_callback(75, "Recommendations formatting failed")
                 return None
-            
-            # Debug: Check the structure of recommendations
-            print(f"🔍 Recommendations structure: {type(recommendations)}", file=sys.stderr)
-            print(f"🔍 Number of recommendations: {len(recommendations)}", file=sys.stderr)
-            if recommendations:
-                print(f"🔍 First recommendation keys: {list(recommendations[0].keys()) if recommendations else 'None'}", file=sys.stderr)
-                print(f"🔍 Sample recommendation: {recommendations[0] if recommendations else 'None'}", file=sys.stderr)
             
             # Build the simple prompt for the Phi model
             prompt = build_phi_location_prompt(
@@ -898,12 +835,6 @@ class Preferences:
             
             # Extract the selected places from Phi's output
             selected_places = self._extract_places_from_phi_output(raw_output, recommendations)
-            
-            # Debug: Check what Phi returned
-            print(f"🔍 Phi raw output length: {len(raw_output) if raw_output else 0}", file=sys.stderr)
-            print(f"🔍 Phi extracted places: {len(selected_places)}", file=sys.stderr)
-            if selected_places:
-                print(f"🔍 Selected place names: {[p.get('place_name', 'Unknown') for p in selected_places]}", file=sys.stderr)
             
             if selected_places:
                 # Convert to JSON format for WPF

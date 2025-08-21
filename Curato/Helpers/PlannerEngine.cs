@@ -39,15 +39,7 @@ public static class PlannerEngine
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping 
             });
             
-            // Log the payload being sent to Python
-            Logger.LogInfo($"Sending payload to Python: {json}");
-            
             var scriptPath = Path.Combine(AppContext.BaseDirectory, "generate_plan.py");
-            
-            // Log the resolved script path for troubleshooting
-            Logger.LogInfo($"Resolved script path: {scriptPath}");
-            Logger.LogInfo($"Script file exists: {File.Exists(scriptPath)}");
-            Logger.LogInfo($"Working directory: {AppContext.BaseDirectory}");
             
             var psi = new ProcessStartInfo
             {
@@ -63,9 +55,6 @@ public static class PlannerEngine
 
             // Set the INPUT_JSON environment variable
             psi.Environment["INPUT_JSON"] = json;
-            
-            // Log the environment variable
-            Logger.LogInfo($"Set INPUT_JSON environment variable: {json}");
 
             using var process = Process.Start(psi)!;
             
@@ -109,16 +98,11 @@ public static class PlannerEngine
                             if (progressData.TryGetProperty("route_plan", out var routePlanElement))
                             {
                                 finalRoutePlan = routePlanElement.GetString();
-                                Logger.LogInfo($"Phi completed - route plan received: {finalRoutePlan?.Substring(0, Math.Min(100, finalRoutePlan?.Length ?? 0))}...");
                                 phiCompleted = true;
                                 
                                 // Report Phi completion with route plan data to show output page immediately
                                 // Send the route plan data separately to avoid corrupting the JSON
                                 progress?.Report((85, $"phi_completion|{finalRoutePlan}"));
-                            }
-                            else
-                            {
-                                Logger.LogInfo("No route_plan property found in phi_completion message");
                             }
                         }
                         else if (type == "streaming_token")
@@ -166,9 +150,6 @@ public static class PlannerEngine
                                 Logger.LogInfo("No itinerary property found in completion message");
                             }
                             
-                            // Log the complete completion message for debugging
-                            Logger.LogInfo($"Complete completion message: {e.Data}");
-                            
                             hasCompleted = true;
                         }
                     }
@@ -202,19 +183,6 @@ public static class PlannerEngine
             
             // Wait a bit for any pending output processing
             await Task.Delay(100);
-            
-            // Log the final values for debugging
-            Logger.LogInfo($"Final values - Route plan: {finalRoutePlan is not null}, Itinerary: {finalItinerary is not null}");
-            if (finalRoutePlan != null)
-            {
-                Logger.LogInfo($"Final route plan length: {finalRoutePlan.Length}");
-                Logger.LogInfo($"Final route plan preview: {finalRoutePlan.Substring(0, Math.Min(200, finalRoutePlan.Length))}");
-            }
-            if (finalItinerary != null)
-            {
-                Logger.LogInfo($"Final itinerary length: {finalItinerary.Length}");
-                Logger.LogInfo($"Final itinerary preview: {finalItinerary.Substring(0, Math.Min(200, finalItinerary.Length))}");
-            }
             
             // If we didn't get a completion message, try to parse the final output
             if (string.IsNullOrEmpty(finalItinerary))
@@ -258,7 +226,6 @@ public static class PlannerEngine
                         if (routePlanData != null)
                         {
                             tripPlan.SuggestedPlaces = routePlanData;
-                            Logger.LogInfo($"Successfully parsed route plan with {routePlanData.Count} places");
                         }
                     }
                     catch (Exception ex)
@@ -267,8 +234,7 @@ public static class PlannerEngine
                     }
                 }
                 
-                Logger.LogInfo($"Final TripPlan EmotionalNarrative: {tripPlan.EmotionalNarrative?.Substring(0, Math.Min(100, tripPlan.EmotionalNarrative?.Length ?? 0))}...");
-                Logger.LogInfo($"Final TripPlan SuggestedPlaces count: {tripPlan.SuggestedPlaces?.Count ?? 0}");
+
                 return tripPlan;
             }
             else

@@ -501,11 +501,7 @@ class GenieRunner:
             if self.progress_callback:
                 self.progress_callback(90, f"{model_type} model completed successfully")
             
-            # Print command output for debugging
-            if result.stdout:
-                print(f"✅ Model output: {result.stdout[:200]}...", file=sys.stderr)
-            if result.stderr:
-                print(f"⚠️ Model stderr: {result.stderr}", file=sys.stderr)
+            # Check if the command was successful
             
             # Check if the command was successful
             result.check_returncode()
@@ -567,16 +563,7 @@ class GenieRunner:
             else:
                 raise ValueError(f"Unsupported model type: {model_type}")
             
-            print(f"📝 Running {model_type} model with streaming...", file=sys.stderr)
-            print(f"📁 Bundle path: {bundle_path}", file=sys.stderr)
-            print(f"📁 Working directory: {self.working_dir}", file=sys.stderr)
-            print(f"🔧 Executable: {executable}", file=sys.stderr)
-            
-            # Show NPU processing information
-            print("🚀 Starting NPU inference with streaming...", file=sys.stderr)
-            print("⏳ Model is now processing on your NPU...", file=sys.stderr)
-            print("💡 Monitor NPU usage in Task Manager > Performance tab", file=sys.stderr)
-            print("🔍 You can also check GPU-Z or similar tools for detailed NPU stats", file=sys.stderr)
+            # Send progress update if callback is available
             
             # Send progress update if callback is available
             if self.progress_callback:
@@ -591,8 +578,7 @@ class GenieRunner:
                 "--prompt_file", str(prompt_path)
             ]
             
-            print(f"🚀 Running command: {' '.join(cmd)}", file=sys.stderr)
-            print(f"🚀 From directory: {bundle_path}", file=sys.stderr)
+
             
             # Add progress indicator
             import time

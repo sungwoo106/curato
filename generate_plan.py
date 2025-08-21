@@ -36,19 +36,11 @@ from pathlib import Path
 script_dir = Path(__file__).parent
 project_root = script_dir.parent  # Go up one level from bin/Debug/net9.0-windows/
 
-# Debug logging to help troubleshoot path issues
-print(f"Script directory: {script_dir}", file=sys.stderr)
-print(f"Project root: {project_root}", file=sys.stderr)
-print(f"Project root exists: {project_root.exists()}", file=sys.stderr)
-print(f"Data folder in project root: {(project_root / 'data').exists()}", file=sys.stderr)
-
 # Strategy 1: Try to add project root to Python path if data folder exists there
 if project_root.exists() and (project_root / "data").exists():
     sys.path.insert(0, str(project_root))
-    print(f"Added {project_root} to Python path", file=sys.stderr)
 elif (script_dir / "data").exists():
     # Strategy 2: If data folder is in the same directory as the script
-    print("Data folder found in script directory", file=sys.stderr)
     pass
 else:
     # Strategy 3: Try to find the project root by looking for data folder in parent directories
@@ -57,12 +49,7 @@ else:
         current = current.parent
         if (current / "data").exists():
             sys.path.insert(0, str(current))
-            print(f"Found data folder in {current}, added to Python path", file=sys.stderr)
             break
-    else:
-        print("Could not find data folder in any parent directory", file=sys.stderr)
-
-print(f"Python path: {sys.path[:3]}", file=sys.stderr)
 
 # =============================================================================
 # ENCODING SETUP

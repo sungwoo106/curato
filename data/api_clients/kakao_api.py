@@ -687,21 +687,11 @@ def search_places_enhanced(place_type: str, lat: float, lng: float,
         
         if category_code:
             # Use category search for more precise results
-            print(f"🔍 Using category search for '{place_type}' (code: {category_code})", file=sys.stderr)
             result = search_places_by_category(category_code, lat, lng, radius, size)
-            print(f"🔍 Category search returned {len(result.get('documents', []))} places", file=sys.stderr)
-            # Show first few results for debugging
-            for i, place in enumerate(result.get('documents', [])[:3]):
-                print(f"🔍   {i+1}. {place.get('place_name', 'Unknown')} - {place.get('category_name', 'No category')}", file=sys.stderr)
             return result
     
     # Fall back to keyword search if no category code or category search disabled
-    print(f"🔍 Using keyword search for '{place_type}'", file=sys.stderr)
     result = search_places(place_type, lat, lng, radius, size)
-    print(f"🔍 Keyword search returned {len(result.get('documents', []))} places", file=sys.stderr)
-    # Show first few results for debugging
-    for i, place in enumerate(result.get('documents', [])[:3]):
-        print(f"🔍   {i+1}. {place.get('place_name', 'Unknown')} - {place.get('category_name', 'No category')}", file=sys.stderr)
     return result
 
 def get_progressive_place_selection_enhanced(place_types: List[str], 

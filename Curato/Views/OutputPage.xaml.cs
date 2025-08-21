@@ -31,8 +31,6 @@ namespace Curato.Views
 
         private async void OutputPage_Loaded(object sender, RoutedEventArgs e)
         {
-            Logger.LogInfo("OutputPage_Loaded - Starting");
-            
             // Set the DataContext to the shared InputViewModel for proper data binding
             this.DataContext = AppState.SharedInputViewModel;
             
@@ -42,30 +40,19 @@ namespace Curato.Views
                 var vm = AppState.SharedInputViewModel;
                 // Use the existing PreferencesSummary property from the ViewModel
                 PreferencesSummaryLabel.Text = vm.PreferencesSummary;
-                Logger.LogInfo($"OutputPage_Loaded - Set preferences summary: {vm.PreferencesSummary}");
             }
             else
             {
-                Logger.LogInfo("OutputPage_Loaded - SharedInputViewModel is null");
                 PreferencesSummaryLabel.Text = "Preferences not available";
             }
 
             // Check if we have a plan from AppState
             var plan = AppState.SharedTripPlan;
-            Logger.LogInfo($"OutputPage_Loaded - Plan from AppState: {plan?.EmotionalNarrative}");
-            Logger.LogInfo($"OutputPage_Loaded - EmotionalNarrative is null/empty: {string.IsNullOrWhiteSpace(plan?.EmotionalNarrative)}");
-            Logger.LogInfo($"OutputPage_Loaded - SuggestedPlaces count: {plan?.SuggestedPlaces?.Count ?? 0}");
-            
-            if (plan?.SuggestedPlaces != null && plan.SuggestedPlaces.Any())
-            {
-                Logger.LogInfo($"OutputPage_Loaded - First place: {plan.SuggestedPlaces[0].Name} at ({plan.SuggestedPlaces[0].Latitude}, {plan.SuggestedPlaces[0].Longitude})");
-            }
 
             if (plan != null && !string.IsNullOrWhiteSpace(plan.EmotionalNarrative))
             {
                 // Clean the content to remove prompt instructions
                 var cleanedContent = CleanStoryContent(plan.EmotionalNarrative);
-                Logger.LogInfo($"Setting EmotionalItineraryTextBlock with cleaned text: {cleanedContent}");
                 
                 EmotionalItineraryTextBlock.Inlines.Clear();
                 foreach (var para in cleanedContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
@@ -78,7 +65,6 @@ namespace Curato.Views
             }
             else
             {
-                Logger.LogInfo("Plan or EmotionalNarrative is null/empty, not setting text");
                 EmotionalItineraryTextBlock.Text = "Story is being generated in real-time...";
                 
                 // Try to reload from AppState after a longer delay
@@ -88,7 +74,6 @@ namespace Curato.Views
                 {
                     // Clean the content to remove prompt instructions
                     var cleanedRetryContent = CleanStoryContent(retryPlan.EmotionalNarrative);
-                    Logger.LogInfo($"Retry successful - setting cleaned text: {cleanedRetryContent}");
                     
                     EmotionalItineraryTextBlock.Inlines.Clear();
                     foreach (var para in cleanedRetryContent.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
@@ -119,17 +104,11 @@ namespace Curato.Views
                 // Get the plan from AppState
                 var JSplan = AppState.SharedTripPlan ?? new TripPlan();
                 
-                // Use the actual suggested places from the generated plan
+                                // Use the actual suggested places from the generated plan
                 if (JSplan.SuggestedPlaces != null && JSplan.SuggestedPlaces.Count > 0)
                 {
-                    Logger.LogInfo($"Using {JSplan.SuggestedPlaces.Count} suggested places from generated plan");
                     
-                    // Log all places for debugging
-                    for (int i = 0; i < JSplan.SuggestedPlaces.Count; i++)
-                    {
-                        var place = JSplan.SuggestedPlaces[i];
-                        Logger.LogInfo($"Place {i + 1}: {place.Name} at ({place.Latitude}, {place.Longitude})");
-                    }
+                    
                     
                     // Find the first valid coordinate set
                     var firstValidPlace = JSplan.SuggestedPlaces.FirstOrDefault(p => 
@@ -154,18 +133,12 @@ namespace Curato.Views
                         // Use the first valid place for map center
                         lat = firstValidPlace.Latitude;
                         lng = firstValidPlace.Longitude;
-                        Logger.LogInfo($"Using first valid place coordinates: lat={lat}, lng={lng}");
                     }
                     else
                     {
-                        Logger.LogInfo("No valid coordinates found in suggested places, using default Seoul coordinates");
                         lat = 37.5665; // Seoul
                         lng = 126.9780;
                     }
-                }
-                else
-                {
-                    Logger.LogInfo("No suggested places in plan, using default Seoul coordinates");
                 }
 
                 string coordArray = "[]"; // Default empty array
@@ -190,29 +163,16 @@ namespace Curato.Views
                         p.Name != "Kakao Map URL"
                     ).ToList();
                     
-                    if (validPlaces.Any())
-                    {
-                        coordArray = "["
-                            + string.Join(",", validPlaces
-                                .Select((p, i) =>
-                                    $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
-                            + "]";
-                        
-                        Logger.LogInfo($"Generated coordinate array with {validPlaces.Count} valid coordinates");
-                    }
-                    else
-                    {
-                        Logger.LogInfo("No valid coordinates found after filtering, using empty array");
-                    }
-                }
-                else
-                {
-                    Logger.LogInfo("No suggested places found, using empty coordinate array");
-                }
+                        if (validPlaces.Any())
+                        {
+                            coordArray = "["
+                                + string.Join(",", validPlaces
+                                    .Select((p, i) =>
+                                        $"{{ lat: {p.Latitude.ToString(CultureInfo.InvariantCulture)}, lng: {p.Longitude.ToString(CultureInfo.InvariantCulture)}, name: \"{p.Name.Replace("\"", "\\\"")}\", index: {i + 1} }}"))
+                                + "]";
+                        }
 
-                Logger.LogInfo($"Map center coordinates: lat={lat}, lng={lng}");
-                Logger.LogInfo($"Coordinate array length: {coordArray.Length}");
-                Logger.LogInfo($"Coordinate array content: {coordArray}");
+
 
                 var finalHtml = htmlTemplate
                     .Replace("{API_KEY}", kakaoMapKey)
