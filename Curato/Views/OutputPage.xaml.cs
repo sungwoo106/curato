@@ -1,12 +1,22 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Curato;
 using Curato.Models;
+using Curato.Views;
+using Microsoft.Web.WebView2.Wpf;
 using secure;
 using Curato.Helpers;
 using System.Text;
@@ -370,7 +380,7 @@ namespace Curato.Views
                     var elapsedSeconds = (DateTime.Now - _streamingStartTime).TotalSeconds;
                     if (elapsedSeconds > BEGIN_MARKER_TIMEOUT_SECONDS)
                     {
-                        Logger.LogWarning($"Timeout waiting for [BEGIN] marker after {elapsedSeconds:F1} seconds. Showing content anyway.");
+                        Logger.LogInfo($"Timeout waiting for [BEGIN] marker after {elapsedSeconds:F1} seconds. Showing content anyway.");
                         // Show a warning message
                         Dispatcher.Invoke(() =>
                         {
@@ -395,7 +405,7 @@ namespace Curato.Views
                 var currentContent = _streamingStoryBuilder.ToString();
                 if (currentContent.Length > 10000)
                 {
-                    Logger.LogWarning("Content length exceeds 10,000 characters, truncating");
+                    Logger.LogInfo("Content length exceeds 10,000 characters, truncating");
                     _streamingStoryBuilder.Clear();
                     _streamingStoryBuilder.Append(TruncateLongContent(currentContent));
                 }
@@ -459,7 +469,7 @@ namespace Curato.Views
             // Handle malformed markers
             if (!HandleMalformedMarkers(fullContent))
             {
-                Logger.LogWarning("Malformed markers detected, proceeding with caution");
+                Logger.LogInfo("Malformed markers detected, proceeding with caution");
             }
             
             Logger.LogInfo($"Filtering token: hasBegin={hasBegin}, hasEnd={hasEnd}, token='{token.Substring(0, Math.Min(30, token.Length))}...'");
@@ -607,7 +617,7 @@ namespace Curato.Views
         {
             if (content.Length > maxLength)
             {
-                Logger.LogWarning($"Content length ({content.Length}) exceeds maximum ({maxLength}), truncating");
+                Logger.LogInfo($"Content length ({content.Length}) exceeds maximum ({maxLength}), truncating");
                 return content.Substring(0, maxLength) + "... [TRUNCATED]";
             }
             return content;
@@ -626,7 +636,7 @@ namespace Curato.Views
             
             if (partialBegin || partialEnd)
             {
-                Logger.LogWarning($"Found partial markers: partialBegin={partialBegin}, partialEnd={partialEnd}");
+                Logger.LogInfo($"Found partial markers: partialBegin={partialBegin}, partialEnd={partialEnd}");
                 return false;
             }
             
@@ -644,7 +654,7 @@ namespace Curato.Views
             // Check for potential issues
             if (hasEnd && !hasBegin)
             {
-                Logger.LogWarning("Found [END] marker without [BEGIN] marker - this shouldn't happen");
+                Logger.LogInfo("Found [END] marker without [BEGIN] marker - this shouldn't happen");
             }
             
             if (fullContent.Contains("[BEGIN]") && fullContent.Contains("[END]"))
@@ -653,7 +663,7 @@ namespace Curato.Views
                 var endIndex = fullContent.IndexOf("[END]");
                 if (endIndex < beginIndex)
                 {
-                    Logger.LogWarning("[END] marker appears before [BEGIN] marker - this shouldn't happen");
+                    Logger.LogInfo("[END] marker appears before [BEGIN] marker - this shouldn't happen");
                 }
             }
         }
