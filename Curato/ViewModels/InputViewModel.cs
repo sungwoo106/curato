@@ -206,7 +206,7 @@ namespace Curato.ViewModels
             }
         }
 
-        public string PreferencesSummary => string.Join("    |    ", new[]
+        public string PreferencesSummary => string.Join("        |        ", new[]
         {
             string.IsNullOrWhiteSpace(LocationQuery) || LocationQuery == "Search Location" ? null : LocationQuery,
             SelectedCompanion,

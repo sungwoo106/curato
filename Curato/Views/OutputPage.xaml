@@ -65,7 +65,7 @@
                            Foreground="#FFB31A"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Left"
-                           Margin="75,0,0,0"
+                           Margin="45,0,0,0"
                            Width="Auto"/>
 
                 <!-- Preferences -->
@@ -102,7 +102,7 @@
                         Click="EditButton_Click"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        Margin="0,0,50,0">
+                        Margin="0,0,80,0">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="White"/>
