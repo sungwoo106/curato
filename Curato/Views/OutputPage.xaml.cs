@@ -374,7 +374,14 @@ namespace Curato.Views
             // Get the current state from the full content
             var fullContent = _streamingStoryBuilder.ToString();
             var hasBegin = fullContent.Contains("[BEGIN]: ");
-            var hasEnd = fullContent.Contains("[END] ");
+            var hasEnd = fullContent.Contains("[END] "); // Check for [END] with space
+            
+            // Debug logging for marker detection
+            if (token.Contains("[END"))
+            {
+                Logger.LogInfo($"DEBUG: Token contains END marker: '{token}'");
+                Logger.LogInfo($"DEBUG: Full content has BEGIN: {hasBegin}, has END: {hasEnd}");
+            }
             
             // Handle malformed markers
             if (!HandleMalformedMarkers(fullContent))
@@ -397,8 +404,9 @@ namespace Curato.Views
             }
             
             // Check if this token contains the [END] marker
-            if (token.Contains("[END]"))
+            if (token.Contains("[END] "))
             {
+                Logger.LogInfo($"DEBUG: Hiding token with END marker: '{token}'");
                 return string.Empty; // Don't show the [END] marker
             }
             
@@ -444,13 +452,16 @@ namespace Curato.Views
         /// <returns>Cleaned story content</returns>
         private string CleanupStoryAfterEnd(string completeStory)
         {
+            // Check for [END] marker with space
             var endIndex = completeStory.IndexOf("[END] ");
             if (endIndex >= 0)
             {
                 var cleanedStory = completeStory.Substring(0, endIndex);
+                Logger.LogInfo($"DEBUG: Cleaned story after [END] marker at index {endIndex}");
                 return cleanedStory;
             }
             
+            Logger.LogInfo("DEBUG: No [END] marker found in complete story");
             return completeStory;
         }
         
