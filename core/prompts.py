@@ -187,6 +187,7 @@ Cover these {len(selected_places)} locations:
 {places_text}
 
 Write 3-4 engaging sentences for each place, suitable for {companion_type.lower()} outings with {budget_level} budget.
+Begin your response with a short welcoming introduction, and end with a warm closing sentence to conclude the day.
 <|im_end|>
 
 <|im_start|>assistant
