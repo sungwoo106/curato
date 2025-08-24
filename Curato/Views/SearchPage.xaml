@@ -424,7 +424,7 @@
                         StaysOpen="False"
                         AllowsTransparency="True"
                         PopupAnimation="Slide"
-                        MinWidth="450"
+                        MinWidth="500"
                         MinHeight="240"
                         VerticalOffset="20">
                         <Border
