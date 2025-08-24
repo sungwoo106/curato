@@ -208,73 +208,76 @@
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
                 </Border.Effect>
-                <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
+                
+                <!-- Centered container for search bar and preferences -->
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
-                    <!-- Search box -->
-                    <Border Background="White" CornerRadius="40" Padding="15,10" Margin="0,0,20,0" Height="97" Width="450"
-                            BorderBrush="#E0E0E0" BorderThickness="1"
-                            UseLayoutRounding="True" SnapsToDevicePixels="True">
-                        <Border.Effect>
-                            <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
-                        </Border.Effect>
-                        <DockPanel>
-                            <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="5,0,10,0"/>
-                            <TextBox x:Name="LocationTextBox"
-                                     FontSize="24"
-                                     BorderThickness="0"
-                                     Background="Transparent"
-                                     Foreground="#575757"
-                                     FontFamily="{StaticResource SatoshiMedium}"
-                                     VerticalAlignment="Center"
-                                     Margin="20,0,0,0"
-                                     Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     TextChanged="LocationTextBox_TextChanged"
-                                     GotFocus="LocationTextBox_GotFocus"/>
-                                <Popup x:Name="LocationSuggestionPopup"
-                                  PlacementTarget="{Binding ElementName=LocationTextBox}"
-                                  Placement="Custom"
-                                  CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
-                                  VerticalOffset="20"
-                                  StaysOpen="False"
-                                  AllowsTransparency="True"
-                                  PopupAnimation="Slide"
-                                  IsOpen="{Binding IsLocationPopupOpen}"
-                                  MinWidth="600">
-                                <Border Background="White"
-                                        Padding="5"
-                                        CornerRadius="15"
-                                        Margin="10"
-                                        Effect="{StaticResource StrongShadowEffect}">
-                                    <StackPanel>
-                                        <ItemsControl ItemsSource="{Binding LocationSuggestions}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="10">
-                                                        <TextBlock Text="{Binding Name}"
-                                                                Padding="10,8"
-                                                                FontSize="18"
-                                                                FontFamily="{StaticResource SatoshiMedium}"
-                                                                Foreground="Black"
-                                                                Cursor="Hand"
-                                                                Margin="5,2"
-                                                                MouseLeftButtonDown="Suggestion_Click" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </Border>
-                            </Popup>
-                        </DockPanel>
-                    </Border>
+                        <!-- Search box -->
+                        <Border Background="White" CornerRadius="40" Padding="15,10" Margin="0,0,20,0" Height="97" Width="450"
+                                BorderBrush="#E0E0E0" BorderThickness="1"
+                                UseLayoutRounding="True" SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
+                            </Border.Effect>
+                            <DockPanel>
+                                <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="5,0,10,0"/>
+                                <TextBox x:Name="LocationTextBox"
+                                         FontSize="24"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Foreground="#575757"
+                                         FontFamily="{StaticResource SatoshiMedium}"
+                                         VerticalAlignment="Center"
+                                         Margin="20,0,0,0"
+                                         Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         TextChanged="LocationTextBox_TextChanged"
+                                         GotFocus="LocationTextBox_GotFocus"/>
+                                    <Popup x:Name="LocationSuggestionPopup"
+                                      PlacementTarget="{Binding ElementName=LocationTextBox}"
+                                      Placement="Custom"
+                                      CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
+                                      VerticalOffset="20"
+                                      StaysOpen="False"
+                                      AllowsTransparency="True"
+                                      PopupAnimation="Slide"
+                                      IsOpen="{Binding IsLocationPopupOpen}"
+                                      MinWidth="600">
+                                    <Border Background="White"
+                                            Padding="5"
+                                            CornerRadius="15"
+                                            Margin="10"
+                                            Effect="{StaticResource StrongShadowEffect}">
+                                        <StackPanel>
+                                            <ItemsControl ItemsSource="{Binding LocationSuggestions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="10">
+                                                            <TextBlock Text="{Binding Name}"
+                                                                    Padding="10,8"
+                                                                    FontSize="18"
+                                                                    FontFamily="{StaticResource SatoshiMedium}"
+                                                                    Foreground="Black"
+                                                                    Cursor="Hand"
+                                                                    Margin="5,2"
+                                                                    MouseLeftButtonDown="Suggestion_Click" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </Popup>
+                            </DockPanel>
+                        </Border>
 
-                    <!-- Preferences -->
-                    <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97"
-                            UseLayoutRounding="True" SnapsToDevicePixels="True">
-                        <Border.Effect>
-                            <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
-                        </Border.Effect>
-                        <UniformGrid Columns="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="97" Width="1250">
+                        <!-- Preferences -->
+                        <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97"
+                                UseLayoutRounding="True" SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
+                            </Border.Effect>
+                            <UniformGrid Columns="5" HorizontalAlignment="Center" VerticalAlignment="Center" Height="97" Width="1250">
                             <!-- Companion Button -->
                             <Button x:Name="CompanionButton" 
                                 Content="{Binding CompanionButtonText}" 
@@ -475,6 +478,7 @@
                     </Border>
 
                 </DockPanel>
+                </Grid>
             </Border>
 
             <!-- Recommendations -->
