@@ -173,135 +173,124 @@
 
     <Viewbox Stretch="Fill">
         <Grid Width="1920" Height="1080" Background="#FAFAFA" ClipToBounds="False">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <!-- Main content Grid -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <Grid Background="White" Height="80" Grid.Row="0">
-                <!-- Container for both Canvas and other content -->
-                <Grid>
-                    <!-- Logo positioned absolutely with Canvas -->
-                    <Canvas>
-                        <TextBlock Text="Curato"
-                                   FontSize="46"
-                                   FontFamily="{StaticResource SatoshiBold}"
-                                   Height="80"
-                                   Foreground="#FFB31A"
-                                   Canvas.Left="75"
-                                   Canvas.Top="80"
-                                   Width="Auto"/>
-                    </Canvas>
+                <!-- Header -->
+                <Grid Background="White" Height="80" Grid.Row="0">
+                    <!-- Original header content remains unchanged -->
                 </Grid>
-            </Grid>
 
-            <!-- Search Bar -->
-            <Border
-                Background="White"
-                Padding="40,20"
-                Grid.Row="1"
-                BorderBrush="#EEEEEE"
-                BorderThickness="0"
-                MinHeight="340"
-                UseLayoutRounding="True" SnapsToDevicePixels="True"
-                ClipToBounds="False">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
-                </Border.Effect>
-                
-                <!-- Centered container for search bar and preferences -->
-                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
+                <!-- Search Bar -->
+                <Border
+                    Background="White"
+                    Padding="40,20"
+                    Grid.Row="1"
+                    BorderBrush="#EEEEEE"
+                    BorderThickness="0"
+                    MinHeight="340"
+                    UseLayoutRounding="True" SnapsToDevicePixels="True"
+                    ClipToBounds="False">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="5" ShadowDepth="4" Opacity="0.08"/>
+                    </Border.Effect>
+                    
+                    <!-- Centered container for search bar and preferences -->
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center" LastChildFill="False" Margin="0,10">
 
-                        <!-- Search box -->
-                        <Border Background="White" CornerRadius="40" Padding="15,10" Margin="0,0,20,0" Height="97" Width="450"
-                                BorderBrush="#E0E0E0" BorderThickness="1"
-                                UseLayoutRounding="True" SnapsToDevicePixels="True">
-                            <Border.Effect>
-                                <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
-                            </Border.Effect>
-                            <DockPanel>
-                                <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="5,0,10,0"/>
-                                <TextBox x:Name="LocationTextBox"
-                                         FontSize="24"
-                                         BorderThickness="0"
-                                         Background="Transparent"
-                                         Foreground="#575757"
-                                         FontFamily="{StaticResource SatoshiMedium}"
-                                         VerticalAlignment="Center"
-                                         Margin="20,0,0,0"
-                                         Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         TextChanged="LocationTextBox_TextChanged"
-                                         GotFocus="LocationTextBox_GotFocus"/>
-                                    <Popup x:Name="LocationSuggestionPopup"
-                                      PlacementTarget="{Binding ElementName=LocationTextBox}"
-                                      Placement="Custom"
-                                      CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
-                                      VerticalOffset="20"
-                                      StaysOpen="False"
-                                      AllowsTransparency="True"
-                                      PopupAnimation="Slide"
-                                      IsOpen="{Binding IsLocationPopupOpen}"
-                                      MinWidth="600">
-                                    <Border Background="White"
-                                            Padding="5"
-                                            CornerRadius="15"
-                                            Margin="10"
-                                            Effect="{StaticResource StrongShadowEffect}">
-                                        <StackPanel>
-                                            <ItemsControl ItemsSource="{Binding LocationSuggestions}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="10">
-                                                            <TextBlock Text="{Binding Name}"
-                                                                    Padding="10,8"
-                                                                    FontSize="18"
-                                                                    FontFamily="{StaticResource SatoshiMedium}"
-                                                                    Foreground="Black"
-                                                                    Cursor="Hand"
-                                                                    Margin="5,2"
-                                                                    MouseLeftButtonDown="Suggestion_Click" />
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </Border>
-                                </Popup>
-                            </DockPanel>
-                        </Border>
+                            <!-- Search box -->
+                            <Border Background="White" CornerRadius="40" Padding="15,10" Margin="0,0,20,0" Height="97" Width="450"
+                                    BorderBrush="#E0E0E0" BorderThickness="1"
+                                    UseLayoutRounding="True" SnapsToDevicePixels="True">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
+                                </Border.Effect>
+                                <DockPanel>
+                                    <Image Source="/Resources/Icons/search.png" Width="33" Height="32" Margin="5,0,10,0"/>
+                                    <TextBox x:Name="LocationTextBox"
+                                             FontSize="24"
+                                             BorderThickness="0"
+                                             Background="Transparent"
+                                             Foreground="#575757"
+                                             FontFamily="{StaticResource SatoshiMedium}"
+                                             VerticalAlignment="Center"
+                                             Margin="20,0,0,0"
+                                             Text="{Binding LocationQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             TextChanged="LocationTextBox_TextChanged"
+                                             GotFocus="LocationTextBox_GotFocus"/>
+                                        <Popup x:Name="LocationSuggestionPopup"
+                                          PlacementTarget="{Binding ElementName=LocationTextBox}"
+                                          Placement="Custom"
+                                          CustomPopupPlacementCallback="LocationSuggestionPopup_PlacementCallback"
+                                          VerticalOffset="20"
+                                          StaysOpen="False"
+                                          AllowsTransparency="True"
+                                          PopupAnimation="Slide"
+                                          IsOpen="{Binding IsLocationPopupOpen}"
+                                          MinWidth="600">
+                                        <Border Background="White"
+                                                Padding="5"
+                                                CornerRadius="15"
+                                                Margin="10"
+                                                Effect="{StaticResource StrongShadowEffect}">
+                                            <StackPanel>
+                                                <ItemsControl ItemsSource="{Binding LocationSuggestions}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="10">
+                                                                <TextBlock Text="{Binding Name}"
+                                                                        Padding="10,8"
+                                                                        FontSize="18"
+                                                                        FontFamily="{StaticResource SatoshiMedium}"
+                                                                        Foreground="Black"
+                                                                        Cursor="Hand"
+                                                                        Margin="5,2"
+                                                                        MouseLeftButtonDown="Suggestion_Click" />
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </DockPanel>
+                            </Border>
 
-                        <!-- Preferences -->
-                        <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97"
-                                UseLayoutRounding="True" SnapsToDevicePixels="True">
-                            <Border.Effect>
-                                <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
-                            </Border.Effect>
-                            <UniformGrid Columns="5" HorizontalAlignment="Center" VerticalAlignment="Center" Height="97" Width="1250">
-                            <!-- Companion Button -->
-                            <Button x:Name="CompanionButton" 
-                                Content="{Binding CompanionButtonText}" 
-                                Click="CompanionButton_Click"
-                                FontSize="24" 
-                                FontFamily="{StaticResource SatoshiMedium}" 
-                                Height="67" 
-                                Width="202" 
-                                Margin="0,0,10,0" 
-                                BorderThickness="0"
-                                Style="{StaticResource CompanionButtonStyle}">
-                            </Button>
-                            <Popup x:Name="CompanionPopup"
-                                PlacementTarget="{Binding ElementName=CompanionButton}"
-                                Placement="Custom"
-                                CustomPopupPlacementCallback="CompanionPopup_PlacementCallback"
-                                VerticalOffset="20"
-                                StaysOpen="False"
-                                AllowsTransparency="True"
-                                PopupAnimation="Slide"
-                                Width="192"
-                                MinHeight="210">
+                            <!-- Preferences -->
+                            <Border Background="White" CornerRadius="40" Padding="10" Margin="0,0,0,0" Height="97"
+                                    UseLayoutRounding="True" SnapsToDevicePixels="True">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" Opacity="0.13" BlurRadius="20" ShadowDepth="2"/>
+                                </Border.Effect>
+                                <UniformGrid Columns="5" HorizontalAlignment="Center" VerticalAlignment="Center" Height="97" Width="1250">
+                                <!-- Companion Button -->
+                                <Button x:Name="CompanionButton" 
+                                    Content="{Binding CompanionButtonText}" 
+                                    Click="CompanionButton_Click"
+                                    FontSize="24" 
+                                    FontFamily="{StaticResource SatoshiMedium}" 
+                                    Height="67" 
+                                    Width="202" 
+                                    Margin="0,0,10,0" 
+                                    BorderThickness="0"
+                                    Style="{StaticResource CompanionButtonStyle}">
+                                </Button>
+                                <Popup x:Name="CompanionPopup"
+                                    PlacementTarget="{Binding ElementName=CompanionButton}"
+                                    Placement="Custom"
+                                    CustomPopupPlacementCallback="CompanionPopup_PlacementCallback"
+                                    VerticalOffset="20"
+                                    StaysOpen="False"
+                                    AllowsTransparency="True"
+                                    PopupAnimation="Slide"
+                                    Width="192"
+                                    MinHeight="210">
                                     <Border Background="White" CornerRadius="50" Padding="12" Margin="8" Effect="{DynamicResource ShadowEffect}" ClipToBounds="False">
                                     <ItemsControl x:Name="CompanionItemsControl"/>
                                 </Border>
@@ -329,243 +318,255 @@
                                 PopupAnimation="Slide"
                                 Width="192"
                                 MinHeight="200">
-                                    <Border Background="White" Padding="12" Effect="{DynamicResource ShadowEffect}" CornerRadius="50" BorderBrush="#DDD" BorderThickness="1" Margin="8" ClipToBounds="False">
-                                    <ItemsControl x:Name="BudgetItemsControl" />
-                                </Border>
-                            </Popup>
+                                <Border Background="White" Padding="12" Effect="{DynamicResource ShadowEffect}" CornerRadius="50" BorderBrush="#DDD" BorderThickness="1" Margin="8" ClipToBounds="False">
+                                <ItemsControl x:Name="BudgetItemsControl" />
+                            </Border>
+                        </Popup>
 
-                            <!-- Time Button -->
-                            <Button x:Name="TimeButton"
-                                    Content="{Binding TimeButtonText}"
-                                    Click="TimeButton_Click"
-                                    FontSize="24" 
-                                    FontFamily="{StaticResource SatoshiMedium}" 
-                                    Height="67" 
-                                    Width="131" 
-                                    Margin="0,0,10,0" 
-                                    BorderThickness="0"
-                                    Style="{StaticResource TimeButtonStyle}">
-                            </Button>
-                            <Popup
-                            x:Name="TimePopup"
-                            PlacementTarget="{Binding ElementName=TimeButton}"
-                            Placement="Custom"
-                            CustomPopupPlacementCallback="TimePopup_PlacementCallback"
-                            VerticalOffset="20"
-                            StaysOpen="False"
-                            AllowsTransparency="True"
-                                PopupAnimation="Slide"
-                                MinWidth="890"
-                                MinHeight="97">
-                                <Border
-                                 Background="White"
-                                 Padding="12"
-                                 CornerRadius="40"
-                                 BorderBrush="#DDD"
-                                 BorderThickness="1"
-                                 Margin="8"
-                                 Effect="{DynamicResource ShadowEffect}"
-                                 ClipToBounds="False">
-                                <Grid>
-                                <Grid.RowDefinitions>
-                                    <!-- Row for the four period buttons: same height as your toggle buttons (67) -->
-                                    <RowDefinition Height="Auto"/>
-                                    <!-- Row for sub-popup or scroll content -->
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <!-- Main periods row -->
-                                <ItemsControl x:Name="TimeMainItemsControl"
-                                    Grid.Row="0"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Stretch"
-                                    MinWidth="166"
-                                    MinHeight="67">
+                        <!-- Time Button -->
+                        <Button x:Name="TimeButton"
+                                Content="{Binding TimeButtonText}"
+                                Click="TimeButton_Click"
+                                FontSize="24" 
+                                FontFamily="{StaticResource SatoshiMedium}" 
+                                Height="67" 
+                                Width="131" 
+                                Margin="0,0,10,0" 
+                                BorderThickness="0"
+                                Style="{StaticResource TimeButtonStyle}">
+                        </Button>
+                        <Popup
+                        x:Name="TimePopup"
+                        PlacementTarget="{Binding ElementName=TimeButton}"
+                        Placement="Custom"
+                        CustomPopupPlacementCallback="TimePopup_PlacementCallback"
+                        VerticalOffset="20"
+                        StaysOpen="False"
+                        AllowsTransparency="True"
+                            PopupAnimation="Slide"
+                            MinWidth="890"
+                            MinHeight="97">
+                            <Border
+                             Background="White"
+                             Padding="12"
+                             CornerRadius="40"
+                             BorderBrush="#DDD"
+                             BorderThickness="1"
+                             Margin="8"
+                             Effect="{DynamicResource ShadowEffect}"
+                             ClipToBounds="False">
+                            <Grid>
+                            <Grid.RowDefinitions>
+                                <!-- Row for the four period buttons: same height as your toggle buttons (67) -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Row for sub-popup or scroll content -->
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <!-- Main periods row -->
+                            <ItemsControl x:Name="TimeMainItemsControl"
+                                Grid.Row="0"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch"
+                                MinWidth="166"
+                                MinHeight="67">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="4" VerticalAlignment="Center"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <!-- Sub popup row -->
+                            <ScrollViewer
+                                x:Name="TimeSubScroll"
+                                Grid.Row="1"
+                                HorizontalScrollBarVisibility="Auto"
+                                VerticalScrollBarVisibility="Disabled"
+                                Visibility="Collapsed"
+                                Margin="0,10,0,0"
+                                Width="204"
+                                MaxHeight="300">
+                                <ItemsControl x:Name="TimeSubItemsControl">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="4" VerticalAlignment="Center"/>
+                                    <!-- stack vertically so items "drop down" -->
+                                    <StackPanel Orientation="Vertical"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 </ItemsControl>
+                            </ScrollViewer>
+                            </Grid>
+                        </Border>
+                        </Popup>
 
-                                <!-- Sub popup row -->
-                                <ScrollViewer
-                                    x:Name="TimeSubScroll"
-                                    Grid.Row="1"
-                                    HorizontalScrollBarVisibility="Auto"
-                                    VerticalScrollBarVisibility="Disabled"
-                                    Visibility="Collapsed"
-                                    Margin="0,10,0,0"
-                                    Width="204"
-                                    MaxHeight="300">
-                                    <ItemsControl x:Name="TimeSubItemsControl">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                        <!-- stack vertically so items “drop down” -->
-                                        <StackPanel Orientation="Vertical"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                                </Grid>
-                            </Border>
-                            </Popup>
+                        <!-- Category Button -->
+                        <Button
+                        x:Name="CategoryButton"
+                        Style="{StaticResource CategoryButtonStyle}"
+                        Click="CategoryButton_Click"
+                        FontSize="24"
+                        FontFamily="{StaticResource SatoshiMedium}"
+                        Height="67"
+                        Width="181"
+                        Margin="0,0,10,0"
+                        BorderThickness="0">
+                            <TextBlock Text="{Binding CategoryButtonText}"
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </Button>
 
-                            <!-- Category Button -->
-                            <Button
-                            x:Name="CategoryButton"
-                            Style="{StaticResource CategoryButtonStyle}"
-                            Click="CategoryButton_Click"
-                            FontSize="24"
-                            FontFamily="{StaticResource SatoshiMedium}"
-                            Height="67"
-                            Width="181"
-                            Margin="0,0,10,0"
-                            BorderThickness="0">
-                                <TextBlock Text="{Binding CategoryButtonText}"
-                                           TextWrapping="Wrap"
-                                           TextTrimming="CharacterEllipsis"/>
-                            </Button>
-
-                            <!-- Category dropdown -->
-                            <Popup
-                            x:Name="CategoryPopup"
-                            PlacementTarget="{Binding ElementName=CategoryButton}"
-                            Placement="Custom"
-                            CustomPopupPlacementCallback="CategoryPopup_PlacementCallback"
-                            StaysOpen="False"
-                            AllowsTransparency="True"
-                            PopupAnimation="Slide"
-                            MinWidth="450"
-                            MinHeight="240"
-                            VerticalOffset="20">
-                            <Border
-                                 Background="White"
-                                 Padding="20"
-                                 Margin="20,0,20,0"
-                                 CornerRadius="40"
-                                 BorderBrush="#DDD"
-                                 BorderThickness="1"
-                                 Effect="{StaticResource ShadowEffect}"
-                                 ClipToBounds="False">
-                                <Grid x:Name="CategoryGrid" 
-                                    HorizontalAlignment="Center" 
-                                    VerticalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                </Grid>
-                            </Border>
-                            </Popup>
-
-                            <Button x:Name="GenerateButton" Click="GenerateButton_Click"
-                                    Width="67" Height="67" Margin="40,0,0,0" Cursor="Hand"
-                                    Background="#FFB31A" BorderThickness="0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="100">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Button.Template>
-                                <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
-                                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                            </Button>
-                        </UniformGrid>
+                        <!-- Category dropdown -->
+                        <Popup
+                        x:Name="CategoryPopup"
+                        PlacementTarget="{Binding ElementName=CategoryButton}"
+                        Placement="Custom"
+                        CustomPopupPlacementCallback="CategoryPopup_PlacementCallback"
+                        StaysOpen="False"
+                        AllowsTransparency="True"
+                        PopupAnimation="Slide"
+                        MinWidth="450"
+                        MinHeight="240"
+                        VerticalOffset="20">
+                        <Border
+                             Background="White"
+                             Padding="20"
+                             Margin="20,0,20,0"
+                             CornerRadius="40"
+                             BorderBrush="#DDD"
+                             BorderThickness="1"
+                             Effect="{StaticResource ShadowEffect}"
+                             ClipToBounds="False">
+                        <Grid x:Name="CategoryGrid" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        </Grid>
                     </Border>
+                    </Popup>
 
-                </DockPanel>
-                </Grid>
+                    <Button x:Name="GenerateButton" Click="GenerateButton_Click"
+                            Width="67" Height="67" Margin="40,0,0,0" Cursor="Hand"
+                            Background="#FFB31A" BorderThickness="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="100">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <Image Source="/Resources/Icons/arrow.png" Width="32.25" Height="25.91"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                </UniformGrid>
             </Border>
 
-            <!-- Recommendations -->
-            <StackPanel Grid.Row="2" Margin="120,40,120,0" ClipToBounds="False">
-                <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,20,50"
-                           FontFamily="{StaticResource SatoshiBold}"
-                           HorizontalAlignment="Left"/>
-                <ItemsControl ItemsSource="{Binding PopularPlaces}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel HorizontalAlignment="Left" ItemWidth="323"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Width="323"
-                                Height="Auto"
-                                Background="White"
-                                BorderThickness="0"
-                                Padding="0"
-                                Margin="10"
-                                Click="PopularPlace_Click"
-                                Cursor="Hand"
-                                UseLayoutRounding="True" SnapsToDevicePixels="True">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="border"
-                                                            Background="{TemplateBinding Background}"
-                                                            CornerRadius="20">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="border" Property="Background" Value="#FFF2CC"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsPressed" Value="True">
-                                                            <Setter TargetName="border" Property="Opacity" Value="0.9"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </Button.Style>
-                                
-                                <Border CornerRadius="20" Padding="10" UseLayoutRounding="True" SnapsToDevicePixels="True">
-                                    <StackPanel VerticalAlignment="Top">
-                                        <Grid>
-                                            <Border Height="350"
-                                                    CornerRadius="40"
-                                                    ClipToBounds="True"
-                                                    HorizontalAlignment="Stretch"
-                                                    Background="Transparent"
-                                                    UseLayoutRounding="True" SnapsToDevicePixels="True">
-                                                <Image Source="{Binding ImagePath}"
-                                                    Stretch="UniformToFill" StretchDirection="Both"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    SnapsToDevicePixels="True"
-                                                    RenderOptions.BitmapScalingMode="HighQuality"/>
-                                            </Border>
-                                            <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0"
-                                                    UseLayoutRounding="True" SnapsToDevicePixels="True">
-                                                <Border.Effect>
-                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
-                                                </Border.Effect>
-                                                <TextBlock Text="{Binding Label}" FontSize="16"
-                                                        FontFamily="{StaticResource SatoshiBold}" Foreground="#CC000000"/>
-                                            </Border>
-                                        </Grid>
-                                        <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0"
-                                                FontFamily="{StaticResource SatoshiBold}"/>
-                                        <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
-                                                Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"/>
-                                    </StackPanel>
-                                </Border>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+        </DockPanel>
         </Grid>
-    </Viewbox>
-</UserControl>
+    </Border>
+
+    <!-- Recommendations -->
+    <StackPanel Grid.Row="2" Margin="120,40,120,0" ClipToBounds="False">
+        <TextBlock Text="Popular places around Seoul" FontSize="34" Margin="0,0,20,50"
+                   FontFamily="{StaticResource SatoshiBold}"
+                   HorizontalAlignment="Left"/>
+        <ItemsControl ItemsSource="{Binding PopularPlaces}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel HorizontalAlignment="Left" ItemWidth="323"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Width="323"
+                        Height="Auto"
+                        Background="White"
+                        BorderThickness="0"
+                        Padding="0"
+                        Margin="10"
+                        Click="PopularPlace_Click"
+                        Cursor="Hand"
+                        UseLayoutRounding="True" SnapsToDevicePixels="True">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="20">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="#FFF2CC"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        
+                        <Border CornerRadius="20" Padding="10" UseLayoutRounding="True" SnapsToDevicePixels="True">
+                            <StackPanel VerticalAlignment="Top">
+                                <Grid>
+                                    <Border Height="350"
+                                            CornerRadius="40"
+                                            ClipToBounds="True"
+                                            HorizontalAlignment="Stretch"
+                                            Background="Transparent"
+                                            UseLayoutRounding="True" SnapsToDevicePixels="True">
+                                        <Image Source="{Binding ImagePath}"
+                                            Stretch="UniformToFill" StretchDirection="Both"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            SnapsToDevicePixels="True"
+                                            RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    </Border>
+                                    <Border Background="#CCFFFFFF" Padding="6,2" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="13,13,0,0"
+                                            UseLayoutRounding="True" SnapsToDevicePixels="True">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.4" />
+                                        </Border.Effect>
+                                        <TextBlock Text="{Binding Label}" FontSize="16"
+                                                FontFamily="{StaticResource SatoshiBold}" Foreground="#CC000000"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="{Binding Title}" FontSize="22" Margin="0,10,0,0"
+                                        FontFamily="{StaticResource SatoshiBold}"/>
+                                <TextBlock Text="{Binding Subtitle}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,10"
+                                        Foreground="#777777" FontFamily="{StaticResource SatoshiMedium}"/>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</Grid>
+
+<!-- Logo Canvas overlaid on top without affecting layout -->
+<Canvas HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" Panel.ZIndex="1">
+    <TextBlock Text="Curato"
+               FontSize="46"
+               FontFamily="{StaticResource SatoshiBold}"
+               Height="80"
+               Foreground="#FFB31A"
+               Canvas.Left="75"
+               Canvas.Top="80"
+               Width="Auto"/>
+</Canvas>
+</Grid>
+</Viewbox>
