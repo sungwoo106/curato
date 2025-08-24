@@ -81,7 +81,7 @@
                         VerticalAlignment="Center"
                         MinWidth="1100"
                         Height="75"
-                        Margin="150,0,0,0"
+                        Margin="200,0,0,0"
                         UseLayoutRounding="True" SnapsToDevicePixels="True">
                     <TextBlock x:Name="PreferencesSummaryLabel"
                                Text="{Binding PreferencesSummary, FallbackValue='Loading preferences...'}"
