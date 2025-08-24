@@ -508,7 +508,7 @@ namespace Curato.Views
                 var tb = new TextBlock
                 {
                     Text              = cat,
-                    FontSize          = 20,
+                    FontSize          = 24,
                     FontFamily        = satoshi,
                     VerticalAlignment = VerticalAlignment.Center
                 };

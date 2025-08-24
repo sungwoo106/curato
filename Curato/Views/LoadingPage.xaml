@@ -22,18 +22,20 @@
 
         <!-- Header -->
         <Grid Background="White" Height="80" Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0"
-                       Text="Curato" 
-                       VerticalAlignment="Center" 
-                       HorizontalAlignment="Left" 
-                       Margin="75,0,0,0"
-                       FontSize="46"
-                       FontFamily="{StaticResource SatoshiBold}"
-                       Foreground="#FFB31A"/>
+            <!-- Container for both Canvas and other content -->
+            <Grid>
+                <!-- Logo positioned absolutely with Canvas -->
+                <Canvas>
+                    <TextBlock Text="Curato"
+                               FontSize="46"
+                               FontFamily="{StaticResource SatoshiBold}"
+                               Height="80"
+                               Foreground="#FFB31A"
+                               Canvas.Left="75"
+                               Canvas.Top="80"
+                               Width="Auto"/>
+                </Canvas>
+            </Grid>
         </Grid>
 
         <!-- Center StackPanel -->
