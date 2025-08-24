@@ -12,7 +12,7 @@ Each prompt is dynamically crafted based on user preferences like location, time
 
 ---
 
-## 🚀 Edge AI Architecture
+## Edge AI Architecture
 
 Curato uses a **revolutionary single-model architecture** designed specifically for real-time, on-device itinerary generation:
 
@@ -42,7 +42,7 @@ All processing is executed entirely on-device using **Qualcomm's Genie SDK**, ru
 
 ---
 
-## 🔒 Privacy & Trust
+## Privacy & Trust
 
 Planning a day with AI may not involve government IDs or credit cards — but it still requires deeply personal context:
 - Real-time location and movement patterns  
@@ -68,7 +68,7 @@ This enables:
 
 ---
 
-## ⚡ Why Edge AI?
+## Why Edge AI?
 
 Curato is specifically architected for on-device execution to meet the demands of real-time, privacy-sensitive, and network-independent itinerary planning. Rather than relying on external cloud infrastructure, all AI reasoning—including location selection, context-aware ordering, and narrative generation—is performed locally using a single, optimized quantized language model.
 
@@ -89,7 +89,7 @@ Edge AI enables Curato to function as a trusted, context-aware assistant that de
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
 | Component                      | Description | Technical Innovation |
 |-------------------------------|-------------|---------------------|
@@ -104,7 +104,7 @@ Edge AI enables Curato to function as a trusted, context-aware assistant that de
 
 ---
 
-## 📊 Performance Benchmarks
+## Performance Benchmarks
 
 Curato's performance has been rigorously tested and benchmarked across different model pipeline configurations. The following results demonstrate the application's efficiency and optimization on Snapdragon X Elite hardware.
 
@@ -182,7 +182,7 @@ All benchmarks were conducted on:
 
 ---
 
-## 🛠️ Technical Implementation
+## Technical Implementation
 
 ### **Core Architecture Components**
 - **`core/cache_manager.py`**: Intelligent caching with TTL and size management
@@ -206,7 +206,7 @@ All benchmarks were conducted on:
 
 ---
 
-## 👥 Team Members
+## Team Members
 
 | Name | Role | Email | Qualcomm ID |
 |------|------|-------|-------------|
@@ -215,7 +215,7 @@ All benchmarks were conducted on:
 
 ---
 
-## 📋 Installation
+## Installation
 
 > ⚠️ **Requires Windows on Snapdragon (Snapdragon X Elite)**
 
@@ -236,7 +236,7 @@ For detailed setup instructions, please refer to **[SETUP.md](./SETUP.md)** whic
 
 ---
 
-## 🎮 Usage
+## Usage
 
 ### **Input Interface**
 Upon launch, the application opens with the main input interface (`SearchPage.xaml`), where users are guided to enter key trip parameters:
@@ -269,7 +269,7 @@ Once inference is complete, the app transitions to the output interface (`Output
 
 ---
 
-## 📸 Screenshots & Demo
+## Screenshots & Demo
 
 [Youtube Demo](https://www.youtube.com/watch?v=SLvkNsRBMl0)
 
@@ -300,13 +300,13 @@ When user clicks into generated places or edits plan.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](./LICENSE).
 
 ---
 
-## 🔗 Open Source Dependencies
+## Open Source Dependencies
 
 Curato relies on the following open-source tools and models:
 
@@ -316,7 +316,7 @@ Curato relies on the following open-source tools and models:
 
 ---
 
-## 🚀 Future Enhancements
+## Future Enhancements
 
 - **Multi-language Support**: Korean and English interface with localized place recommendations
 - **Advanced Route Optimization**: Integration with real-time traffic and public transport data
