@@ -331,7 +331,7 @@
                                 FontFamily="{StaticResource SatoshiMedium}" 
                                 Height="67" 
                                 Width="131" 
-                                Margin="0,0,10,0" 
+                                Margin="0,0,0,0" 
                                 BorderThickness="0"
                                 Style="{StaticResource TimeButtonStyle}">
                         </Button>
