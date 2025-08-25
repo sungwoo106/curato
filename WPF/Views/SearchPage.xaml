@@ -408,7 +408,7 @@
                         FontFamily="{StaticResource SatoshiMedium}"
                         Height="67"
                         Width="230"
-                        Margin="0,0,10,0"
+                        Margin="10,0,10,0"
                         BorderThickness="0">
                             <TextBlock Text="{Binding CategoryButtonText}"
                                        TextWrapping="Wrap"
