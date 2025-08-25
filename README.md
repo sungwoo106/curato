@@ -96,11 +96,12 @@ Edge AI enables Curato to function as a trusted, context-aware assistant that de
 
 Our optimized Qwen-Qwen pipeline demonstrates significant performance improvements over the original Phi-Qwen approach, achieving **78% faster** overall execution time.
 
-### **Comprehensive Performance Benchmark**
+### **Pipeline Performance Comparison**
+
+#### **Place Selection Performance**
 
 | Metric | Phi-Qwen Pipeline | Qwen-Qwen Pipeline | Performance Gain |
 |--------|------------------|-------------------|------------------|
-| **Place Selection** | | | |
 | Init Time (s) | 5.97 | 7.98 | -34% (slower init) |
 | Prompt Tokens | 790 | 469 | +69% (more efficient) |
 | Prompt Proc. Rate (tok/s) | 554 | **688.7** | **+24% faster** |
@@ -109,7 +110,11 @@ Our optimized Qwen-Qwen pipeline demonstrates significant performance improvemen
 | Decode Rate (tok/s) | 2.2 | **12.84** | **+484% faster** |
 | Decode Time (s) | 182.3 | **15.81** | **+91% faster** |
 | **Total Query Time (s)** | **183.7** | **16.49** | **+91% faster** |
-| **Narrative Generation** | | | |
+
+#### **Narrative Generation Performance**
+
+| Metric | Phi-Qwen Pipeline | Qwen-Qwen Pipeline | Performance Gain |
+|--------|------------------|-------------------|------------------|
 | Init Time (s) | 9.28 | **7.86** | **+18% faster** |
 | Prompt Tokens | 236 | 234 | +1% (similar) |
 | Prompt Proc. Rate (tok/s) | 699 | 694.4 | -1% (similar) |
@@ -118,7 +123,11 @@ Our optimized Qwen-Qwen pipeline demonstrates significant performance improvemen
 | Decode Rate (tok/s) | 12.5 | **12.83** | +3% (slightly faster) |
 | Decode Time (s) | 51.8 | **33.67** | **+35% faster** |
 | **Total Query Time (s)** | **52.1** | **34.01** | **+35% faster** |
-| **Overall Pipeline** | | | |
+
+#### **Overall Pipeline Results**
+
+| Metric | Phi-Qwen Pipeline | Qwen-Qwen Pipeline | Improvement |
+|--------|------------------|-------------------|-------------|
 | **Total Execution Time (s)** | **235.8** | **50.5** | **+78% faster** |
 | **User Experience** | 4-minute response | **Sub-minute response** | **4.7x faster** |
 
