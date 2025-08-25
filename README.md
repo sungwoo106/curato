@@ -1,76 +1,64 @@
 # Curato: Edge AI Itinerary Planner
 
-Curato is a real-time itinerary planning app designed to generate **personalized, unique day plans** based on real-world constraints like location, time, companion, and budget — all running entirely on-device using quantized LLMs on Snapdragon® X Elite.
+Curato delivers a real-time itinerary planning solution that generates **personalized, unique day plans** based on real-world constraints including location, time, companion, and budget — all operating entirely on-device using quantized LLMs on Snapdragon® X Elite.
 
-Curato automates the **tedious decision-making process**, intelligently selecting the best route and venues with emotional context — and delivering it all as a narrative-style plan that feels human.
+Curato streamlines the **decision-making process**, intelligently selecting optimal routes and venues with emotional context — and delivering comprehensive narrative-style plans that feel human.
 
 > **All AI inference is performed locally**, without offloading any computation to the cloud. This ensures **data privacy**, **ultra-low latency**, and true spontaneity — even in low-connectivity environments.
 
-Built with a single, highly optimized quantized LLM, Curato **splits complex tasks into specialized workflows** to balance efficiency and quality. It uses **dynamic prompt generation** based on real-time user inputs and **locally caches location data** to minimize unnecessary network calls.
+Built with a single, highly optimized quantized LLM, Curato **executes complex tasks through specialized workflows** to balance efficiency and quality. It employs **dynamic prompt generation** based on real-time user inputs and **locally caches location data** to minimize unnecessary network calls.
 
-Each prompt is dynamically crafted based on user preferences like location, time, and companion, enabling the LLM to respond with high contextual accuracy and deliver a uniquely tailored plan with every generation.
+Each prompt is dynamically crafted based on user preferences including location, time, and companion, enabling the LLM to respond with high contextual accuracy and deliver uniquely tailored plans with every generation.
 
 ---
 
-## Edge AI Architecture
+## Edge AI Architecture & Performance
 
-Curato uses a **revolutionary single-model architecture** designed specifically for real-time, on-device itinerary generation:
+Curato employs a **revolutionary single-model architecture** designed specifically for real-time, on-device itinerary generation using the **Snapdragon X Elite's NPU** via **Qualcomm's Genie SDK**.
 
-### **Model Architecture Strategy**
-- **Qwen2.5‑7B‑Instruct** (quantized):  
-  A versatile, high-performance model that handles both place selection and narrative generation through specialized task splitting, offering superior performance and consistency compared to multi-model approaches.
-
-### **Efficient Task Processing**
-- **Dual-Workflow Design**: Single model processes two distinct tasks sequentially for optimal efficiency
-- **Task 1 - Place Selection**: Intelligent filtering and selection of 4-5 optimal locations from 20 candidates
-- **Task 2 - Narrative Generation**: Creation of emotionally engaging, context-aware daily stories
+### **Core Architecture**
+- **Qwen2.5‑7B‑Instruct** (quantized): Single model handling both place selection and narrative generation through specialized task splitting
+- **Dual-Workflow Design**: Sequential processing of place selection (4-5 optimal locations from 20 candidates) and narrative generation (emotionally engaging daily stories)
 - **Unified Context**: Shared understanding across both tasks ensures consistency and coherence
 
-### **Advanced Infrastructure Components**
-- **Smart Caching System**: Intelligent TTL-based caching with automatic cleanup and size management
-- **Rate Limiting**: Sophisticated API rate limiting to respect external service constraints
-- **Place Management**: Intelligent place type selection based on companion type and user preferences
-- **Dynamic Prompting**: Context-aware prompt generation that adapts to user inputs in real-time
-
-All processing is executed entirely on-device using **Qualcomm's Genie SDK**, running on the **Snapdragon X Elite's NPU** for ultra-low-latency and energy-efficient inference.
-
-### **Performance Optimizations**
-- **Batch Processing**: Efficient collection of 10-15 places per category for maximum variety
-- **Smart Filtering**: Intelligent reduction to 20 candidates ensuring diverse place types
-- **Context-Aware Selection**: AI-powered selection considering companion type, budget, and time constraints
-- **Local Data Caching**: Minimized network usage with intelligent cache invalidation
+### **Infrastructure & Optimizations**
+- **Smart Caching**: TTL-based caching with automatic cleanup and size management
+- **Rate Limiting**: Sophisticated API rate limiting with automatic fallbacks
+- **Place Management**: Intelligent selection based on companion type, budget, and time constraints
+- **Dynamic Prompting**: Context-aware prompt generation adapting to real-time user inputs
+- **Local Processing**: All AI inference executed on-device for privacy and performance
 
 ---
 
 ## Privacy & Trust
 
-Planning a day with AI may not involve government IDs or credit cards — but it still requires deeply personal context:
-- Real-time location and movement patterns  
-- Companion or relationship dynamics (e.g., "I'm with my girlfriend")  
-- Budget constraints and spending preferences  
-- Time availability and scheduling patterns  
+While Curato does not process government IDs, credit cards, or health records, privacy remains a core concern due to the nature of the data it handles. Planning an itinerary with Curato involves sharing deeply personal context, such as:
+- Real-time location and movement patterns
+- Companion or relationship dynamics (e.g., "I'm with my girlfriend")
+- Budget constraints and spending preferences
+- Time availability and scheduling patterns
 - Emotional state and social context preferences
 
-Even though this isn't traditionally classified as "sensitive data," it reveals:
-- **Intent and habits** that could be used for targeted advertising
-- **Emotional state** and relationship dynamics
-- **Social context** and lifestyle patterns
-- **Financial behavior** and spending habits
+Although this information is not traditionally classified as "sensitive," it can reveal:
+- **Intent and habits** that could be leveraged for targeted advertising
+- **Behavioral profiles** based on your routines and preferences
+- **Social and emotional context** that could be inferred for profiling or social analysis
 
-Most AI services send this data to the cloud for processing.  
-**Curato doesn't.** All reasoning and generation happens entirely on-device.
+In most cloud-based AI services, this data is transmitted to external servers for processing, where it could be aggregated and analyzed for advertising, profiling, or social inferencing purposes.
 
-This enables:
-- **True privacy** for spontaneous decisions, without outside exposure  
-- **Offline functionality** in low-connectivity environments  
-- **Higher trust**, especially in emotionally sensitive or socially private situations
-- **Data sovereignty** - your personal context never leaves your device
+Curato takes a fundamentally different approach: all reasoning and generation are performed entirely on-device. This ensures that your personal context never leaves your device, providing:
+- **True privacy** for your spontaneous decisions and daily routines
+- **Offline functionality** in low-connectivity environments
+- **Higher trust** in emotionally sensitive or private situations
+- **Data sovereignty** — your information remains under your control at all times
+
+By keeping all processing local, Curato protects not just your official data, but also the personal context that defines your experiences.
 
 ---
 
 ## Why Edge AI?
 
-Curato is specifically architected for on-device execution to meet the demands of real-time, privacy-sensitive, and network-independent itinerary planning. Rather than relying on external cloud infrastructure, all AI reasoning—including location selection, context-aware ordering, and narrative generation—is performed locally using a single, optimized quantized language model.
+Curato is specifically architected for on-device execution to meet the demands of real-time, privacy-sensitive, and network-independent itinerary planning. Rather than relying on external cloud infrastructure, all AI reasoning, including location selection, context-aware ordering, and narrative generation, is executed locally using a single, optimized quantized language model.
 
 ### **Technical Advantages**
 - **Ultra-low latency**: Inference executed directly on device, enabling immediate response to user input
@@ -106,79 +94,63 @@ Edge AI enables Curato to function as a trusted, context-aware assistant that de
 
 ## Performance Benchmarks
 
-Curato's performance has been rigorously tested and benchmarked across different model pipeline configurations. The following results demonstrate the application's efficiency and optimization on Snapdragon X Elite hardware.
+Our optimized Qwen-Qwen pipeline demonstrates significant performance improvements over the original Phi-Qwen approach, achieving **78% faster** overall execution time.
 
-### **Pipeline Performance Comparison**
+### **Comprehensive Performance Benchmark**
 
-#### **Phi-Qwen Pipeline vs Qwen-Qwen Pipeline**
-
-| Metric | **Phi-Qwen Pipeline** | **Qwen-Qwen Pipeline** | **Performance Gain** |
-|--------|----------------------|------------------------|---------------------|
-| **Place Selection (Phi vs Qwen)** | | | |
-| Init Time (s) | 5.97 s | 7.98 s | -34% (slower init) |
+| Metric | Phi-Qwen Pipeline | Qwen-Qwen Pipeline | Performance Gain |
+|--------|------------------|-------------------|------------------|
+| **Place Selection** | | | |
+| Init Time (s) | 5.97 | 7.98 | -34% (slower init) |
 | Prompt Tokens | 790 | 469 | +69% (more efficient) |
-| Prompt Proc. Rate | 554 tok/s | **688.7 tok/s** | **+24% faster** |
-| TTFT (s) | 1.43 s | **0.68 s** | **+52% faster** |
+| Prompt Proc. Rate (tok/s) | 554 | **688.7** | **+24% faster** |
+| Time to First Token (s) | 1.43 | **0.68** | **+52% faster** |
 | Generated Tokens | 403 | 203 | +98% (more output) |
-| Decode Rate (tok/s) | 2.2 tok/s | **12.84 tok/s** | **+484% faster** |
-| Decode Time (s) | 182.3 s | 15.81 s | **+91% faster** |
-| Query Duration (s) | 183.7 s | 16.49 s | **+91% faster** |
-
-| Metric | **Phi-Qwen Pipeline** | **Qwen-Qwen Pipeline** | **Performance Gain** |
-|--------|----------------------|------------------------|---------------------|
-| **Story Generation (Qwen vs Qwen)** | | | |
-| Init Time (s) | 9.28 s | 7.86 s | +18% (faster init) |
-| Prompt Tokens | 236 | 234 | +1% (similar efficiency) |
-| Prompt Proc. Rate | 699 tok/s | **694.4 tok/s** | -1% (similar) |
-| TTFT (s) | 0.34 s | **0.34 s** | 0% (identical) |
+| Decode Rate (tok/s) | 2.2 | **12.84** | **+484% faster** |
+| Decode Time (s) | 182.3 | **15.81** | **+91% faster** |
+| **Total Query Time (s)** | **183.7** | **16.49** | **+91% faster** |
+| **Narrative Generation** | | | |
+| Init Time (s) | 9.28 | **7.86** | **+18% faster** |
+| Prompt Tokens | 236 | 234 | +1% (similar) |
+| Prompt Proc. Rate (tok/s) | 699 | 694.4 | -1% (similar) |
+| Time to First Token (s) | 0.34 | 0.34 | 0% (identical) |
 | Generated Tokens | 648 | 432 | +50% (more output) |
-| Decode Rate (tok/s) | 12.5 tok/s | **12.83 tok/s** | +3% (slightly faster) |
-| Decode Time (s) | 51.8 s | 33.67 s | **+35% faster** |
-| Query Duration (s) | 52.1 s | 34.01 s | **+35% faster** |
+| Decode Rate (tok/s) | 12.5 | **12.83** | +3% (slightly faster) |
+| Decode Time (s) | 51.8 | **33.67** | **+35% faster** |
+| **Total Query Time (s)** | **52.1** | **34.01** | **+35% faster** |
+| **Overall Pipeline** | | | |
+| **Total Execution Time (s)** | **235.8** | **50.5** | **+78% faster** |
+| **User Experience** | 4-minute response | **Sub-minute response** | **4.7x faster** |
 
-### **Performance Analysis & Insights**
+### **Performance Highlights**
+- **Place Selection**: 91% faster execution (16.5s vs 183.7s)
+- **Token Generation**: 484% faster decode rate (12.84 vs 2.2 tok/s)
+- **User Experience**: 4.7x faster response time for complete itinerary generation
+- **Architecture Benefits**: Single model instance eliminates switching overhead and reduces memory footprint
 
-#### **Key Performance Advantages of Qwen-Qwen Pipeline**
-
-1. **Place Selection Performance**: 
-   - **91% faster** query execution (16.5s vs 183.7s)
-   - **484% faster** token generation rate (12.84 vs 2.2 tok/s)
-   - **52% faster** time-to-first-token (0.68s vs 1.43s)
-
-2. **Story Generation Performance**:
-   - **35% faster** query execution (34.0s vs 52.1s)
-   - **18% faster** initialization (7.86s vs 9.28s)
-   - **Consistent quality** with similar prompt processing rates
-
-3. **Overall Pipeline Efficiency**:
-   - **Total execution time**: ~50.5 seconds vs ~235.8 seconds
-   - **Performance improvement**: **78% faster** overall pipeline
-   - **Better resource utilization**: Single model instance reduces overhead
-
-#### **Architecture Benefits of Qwen-Qwen Pipeline**
-
-- **Unified Model Efficiency**: Single Qwen2.5-7B instance handles both tasks
-- **Eliminated Model Switching**: No overhead from switching between Phi and Qwen
-- **Consistent Performance**: Both tasks benefit from the same optimized model
-- **Memory Optimization**: Reduced memory footprint with single model instance
-- **NPU Optimization**: Full leverage of Snapdragon X Elite's NPU capabilities
-
-#### **Real-World Performance Impact**
-
-- **Phi-Qwen Pipeline**: ~235.8 seconds for complete itinerary generation
-- **Qwen-Qwen Pipeline**: ~50.5 seconds for complete itinerary generation
-- **User Experience Improvement**: **4.7x faster** response time
-- **Efficiency Gain**: Sub-minute response time vs. 4-minute response time
-
-### **Benchmark Methodology**
-
-All benchmarks were conducted on:
+### **Test Environment**
 - **Hardware**: Snapdragon X Elite Development Kit
 - **Software**: Windows on Snapdragon, QAIRT SDK 2.34.2.250528164111_119506
 - **Models**: Quantized 8-bit versions optimized for NPU execution
-- **Testing**: Multiple runs with consistent prompts and parameters
-- **Metrics**: Genie SDK profiling with microsecond precision
-- **Pipeline Comparison**: Phi-Qwen (original) vs. Qwen-Qwen (optimized)
+
+### **CPU vs. NPU Performance Comparison**
+
+Our testing demonstrates that NPU acceleration is essential for our edge AI solution - CPU processing completely failed due to hardware limitations.
+
+**Testing Results**:
+
+| Processing Method | Overall Pipeline | System Stability |
+|------------------|------------------|------------------|
+| **CPU Processing** | ❌ **Failed** | ❌ **System Slowdown** |
+| **NPU Processing** | ✅ **50.5s** | ✅ **Stable Performance** |
+
+**Key Findings**:
+- **CPU Failure**: Attempting to run our 7B parameter model on CPU resulted in complete failure - the system became unresponsive and could not complete any AI inference tasks
+- **System Issues**: CPU processing caused significant slowdowns, making the entire PC nearly unusable during AI workload execution
+- **NPU Success**: Only NPU acceleration enabled successful execution with stable system performance
+
+**Why This Matters**:
+Our edge AI solution absolutely requires NPU acceleration - CPU processing is not viable. This demonstrates why specialized AI hardware is essential for on-device AI applications. The NPU isn't just an optimization - it's a requirement for our application to function at all.
 
 ---
 
@@ -219,7 +191,7 @@ All benchmarks were conducted on:
 
 > ⚠️ **Requires Windows on Snapdragon (Snapdragon X Elite)**
 
-For detailed setup instructions, please refer to **[SETUP.md](./SETUP.md)** which contains comprehensive installation steps.
+For detailed setup instructions, please refer to **[SETUP.md](./SETUP.md)** which provides comprehensive installation steps.
 
 ### **Quick Start Overview**
 1. **Prerequisites**: Install .NET SDK 7.0+, Python 3.10, Git, and QAIRT SDK 2.28.0+
@@ -239,7 +211,7 @@ For detailed setup instructions, please refer to **[SETUP.md](./SETUP.md)** whic
 ## Usage
 
 ### **Input Interface**
-Upon launch, the application opens with the main input interface (`SearchPage.xaml`), where users are guided to enter key trip parameters:
+Upon launch, the application presents the main input interface (`SearchPage.xaml`), where users are guided to enter key trip parameters:
 
 - **Starting location** — Korean or English input with Kakao keyword search and autocomplete  
 - **Companion type** — Family, Friends, Partner, or Solo  
@@ -261,7 +233,7 @@ Upon launch, the application opens with the main input interface (`SearchPage.xa
 5. **Route Optimization**: Intelligent ordering for optimal flow and experience
 
 ### **Output Interface**
-Once inference is complete, the app transitions to the output interface (`OutputPage.xaml`), displaying:
+Once inference is complete, the application transitions to the output interface (`OutputPage.xaml`), displaying:
 - **Interactive Kakao Map** with four markers arranged in optimal visit order  
 - **Generated Daily Narrative** with emotional context and personalization  
 - **Input Summary** showing user preferences and constraints  
@@ -294,7 +266,7 @@ Curato displays a generated emotional story and Kakao map with visit order.
 ![Output with Map](./screenshots/OutputPage.png)
 
 #### 5. Interactive Features
-When user clicks into generated places or edits plan.
+When the user clicks on a generated place, Curato opens a Kakao map displaying the walking route.
 
 ![Click View](./screenshots/OutputPage_click.png)
 
@@ -308,7 +280,7 @@ This project is licensed under the [MIT License](./LICENSE).
 
 ## Open Source Dependencies
 
-Curato relies on the following open-source tools and models:
+Curato utilizes the following open-source tools and models:
 
 - **[Kakao Map API](https://developers.kakao.com/docs/latest/en/local/dev-guide)** – Provides geocoding and keyword search functionality via REST endpoints  
 - **[QAIRT SDK](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-15B/qairt-install.html)** – Qualcomm's AI Runtime SDK, required for running quantized LLMs on Snapdragon devices  
@@ -320,6 +292,6 @@ Curato relies on the following open-source tools and models:
 
 - **Multi-language Support**: Korean and English interface with localized place recommendations
 - **Advanced Route Optimization**: Integration with real-time traffic and public transport data
-- **Personalization Learning**: User preference learning without compromising privacy
+- **Personalization Learning**: User preference learning while maintaining privacy
 - **Offline Mode**: Complete offline functionality with pre-cached popular locations
 - **Social Features**: Share and discover itineraries while maintaining privacy
