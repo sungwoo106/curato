@@ -51,6 +51,47 @@ PATH=%PATH%;C:\Users\<YourUsername>\AppData\Local\Programs\Python\Python310\Scri
 
 ---
 
+## Installation Steps
+
+### **1. Install Python Dependencies**
+
+```bash
+# Install required packages
+pip install cryptography
+pip install qai-hub-models
+pip install -r requirements.txt  # if available
+```
+
+### **2. API Key Configuration**
+
+```bash
+# Configure your Qualcomm AI Hub API token
+qai-hub configure --api_token YOUR_QUALCOMM_API_TOKEN
+
+# Set up Kakao Map API key in environment variables
+# Add to your .env file or system environment
+KAKAO_MAP_API_KEY=your_kakao_api_key_here
+```
+
+### **3. Environment Setup**
+
+```bash
+# Create virtual environment
+python -m venv curato_env
+
+# Activate virtual environment
+# Windows:
+curato_env\Scripts\activate
+# macOS/Linux:
+source curato_env/bin/activate
+```
+
+### **4. Model Export and Setup**
+
+Follow the detailed model export instructions below for setting up your quantized LLM.
+
+---
+
 Download QAIRT SDK https://qpm.qualcomm.com/#/main/tools/details/Qualcomm_AI_Runtime_SDK
 
 Set global environment variable QNN_SDK_ROOT to root path of QAIRT SDK

@@ -205,15 +205,21 @@ For detailed setup instructions, please refer to **[SETUP.md](./SETUP.md)** whic
 ### **Quick Start Overview**
 1. **Prerequisites**: Install .NET SDK 7.0+, Python 3.10, Git, and QAIRT SDK 2.28.0+
 2. **Python Environment**: Create virtual environment and install required packages
-3. **Model Export**: Export quantized LLM using AI Hub Models
-4. **Configuration**: Set up secure API keys and model bundle paths
-5. **Build & Run**: Execute the WPF application
+3. **Install Dependencies**: Install required Python packages including cryptography for API key security
+4. **API Key Setup**: Configure and decrypt your API keys for secure access
+5. **Model Export**: Export quantized LLM using AI Hub Models
+6. **Configuration**: Set up secure API keys and model bundle paths
+7. **Build & Run**: Execute the WPF application
+
+> **📖 For detailed step-by-step setup instructions, including Python dependencies, API key configuration, and model export, see [SETUP.md](./SETUP.md)**
 
 ### **Key Dependencies**
 - **QAIRT SDK**: Qualcomm's AI Runtime for NPU execution
 - **Genie SDK**: Bundled with QAIRT for model inference
 - **qai-hub-models**: Model export and compilation tools
 - **Kakao Map API**: Location services and place data
+
+
 
 ---
 
