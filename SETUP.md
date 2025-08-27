@@ -11,7 +11,7 @@ Before setting up Curato, ensure you have the following prerequisites installed 
 - **Storage**: At least 10GB free space for models and dependencies
 
 ### **Required Software**
-- **.NET SDK**: Version 7.0 or higher
+- **.NET SDK**: Version 9.0
   - Download from: https://dotnet.microsoft.com/en-us/download/dotnet/7.0
   - Verify installation: `dotnet --version`
 
@@ -279,3 +279,52 @@ Note that this prompt format is specific to Qwen 2.5.
 After that, move both “qwen_bundle” into the curato directory.
 
 Change [config.py](http://config.py) bundle path accordingly.
+
+---
+
+## Running the WPF Application
+
+### **Building and Running with .NET CLI**
+
+Once you have completed the setup and moved the `qwen_bundle` to the curato directory, you can run the WPF application using the following commands:
+
+#### **1. Navigate to the GitHub Repository Root Directory**
+```bash
+cd /path/to/curato
+```
+
+#### **2. Build the Project**
+```bash
+dotnet build
+```
+
+This command compiles the entire solution, including all projects within the repository.
+
+#### **3. Run the Application**
+```bash
+dotnet run --project WPF
+```
+
+This command launches your WPF application.
+
+### **Project Configuration**
+
+Ensure your project file (`WPF/Curato.csproj`) is correctly configured for WPF. It should include the following properties:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+</Project>
+```
+
+This configuration specifies that the project is a Windows executable targeting .NET 9.0 with WPF support enabled.
+
+### **Troubleshooting**
+
+- **Build Errors**: Ensure all dependencies are properly installed and the project file is correctly configured
+- **Runtime Issues**: Verify that the `qwen_bundle` directory is in the correct location and `config.py` paths are updated
+- **.NET Version**: Make sure you have the correct .NET SDK version installed (`dotnet --version`)
